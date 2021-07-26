@@ -18,7 +18,7 @@ async function main(): Promise<void> {
 
   for (const site of manifest.sites) {
     const stacks = [new SomSiteHostedZoneStack(app, site), new SomSiteStack(app, site)];
-    await Promise.all(stacks.map((stack) => stack.build()));
+    await Promise.all(stacks.map((stack) => stack.build(app)));
   }
 }
 

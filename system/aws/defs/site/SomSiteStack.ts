@@ -8,27 +8,35 @@ import * as s3 from '@aws-cdk/aws-s3';
 import * as deployment from '@aws-cdk/aws-s3-deployment';
 import * as route53 from '@aws-cdk/aws-route53';
 import * as targets from '@aws-cdk/aws-route53-targets';
-import { getContentProducer } from '../../../../content';
-import { formulateStackName } from './lib';
+import {
+  CONTENT_PIPELINE_TYPE_CODECOMMIT_NPM,
+  CONTENT_PIPELINE_TYPE_CODECOMMIT_S3,
+  getContentProducer,
+} from '../../../../content';
 import { DEFAULT_STACK_PROPS, SOM_TAG_NAME } from '../common';
-import { SomSiteParams } from '../../../../lib';
+import { formulateStackName } from './lib';
+import { SomSiteProps } from '../../../../lib';
+import { SomCodecommitS3PipelineStack } from '../pipeline/SomCodecommitS3Pipeline';
+import { SomCodecommitNpmPipelineStack } from '../pipeline/SomCodecommitNpmPipeline';
 
-export class SomSiteStack extends cdk.Stack implements SomSiteParams {
-  public rootDomain: string;
-  public webmasterEmail: string;
-  public contentProducerId: string;
-  public somId: string;
+export class SomSiteStack extends cdk.Stack implements SomSiteProps {
+  public readonly rootDomain: string;
+  public readonly webmasterEmail: string;
+  public readonly contentProducerId: string;
+  public readonly protected: boolean;
+  public readonly somId: string;
 
-  constructor(scope: cdk.Construct, params: SomSiteParams) {
+  constructor(scope: cdk.Construct, params: SomSiteProps) {
     super(scope, formulateStackName(params.rootDomain), DEFAULT_STACK_PROPS);
 
     this.rootDomain = params.rootDomain;
     this.webmasterEmail = params.webmasterEmail;
     this.contentProducerId = params.contentProducerId;
+    this.protected = params.protected;
     this.somId = formulateStackName(params.rootDomain);
   }
 
-  async build() {
+  async build(scope: cdk.Construct) {
     cdk.Tags.of(this).add(SOM_TAG_NAME, this.somId);
 
     let hostedZoneId;
@@ -51,9 +59,14 @@ export class SomSiteStack extends cdk.Stack implements SomSiteParams {
     const DomainUser = new iam.User(this, 'DomainUser', {
       userName: `user-${this.somId}`,
       path: '/',
-      managedPolicies: [],
+      managedPolicies: [
+        iam.ManagedPolicy.fromManagedPolicyArn(
+          this,
+          'AWSCodeCommitReadOnlyPolicy',
+          'arn:aws:iam::aws:policy/AWSCodeCommitReadOnly'
+        ),
+      ],
     });
-    // @ts-ignore
     cdk.Tags.of(DomainUser).add(SOM_TAG_NAME, this.somId);
 
     // ----------------------------------------------------------------------
@@ -61,7 +74,6 @@ export class SomSiteStack extends cdk.Stack implements SomSiteParams {
     const OriginAccessIdentity = new cloudfront.OriginAccessIdentity(this, 'OriginAccessIdentity', {
       comment: `OriginAccessIdentity for ${this.somId}`,
     });
-    // @ts-ignore
     cdk.Tags.of(OriginAccessIdentity).add(SOM_TAG_NAME, this.somId);
 
     // ----------------------------------------------------------------------
@@ -74,7 +86,6 @@ export class SomSiteStack extends cdk.Stack implements SomSiteParams {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
     });
-    // @ts-ignore
     cdk.Tags.of(DomainWebBucket).add(SOM_TAG_NAME, this.somId);
 
     DomainWebBucket.addToResourcePolicy(
@@ -94,24 +105,13 @@ export class SomSiteStack extends cdk.Stack implements SomSiteParams {
     DomainWebBucket.grantRead(OriginAccessIdentity);
 
     // ----------------------------------------------------------------------
-    // Content for www bucket
-    const contentProducer = getContentProducer(this.contentProducerId);
-    await contentProducer.init(this);
-    const zipFilePath = await contentProducer.generateContent(this);
-    new deployment.BucketDeployment(this, 'BucketDeployment', {
-      sources: [deployment.Source.asset(zipFilePath)],
-      destinationBucket: DomainWebBucket,
-    });
-    await contentProducer.clean(this);
-
-    // ----------------------------------------------------------------------
-    // SSL certificate
+    // SSL certificate for apex and wildcard subdomains
     const DomainCertificate = new certificatemanager.DnsValidatedCertificate(this, 'DomainCertificate', {
       domainName: this.rootDomain,
+      subjectAlternativeNames: [`*.${this.rootDomain}`],
       hostedZone: HostedZone,
       region: 'us-east-1',
     });
-    // @ts-ignore
     cdk.Tags.of(DomainCertificate).add(SOM_TAG_NAME, this.somId);
 
     // ----------------------------------------------------------------------
@@ -119,7 +119,7 @@ export class SomSiteStack extends cdk.Stack implements SomSiteParams {
     const CloudFrontDistribution = new cloudfront.Distribution(this, 'CloudFrontDistribution', {
       defaultBehavior: {
         origin: new origins.S3Origin(DomainWebBucket, {
-          originPath: '/',
+          originPath: '/www',
           originAccessIdentity: OriginAccessIdentity,
         }),
         allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
@@ -144,7 +144,6 @@ export class SomSiteStack extends cdk.Stack implements SomSiteParams {
         },
       ],
     });
-    // @ts-ignore
     cdk.Tags.of(CloudFrontDistribution).add(SOM_TAG_NAME, this.somId);
 
     // ----------------------------------------------------------------------
@@ -157,6 +156,42 @@ export class SomSiteStack extends cdk.Stack implements SomSiteParams {
       zone: HostedZone,
       target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(CloudFrontDistribution)),
     });
+
+    // ----------------------------------------------------------------------
+    // Content for www bucket
+    const contentProducer = getContentProducer(this.contentProducerId);
+    await contentProducer.init(this);
+    const contentResult = await contentProducer.generateContent(this, 'www');
+    new deployment.BucketDeployment(this, 'BucketDeployment', {
+      sources: [deployment.Source.asset(contentResult.zipFilePath)],
+      destinationBucket: DomainWebBucket,
+    });
+    await contentProducer.clean(this);
+
+    // ----------------------------------------------------------------------
+    // Pipeline for the site
+    switch (contentResult.pipelineType) {
+      case CONTENT_PIPELINE_TYPE_CODECOMMIT_S3: {
+        const pipeline = new SomCodecommitS3PipelineStack(this, this, {
+          domainUser: DomainUser,
+          type: CONTENT_PIPELINE_TYPE_CODECOMMIT_S3,
+          contentBucket: DomainWebBucket,
+        });
+        await pipeline.build(scope);
+        break;
+      }
+      case CONTENT_PIPELINE_TYPE_CODECOMMIT_NPM: {
+        const pipeline = new SomCodecommitNpmPipelineStack(this, this, {
+          domainUser: DomainUser,
+          type: CONTENT_PIPELINE_TYPE_CODECOMMIT_NPM,
+          contentBucket: DomainWebBucket,
+        });
+        await pipeline.build(scope);
+        break;
+      }
+      default:
+        throw new Error(`Could not create pipeline of type: ${contentResult.pipelineType}`);
+    }
 
     // ----------------------------------------------------------------------
     // Outputs
@@ -175,6 +210,10 @@ export class SomSiteStack extends cdk.Stack implements SomSiteParams {
     new cdk.CfnOutput(this, 'OutputDomainUser', {
       description: 'IAM user',
       value: DomainUser.userArn,
+    });
+    new cdk.CfnOutput(this, 'OutputDomainBucket', {
+      description: 'WWW content S3 bucket',
+      value: DomainWebBucket.bucketName,
     });
     new cdk.CfnOutput(this, 'OutputDomainBucketDomainName', {
       description: 'S3 bucket domain name',

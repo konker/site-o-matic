@@ -2,6 +2,7 @@ sites:
   - rootDomain: 'example.com'
     webmasterEmail: 'webmaster@example.com'
     contentProducerId: 'default'
+    protected: false
     extraDnsConfig:
       # Fastmail MX, DKIM, and SPF config
       - type: 'MX'

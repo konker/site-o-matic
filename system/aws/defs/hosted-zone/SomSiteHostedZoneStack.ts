@@ -1,7 +1,7 @@
 import * as cdk from '@aws-cdk/core';
 import * as route53 from '@aws-cdk/aws-route53';
 import { DEFAULT_STACK_PROPS, SOM_TAG_NAME } from '../common';
-import { DnsConfigMx, SomSiteHostedZoneDnsConfig, SomSiteHostedZoneParams } from '../../../../lib';
+import { DnsConfigMx, SomSiteHostedZoneDnsConfig, SomSiteHostedZoneProps } from '../../../../lib';
 import { formulateStackName } from './lib';
 
 export class SomSiteHostedZoneStack extends cdk.Stack {
@@ -9,7 +9,7 @@ export class SomSiteHostedZoneStack extends cdk.Stack {
   public somId: string;
   public extraDnsConfig?: Array<SomSiteHostedZoneDnsConfig>;
 
-  constructor(scope: cdk.Construct, params: SomSiteHostedZoneParams) {
+  constructor(scope: cdk.Construct, params: SomSiteHostedZoneProps) {
     super(scope, formulateStackName(params.rootDomain), DEFAULT_STACK_PROPS);
 
     this.rootDomain = params.rootDomain;
@@ -17,7 +17,7 @@ export class SomSiteHostedZoneStack extends cdk.Stack {
     this.extraDnsConfig = params.extraDnsConfig;
   }
 
-  async build() {
+  async build(scope: cdk.Construct) {
     cdk.Tags.of(this).add(SOM_TAG_NAME, this.somId);
 
     // ----------------------------------------------------------------------

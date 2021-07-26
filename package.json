@@ -4,7 +4,7 @@
   "description": "Automatic website cloud deployment tool",
   "author": "Konrad Markus <konker@iki.fi>",
   "bin": {
-    "site-o-matic": "system/aws/bin/site-o-matic.js"
+    "site-o-matic": "bin/site-o-matic.js"
   },
   "scripts": {
     "build": "tsc",
@@ -15,9 +15,9 @@
   "types": "lib/index.d.ts",
   "main": "lib/index.js",
   "devDependencies": {
-    "@aws-cdk/assert": "1.114.0",
+    "@aws-cdk/assert": "1.115.0",
     "@types/jest": "^26.0.10",
-    "aws-cdk": "1.114.0",
+    "aws-cdk": "1.115.0",
     "eslint": "^5.13",
     "jest": "^26.4.2",
     "prettier": "^2.3.2",
@@ -27,15 +27,20 @@
     "typescript": "~3.9.7"
   },
   "dependencies": {
-    "@aws-cdk/aws-certificatemanager": "^1.114.0",
-    "@aws-cdk/aws-cloudfront": "^1.114.0",
-    "@aws-cdk/aws-cloudfront-origins": "^1.114.0",
-    "@aws-cdk/aws-iam": "^1.114.0",
-    "@aws-cdk/aws-route53": "^1.114.0",
-    "@aws-cdk/aws-route53-targets": "^1.114.0",
-    "@aws-cdk/aws-s3": "^1.114.0",
-    "@aws-cdk/aws-s3-deployment": "^1.114.0",
-    "@aws-cdk/core": "1.114.0",
+    "@aws-cdk/aws-certificatemanager": "^1.115.0",
+    "@aws-cdk/aws-cloudfront": "^1.115.0",
+    "@aws-cdk/aws-cloudfront-origins": "^1.115.0",
+    "@aws-cdk/aws-codebuild": "^1.115.0",
+    "@aws-cdk/aws-codecommit": "^1.115.0",
+    "@aws-cdk/aws-codedeploy": "^1.115.0",
+    "@aws-cdk/aws-codepipeline": "^1.115.0",
+    "@aws-cdk/aws-codepipeline-actions": "^1.115.0",
+    "@aws-cdk/aws-iam": "^1.115.0",
+    "@aws-cdk/aws-route53": "^1.115.0",
+    "@aws-cdk/aws-route53-targets": "^1.115.0",
+    "@aws-cdk/aws-s3": "^1.115.0",
+    "@aws-cdk/aws-s3-deployment": "^1.115.0",
+    "@aws-cdk/core": "1.115.0",
     "@types/node": "^16.3.3",
     "handlebars": "^4.7.7",
     "jszip": "^3.6.0",

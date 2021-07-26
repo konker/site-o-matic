@@ -9,6 +9,7 @@ test('Empty Stack', () => {
     rootDomain: 'example.com',
     webmasterEmail: 'webmaster@example.com',
     contentProducerId: 'default',
+    protected: false
   });
   // THEN
   expectCDK(stack).to(

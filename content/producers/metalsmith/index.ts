@@ -3,9 +3,9 @@ import * as fs from 'fs';
 import * as JSZip from 'jszip';
 import * as Handlebars from 'handlebars';
 import { SomSiteProps } from '../../../lib';
-import { CONTENT_PIPELINE_TYPE_CODECOMMIT_S3, ContentProducerResult } from '../../index';
+import { CONTENT_PIPELINE_TYPE_CODECOMMIT_NPM, ContentProducerResult } from '../../index';
 
-export const ID = 'default';
+export const ID = 'metalsmith';
 
 const BUILD_DIR = '.som';
 const ZIP_FILE_NAME = 'default.zip';
@@ -54,7 +54,7 @@ export async function generateContent(context: SomSiteProps, deploymentPath: str
       .on('finish', () =>
         resolve({
           zipFilePath,
-          pipelineType: CONTENT_PIPELINE_TYPE_CODECOMMIT_S3,
+          pipelineType: CONTENT_PIPELINE_TYPE_CODECOMMIT_NPM,
         })
       )
       .on('error', reject);
