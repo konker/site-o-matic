@@ -5,6 +5,7 @@ import * as YAML from 'yaml';
 import 'source-map-support/register';
 import * as cdk from '@aws-cdk/core';
 import { SiteStack } from '../defs/siteomatic/site/SiteStack';
+import { formulateSomId } from '../../../lib';
 
 async function main(): Promise<void> {
   const app = new cdk.App();
@@ -13,7 +14,7 @@ async function main(): Promise<void> {
   const manifestYaml = await fs.promises.readFile(manifestPath);
   const manifest = YAML.parse(manifestYaml.toString());
 
-  const stack = new SiteStack(app, manifest);
+  const stack = new SiteStack(app, formulateSomId(manifest.rootDomain), manifest);
   await stack.build();
 }
 

@@ -1,37 +1,5 @@
 import * as crypto from 'crypto';
-import { ContentPipelineType } from '../content';
-
-export const SOM_PREFIX = 'som';
-export const MAX_SOM_ID_LEN = 48;
-
-export interface DnsConfigMx {
-  type: 'MX';
-  hostName: string;
-  priority: number;
-}
-
-export interface DnsConfigCname {
-  type: 'CNAME';
-  recordName: string;
-  domainName: string;
-}
-
-export interface DnsConfigTxt {
-  type: 'TXT';
-  recordName: string;
-  values: Array<string>;
-}
-
-export type SiteHostedZoneDnsConfig = DnsConfigMx | DnsConfigCname | DnsConfigTxt;
-
-export interface SiteProps {
-  rootDomain: string;
-  webmasterEmail: string;
-  contentProducerId: string;
-  pipelineType: ContentPipelineType;
-  extraDnsConfig: Array<SiteHostedZoneDnsConfig>;
-  protected: boolean;
-}
+import { MAX_SOM_ID_LEN, SOM_PREFIX } from './consts';
 
 export function calculateDomainHash(domainName: string) {
   return crypto.createHash('md5').update(domainName).digest('hex').slice(0, 6);

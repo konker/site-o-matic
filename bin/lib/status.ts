@@ -12,7 +12,7 @@ import {
   SOM_STATUS_SITE_FUNCTIONAL,
   SomState,
   SomStatus,
-} from './consts';
+} from '../../lib/consts';
 import { getParam } from './utils';
 
 export async function getSomTxtRecord(rootDomain?: string): Promise<string | undefined> {
@@ -20,17 +20,6 @@ export async function getSomTxtRecord(rootDomain?: string): Promise<string | und
 
   try {
     const records = await dns.promises.resolveTxt(`_som.${rootDomain}`);
-    return records[0][0];
-  } catch (ex) {
-    return undefined;
-  }
-}
-
-export async function getCnameRecords(rootDomain?: string): Promise<string | undefined> {
-  if (!rootDomain) return undefined;
-
-  try {
-    const records = await dns.promises.resolveCname(`*.${rootDomain}`);
     return records[0][0];
   } catch (ex) {
     return undefined;

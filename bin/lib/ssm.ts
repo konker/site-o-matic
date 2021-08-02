@@ -1,5 +1,5 @@
 import * as AWS from 'aws-sdk';
-import { SomParam } from './consts';
+import { SomParam } from '../../lib/consts';
 
 export async function getSsmParams(region: string, somId?: string): Promise<Array<SomParam>> {
   if (!somId) return [];

@@ -10,7 +10,7 @@ import * as cdkExec from './lib/cdkExec';
 import * as ssm from './lib/ssm';
 import * as iam from './lib/iam';
 import * as status from './lib/status';
-import { AWS_REGION, CLS, SomState } from './lib/consts';
+import { AWS_REGION, CLS, SomState } from '../lib/consts';
 import { getParam } from './lib/utils';
 import { formatStatus, getSomTxtRecord } from './lib/status';
 import { removeVerificationCnameRecord } from './lib/route53';
