@@ -1,26 +1,26 @@
-sites:
-  - rootDomain: 'example.com'
-    webmasterEmail: 'webmaster@example.com'
-    contentProducerId: 'default'
-    protected: false
-    extraDnsConfig:
-      # Fastmail MX, DKIM, and SPF config
-      - type: 'MX'
-        hostName: 'in1-smtp.messagingengine.com'
-        priority: 10
-      - type: 'MX'
-        hostName: 'in2-smtp.messagingengine.com'
-        priority: 20
-      - type: 'CNAME'
-        recordName: 'fm1._domainkey.example.com'
-        domainName: 'fm1.example.com.dkim.fmhosted.com'
-      - type: 'CNAME'
-        recordName: 'fm2._domainkey.example.com'
-        domainName: 'fm2.example.com.dkim.fmhosted.com'
-      - type: 'CNAME'
-        recordName: 'fm3._domainkey.example.com'
-        domainName: 'fm3.example.com.dkim.fmhosted.com'
-      - type: 'TXT'
-        recordName: ''
-        values:
-          - 'v=spf1 include:spf.messagingengine.com ?all'
+---
+rootDomain: 'example.com'
+webmasterEmail: 'webmaster@example.com'
+contentProducerId: 'default'
+pipelineType: 'codecommit-s3'
+extraDnsConfig:
+  # Fastmail MX, DKIM, and SPF config
+  - type: 'MX'
+    hostName: 'in1-smtp.messagingengine.com'
+    priority: 10
+  - type: 'MX'
+    hostName: 'in2-smtp.messagingengine.com'
+    priority: 20
+  - type: 'CNAME'
+    recordName: 'fm1._domainkey.example.com'
+    domainName: 'fm1.example.com.dkim.fmhosted.com'
+  - type: 'CNAME'
+    recordName: 'fm2._domainkey.example.com'
+    domainName: 'fm2.example.com.dkim.fmhosted.com'
+  - type: 'CNAME'
+    recordName: 'fm3._domainkey.example.com'
+    domainName: 'fm3.example.com.dkim.fmhosted.com'
+  - type: 'TXT'
+    recordName: ''
+    values:
+      - 'v=spf1 include:spf.messagingengine.com ?all'
