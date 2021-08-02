@@ -14,18 +14,8 @@ export async function build(
   const parentResources = await CodecommitSitePipelineStack.build(siteStack, props);
 
   // ----------------------------------------------------------------------
-  // Code Pipeline
   const codePipeline = new codepipeline.Pipeline(siteStack, 'CodePipeline', {
     pipelineName: siteStack.somId,
-  });
-
-  // ----------------------------------------------------------------------
-  const sourceOutput = new codepipeline.Artifact();
-  const sourceAction = new actions.CodeCommitSourceAction({
-    actionName: 'CodeCommitAction',
-    repository: parentResources.codeCommitRepo,
-    output: sourceOutput,
-    branch: 'main',
   });
 
   // ----------------------------------------------------------------------
@@ -41,17 +31,29 @@ export async function build(
           commands: ['npm run build'],
         },
       },
+      artifacts: {
+        files: ['**/*'],
+      },
     }),
   });
 
-  const buildOutput = new codepipeline.Artifact();
-  const CodeBuildAction = new actions.CodeBuildAction({
+  // ----------------------------------------------------------------------
+  const sourceOutput = new codepipeline.Artifact('SourceOutput');
+  const buildOutput = new codepipeline.Artifact('BuildOutput');
+
+  const sourceAction = new actions.CodeCommitSourceAction({
+    actionName: 'CodeCommitAction',
+    repository: parentResources.codeCommitRepo,
+    output: sourceOutput,
+    branch: 'main',
+  });
+  const codeBuildAction = new actions.CodeBuildAction({
     actionName: 'CodeBuildAction',
     project: CodeBuildPipelineProject,
     input: sourceOutput,
     outputs: [buildOutput],
   });
-  const S3DeployAction = new actions.S3DeployAction({
+  const deployAction = new actions.S3DeployAction({
     actionName: 'S3DeployAction',
     bucket: siteStack.hostingResources.domainBucket,
     input: buildOutput,
@@ -69,11 +71,11 @@ export async function build(
   });
   codePipeline.addStage({
     stageName: 'Build',
-    actions: [CodeBuildAction],
+    actions: [codeBuildAction],
   });
   codePipeline.addStage({
     stageName: 'Deploy',
-    actions: [S3DeployAction],
+    actions: [deployAction],
   });
   codePipeline.addStage({
     stageName: 'Invalidate',
