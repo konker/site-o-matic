@@ -1,37 +1,40 @@
 import * as cdk from '@aws-cdk/core';
 import * as route53 from '@aws-cdk/aws-route53';
-import { DEFAULT_STACK_PROPS, SOM_TAG_NAME } from '../common';
-import { DnsConfigMx, SomSiteHostedZoneDnsConfig, SomSiteHostedZoneProps } from '../../../../lib';
+import * as ssm from '@aws-cdk/aws-ssm';
+import { DnsConfigMx, SiteHostedZoneDnsConfig } from '../../../../../lib';
+import { SiteHostedZoneProps, SOM_TAG_NAME, toSsmParamName } from '../common';
 import { formulateStackName } from './lib';
 
-export class SomSiteHostedZoneStack extends cdk.Stack {
-  public rootDomain: string;
-  public somId: string;
-  public extraDnsConfig?: Array<SomSiteHostedZoneDnsConfig>;
+export class SiteHostedZoneStack extends cdk.NestedStack {
+  public readonly rootDomain: string;
+  public readonly somId: string;
+  public readonly extraDnsConfig?: Array<SiteHostedZoneDnsConfig>;
 
-  constructor(scope: cdk.Construct, params: SomSiteHostedZoneProps) {
-    super(scope, formulateStackName(params.rootDomain), DEFAULT_STACK_PROPS);
+  public hostedZone: route53.PublicHostedZone;
 
-    this.rootDomain = params.rootDomain;
-    this.somId = formulateStackName(params.rootDomain);
-    this.extraDnsConfig = params.extraDnsConfig;
+  constructor(scope: cdk.Construct, props: SiteHostedZoneProps) {
+    super(scope, formulateStackName(props.rootDomain));
+
+    this.rootDomain = props.rootDomain;
+    this.somId = props.somId;
+    this.extraDnsConfig = props.extraDnsConfig;
   }
 
-  async build(scope: cdk.Construct) {
+  async build() {
     cdk.Tags.of(this).add(SOM_TAG_NAME, this.somId);
 
     // ----------------------------------------------------------------------
     // DNS HostedZone
-    const HostedZone = new route53.PublicHostedZone(this, 'HostedZone', {
+    this.hostedZone = new route53.PublicHostedZone(this, 'HostedZone', {
       zoneName: this.rootDomain,
     });
     // @ts-ignore
-    cdk.Tags.of(HostedZone).add(SOM_TAG_NAME, this.somId);
+    cdk.Tags.of(this.hostedZone).add(SOM_TAG_NAME, this.somId);
 
     new route53.TxtRecord(this, 'DnsRecordSet_TXT_Som', {
-      zone: HostedZone,
+      zone: this.hostedZone,
       recordName: '_som',
-      values: [HostedZone.hostedZoneId.toString()],
+      values: [this.hostedZone.hostedZoneId.toString()],
     });
 
     if (this.extraDnsConfig) {
@@ -39,7 +42,7 @@ export class SomSiteHostedZoneStack extends cdk.Stack {
 
       if (mxConfigs.length > 0) {
         new route53.MxRecord(this, `DnsRecordSet_MX`, {
-          zone: HostedZone,
+          zone: this.hostedZone,
           values: mxConfigs.map((i: DnsConfigMx) => ({
             hostName: i.hostName,
             priority: i.priority,
@@ -53,14 +56,14 @@ export class SomSiteHostedZoneStack extends cdk.Stack {
           switch (dnsConfig.type) {
             case 'CNAME':
               new route53.CnameRecord(this, `DnsRecordSet_CNAME_${i}`, {
-                zone: HostedZone,
+                zone: this.hostedZone,
                 recordName: dnsConfig.recordName,
                 domainName: dnsConfig.domainName,
               }).applyRemovalPolicy(cdk.RemovalPolicy.DESTROY);
               break;
             case 'TXT':
               new route53.TxtRecord(this, `DnsRecordSet_TXT_${i}`, {
-                zone: HostedZone,
+                zone: this.hostedZone,
                 recordName: dnsConfig.recordName,
                 values: dnsConfig.values,
               }).applyRemovalPolicy(cdk.RemovalPolicy.DESTROY);
@@ -71,13 +74,19 @@ export class SomSiteHostedZoneStack extends cdk.Stack {
         });
     }
 
-    new cdk.CfnOutput(this, 'OutputHostedZoneId', {
-      description: 'Route53 Hosted Zone ID',
-      value: HostedZone.hostedZoneId,
+    // ----------------------------------------------------------------------
+    // SSM Params
+    new ssm.StringParameter(this, 'SSmHostedZoneId', {
+      parameterName: toSsmParamName(this.somId, 'hosted-zone-id'),
+      stringValue: this.hostedZone.hostedZoneId,
+      type: ssm.ParameterType.STRING,
+      tier: ssm.ParameterTier.STANDARD,
     });
-    new cdk.CfnOutput(this, 'OutputHostedZoneNameServers', {
-      description: 'Route53 Hosted Zone NameServers',
-      value: cdk.Fn.join(',', HostedZone.hostedZoneNameServers || []),
+    new ssm.StringParameter(this, 'SSmHostedZoneNameServers', {
+      parameterName: toSsmParamName(this.somId, 'hosted-zone-name-servers'),
+      stringValue: cdk.Fn.join(',', this.hostedZone.hostedZoneNameServers || []),
+      type: ssm.ParameterType.STRING,
+      tier: ssm.ParameterTier.STANDARD,
     });
   }
 }

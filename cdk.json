@@ -5,6 +5,7 @@
   "versionReporting": false,
   "output": "system/aws/cdk.out",
   "outputsFile": "system/aws/cdk-outputs.json",
+  "requireApproval": "never",
   "context": {
     "@aws-cdk/aws-apigateway:usagePlanKeyOrderInsensitiveId": true,
     "@aws-cdk/core:enableStackNameDuplicates": "true",

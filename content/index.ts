@@ -1,6 +1,6 @@
 import * as DefaultContentProducer from './producers/default';
 import * as MetalsmithContentProducer from './producers/metalsmith';
-import { SomSiteProps } from '../lib';
+import { SiteProps } from '../lib';
 
 export const CONTENT_PIPELINE_TYPE_CODECOMMIT_S3 = 'codecommit-s3';
 export const CONTENT_PIPELINE_TYPE_CODECOMMIT_NPM = 'codecommit-npm';
@@ -13,9 +13,9 @@ export interface ContentProducerResult {
 
 export interface ContentProducer {
   getId(): string;
-  init(context: SomSiteProps): Promise<void>;
-  generateContent(context: SomSiteProps, deploymentPath: string): Promise<ContentProducerResult>;
-  clean(context: SomSiteProps): Promise<void>;
+  init(context: SiteProps): Promise<void>;
+  generateContent(context: SiteProps, deploymentPath: string): Promise<ContentProducerResult>;
+  clean(context: SiteProps): Promise<void>;
 }
 
 export function getContentProducer(contentProducerId: string): ContentProducer {

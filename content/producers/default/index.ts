@@ -1,8 +1,8 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import * as JSZip from 'jszip';
+import JSZip from 'jszip';
 import * as Handlebars from 'handlebars';
-import { SomSiteProps } from '../../../lib';
+import { SiteProps } from '../../../lib';
 import { CONTENT_PIPELINE_TYPE_CODECOMMIT_S3, ContentProducerResult } from '../../index';
 
 export const ID = 'default';
@@ -17,7 +17,7 @@ export function getId() {
   return ID;
 }
 
-export async function init(context: SomSiteProps): Promise<void> {
+export async function init(context: SiteProps): Promise<void> {
   // Initialize temporary build directory
   const tempDir = path.join(__dirname, BUILD_DIR, context.rootDomain);
   await fs.promises.mkdir(tempDir, {
@@ -33,12 +33,12 @@ export async function init(context: SomSiteProps): Promise<void> {
   }
 }
 
-export async function clean(context: SomSiteProps): Promise<void> {
+export async function clean(context: SiteProps): Promise<void> {
   const tempDir = path.join(__dirname, BUILD_DIR, context.rootDomain);
   await fs.promises.rmdir(tempDir, { recursive: true });
 }
 
-export async function generateContent(context: SomSiteProps, deploymentPath: string): Promise<ContentProducerResult> {
+export async function generateContent(context: SiteProps, deploymentPath: string): Promise<ContentProducerResult> {
   const tempDir = path.join(__dirname, BUILD_DIR, context.rootDomain);
   const zipFilePath = path.join(tempDir, `${deploymentPath}--${ZIP_FILE_NAME}`);
 
