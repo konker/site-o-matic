@@ -1,4 +1,5 @@
 import * as dns from 'dns';
+import * as AWS from 'aws-sdk';
 import * as cdk from '@aws-cdk/core';
 import * as iam from '@aws-cdk/aws-iam';
 import * as ssm from '@aws-cdk/aws-ssm';
@@ -23,7 +24,7 @@ export class SiteStack extends cdk.Stack {
   public readonly siteProps: SiteProps;
   public readonly somId: string;
 
-  public domainUser: iam.User;
+  public domainUser: iam.IUser;
   public hostedZoneResources: HostedZoneStackResources;
   public hostingResources: SiteHostingStackResources;
   public sitePipelineResources: SitePipelineResources;
@@ -34,6 +35,7 @@ export class SiteStack extends cdk.Stack {
     this.siteProps = {
       rootDomain: props.rootDomain,
       webmasterEmail: props.webmasterEmail,
+      username: props.username,
       contentProducerId: props.contentProducerId,
       pipelineType: props.pipelineType,
       extraDnsConfig: props.extraDnsConfig,
@@ -59,17 +61,8 @@ export class SiteStack extends cdk.Stack {
 
     // ----------------------------------------------------------------------
     // User for all resources
-    this.domainUser = new iam.User(this, 'this.domainUser', {
-      userName: `user-${this.somId}`,
-      path: '/',
-      managedPolicies: [],
-    });
-    new ssm.StringParameter(this, 'SSmDomainUserArn', {
-      parameterName: toSsmParamName(this.somId, 'domain-user-arn'),
-      stringValue: this.domainUser.userArn,
-      type: ssm.ParameterType.STRING,
-      tier: ssm.ParameterTier.STANDARD,
-    });
+    this.domainUser = iam.User.fromUserName(this, 'DomainUser', this.siteProps.username);
+
     new ssm.StringParameter(this, 'SSmDomainUserName', {
       parameterName: toSsmParamName(this.somId, 'domain-user-name'),
       stringValue: this.domainUser.userName,
@@ -83,14 +76,34 @@ export class SiteStack extends cdk.Stack {
       extraDnsConfig: this.siteProps.extraDnsConfig,
     });
 
-    let hostedZoneId;
-    try {
-      const txtRecords = await dns.promises.resolveTxt(`_som.${this.siteProps.rootDomain}`);
-      hostedZoneId = txtRecords[0][0];
-    } catch (ex) {
-      console.error(`WARNING: No site-o-matic TXT record found for: ${this.siteProps.rootDomain}`);
+    const verificationTxt = await (async () => {
+      try {
+        const txtRecords = await dns.promises.resolveTxt(`_som.${this.siteProps.rootDomain}`);
+        return txtRecords[0][0];
+      } catch (ex) {
+        return undefined;
+      }
+    })();
+    const hostedZoneId = await (async () => {
+      try {
+        AWS.config.update({ region: this.region });
+        const ssmSdk = new AWS.SSM();
+
+        const result = await ssmSdk.getParameter({ Name: toSsmParamName(this.somId, 'hosted-zone-id') }).promise();
+        return result?.Parameter?.Value;
+      } catch (ex) {
+        return undefined;
+      }
+    })();
+
+    if (!verificationTxt || verificationTxt !== hostedZoneId) {
+      console.error(
+        `WARNING: Missing or invalid site-o-matic verification TXT record found for: ${this.siteProps.rootDomain}`
+      );
+      return;
+    } else {
+      console.log(`VERIFIED: ${verificationTxt} === ${hostedZoneId}`);
     }
-    if (!hostedZoneId) return;
 
     // ----------------------------------------------------------------------
     // Hosting

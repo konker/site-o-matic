@@ -19,8 +19,13 @@ async function cdkExec(vorpal: Vorpal, command: string, args: Array<string>): Pr
   });
 }
 
-export async function cdkDeploy(vorpal: Vorpal, pathToManifestFile?: string, somId?: string): Promise<number> {
-  if (!somId) return 1;
+export async function cdkDeploy(
+  vorpal: Vorpal,
+  pathToManifestFile?: string,
+  somId?: string,
+  iamUsername?: string
+): Promise<number> {
+  if (!somId || !iamUsername) return 1;
   return cdkExec(vorpal, 'npx', [
     'yarn',
     'cdk',
@@ -28,6 +33,8 @@ export async function cdkDeploy(vorpal: Vorpal, pathToManifestFile?: string, som
     `${somId}`,
     '--context',
     `pathToManifestFile=${pathToManifestFile}`,
+    '--context',
+    `iamUsername=${iamUsername}`,
   ]);
 }
 

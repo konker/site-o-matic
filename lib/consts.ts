@@ -39,6 +39,7 @@ export type SomStatus =
 export type SomParam = { [key: string]: string };
 
 export interface SomState {
+  spinner: any;
   rootDomain?: string;
   siteUrl?: string;
   somId?: string;

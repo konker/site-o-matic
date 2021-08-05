@@ -6,6 +6,7 @@ test('Empty Stack', () => {
   const app = new cdk.App();
   // WHEN
   const stack = new SiteStack(app, 'som-id-test', {
+    username: 'som-example-user',
     rootDomain: 'example.com',
     webmasterEmail: 'webmaster@example.com',
     contentProducerId: 'default',

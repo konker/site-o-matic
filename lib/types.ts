@@ -32,6 +32,7 @@ export type SiteHostedZoneDnsConfig = DnsConfigMx | DnsConfigCname | DnsConfigTx
 export interface SiteProps {
   rootDomain: string;
   webmasterEmail: string;
+  username: string;
   contentProducerId: string;
   pipelineType: SitePipelineType;
   extraDnsConfig: Array<SiteHostedZoneDnsConfig>;

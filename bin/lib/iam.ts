@@ -1,4 +1,35 @@
 import * as AWS from 'aws-sdk';
+import { SOM_TAG_NAME } from '../../lib/consts';
+
+export async function listSomUsers(region: string): Promise<Array<{ [key: string]: string }>> {
+  AWS.config.update({ region });
+  const iam = new AWS.IAM();
+
+  const users = await iam.listUsers().promise();
+  if (!users || !users.Users) return [];
+
+  const usersWithTags = await Promise.all(
+    users.Users.map(async (user) => {
+      user.Tags = (await iam.listUserTags({ UserName: user.UserName }).promise()).Tags;
+      return user;
+    })
+  );
+
+  return usersWithTags
+    .filter(({ Tags }) => Tags && Tags.find(({ Key }) => Key === SOM_TAG_NAME))
+    .map(({ UserName }) => ({
+      UserName,
+    }));
+}
+
+export async function addSomUser(region: string, username: string): Promise<Array<{ [key: string]: string }>> {
+  AWS.config.update({ region });
+  const iam = new AWS.IAM();
+
+  await iam.createUser({ UserName: username, Tags: [{ Key: SOM_TAG_NAME, Value: SOM_TAG_NAME }] }).promise();
+
+  return listSomUsers(region);
+}
 
 export async function listPublicKeys(region: string, userName: string): Promise<Array<{ [key: string]: string }>> {
   AWS.config.update({ region });

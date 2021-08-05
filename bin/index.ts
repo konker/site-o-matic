@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as YAML from 'yaml';
 import Vorpal from 'vorpal';
 import chalk from 'chalk';
+import ora from 'ora';
 import * as AWS from 'aws-sdk';
 import { formulateSomId } from '../lib';
 import { tabulate } from './lib/tables';
@@ -57,15 +58,26 @@ const actionShowManifest =
     vorpal.log(JSON.stringify(state.manifest, undefined, 2));
   };
 
+const actionListUsers =
+  (vorpal: Vorpal, state: SomState) =>
+  async (args: Vorpal.Args): Promise<void> => {
+    const users = await iam.listSomUsers(AWS_REGION);
+
+    vorpal.log(tabulate(users, ['UserName']));
+  };
+
+const actionAddUser =
+  (vorpal: Vorpal, state: SomState) =>
+  async (args: Vorpal.Args): Promise<void> => {
+    const users = await iam.addSomUser(AWS_REGION, args.username);
+
+    vorpal.log(tabulate(users, ['UserName']));
+  };
+
 const actionListPublicKeys =
   (vorpal: Vorpal, state: SomState) =>
   async (args: Vorpal.Args): Promise<void> => {
-    if (!state.manifest) {
-      vorpal.log(`ERROR: no manifest loaded`);
-      return;
-    }
-
-    const keys = await iam.listPublicKeys(AWS_REGION, getParam(state, 'domain-user-name') as string);
+    const keys = await iam.listPublicKeys(AWS_REGION, args.username);
 
     vorpal.log(tabulate(keys, ['SSHPublicKeyId', 'Status', 'Remote']));
   };
@@ -73,17 +85,8 @@ const actionListPublicKeys =
 const actionAddPublicKey =
   (vorpal: Vorpal, state: SomState) =>
   async (args: Vorpal.Args): Promise<void> => {
-    if (!state.manifest) {
-      vorpal.log(`ERROR: no manifest loaded`);
-      return;
-    }
-
     const publicKey = await fs.promises.readFile(args.pathToPublicKeyFile);
-    const keys = await iam.addPublicKey(
-      AWS_REGION,
-      getParam(state, 'domain-user-name') as string,
-      publicKey.toString()
-    );
+    const keys = await iam.addPublicKey(AWS_REGION, args.username, publicKey.toString());
 
     vorpal.log(tabulate(keys, ['SSHPublicKeyId', 'Status']));
   };
@@ -91,12 +94,7 @@ const actionAddPublicKey =
 const actionDeletePublicKey =
   (vorpal: Vorpal, state: SomState) =>
   async (args: Vorpal.Args): Promise<void> => {
-    if (!state.manifest) {
-      vorpal.log(`ERROR: no manifest loaded`);
-      return;
-    }
-
-    const keys = await iam.deletePublicKey(AWS_REGION, getParam(state, 'domain-user-name') as string, args.keyId);
+    const keys = await iam.deletePublicKey(AWS_REGION, args.username, args.keyId);
 
     vorpal.log(tabulate(keys, ['SSHPublicKeyId', 'Status']));
   };
@@ -111,10 +109,13 @@ const actionInfo =
       return;
     }
 
+    state.spinner.start();
     state.params = await ssm.getSsmParams(AWS_REGION, state.somId);
     state.status = await status.getStatus(state);
     state.verificationTxtRecord = await getSomTxtRecord(state.rootDomain);
     const connectionStatus = await getSiteConnectionStatus(state.siteUrl);
+    state.spinner.stop();
+
     vorpal.log(
       tabulate(
         [
@@ -153,10 +154,14 @@ const actionDeploy =
     const response = await vorpal.activeCommand.prompt({
       type: 'input',
       name: 'confirm',
-      message: chalk.green(`Are you sure you want to deploy site: ${state.somId}? [y/n] `),
+      message: chalk.green(
+        `Are you sure you want to deploy site: ${chalk.bold(state.somId)} under user ${chalk.bold(
+          args.username
+        )}? [y/n] `
+      ),
     });
     if (response.confirm === 'y') {
-      await cdkExec.cdkDeploy(vorpal, state.pathToManifestFile, state.somId);
+      await cdkExec.cdkDeploy(vorpal, state.pathToManifestFile, state.somId, args.username);
     } else {
       vorpal.log('Aborted');
     }
@@ -191,19 +196,32 @@ async function main() {
   AWS.config.update({ region: AWS_REGION });
 
   const vorpal = new Vorpal();
-  const state: SomState = {};
+  const state: SomState = {
+    spinner: ora(),
+  };
 
   vorpal.delimiter('site-o-matic$');
 
   vorpal.command('clear', 'Clear the screen').alias('cls').action(actionClearScreen(vorpal, state));
   vorpal.command('load <pathToManifestFile>', 'Load a manifest file').action(actionLoadManifest(vorpal, state));
   vorpal.command('manifest', 'Show details of a loaded manifest').action(actionShowManifest(vorpal, state));
-  vorpal.command('ls keys', 'List public keys added').action(actionListPublicKeys(vorpal, state));
-  vorpal.command('add key <pathToPublicKeyFile>', 'Add a public key').action(actionAddPublicKey(vorpal, state));
-  vorpal.command('del key <keyId>', 'Delete a public key').action(actionDeletePublicKey(vorpal, state));
-  vorpal.command('deploy', 'Deploy the site').action(actionDeploy(vorpal, state));
-  vorpal.command('destroy', 'Destroy the site').action(actionDestroy(vorpal, state));
   vorpal.command('info', 'Show details about the site deployment').action(actionInfo(vorpal, state));
+
+  vorpal.command('ls users', 'List users').action(actionListUsers(vorpal, state));
+  vorpal.command('add user <username>', 'Add a user').action(actionAddUser(vorpal, state));
+
+  vorpal
+    .command('ls keys <username>', 'List public keys added for the given user')
+    .action(actionListPublicKeys(vorpal, state));
+  vorpal
+    .command('add key <username> <pathToPublicKeyFile>', 'Add a public key for the given user')
+    .action(actionAddPublicKey(vorpal, state));
+  vorpal
+    .command('del key <username> <keyId>', 'Delete a public key for the given user')
+    .action(actionDeletePublicKey(vorpal, state));
+
+  vorpal.command('deploy <username>', 'Deploy the site under the given user').action(actionDeploy(vorpal, state));
+  vorpal.command('destroy', 'Destroy the site').action(actionDestroy(vorpal, state));
 
   vorpal.show();
 }
