@@ -6,17 +6,19 @@ import chalk from 'chalk';
 import ora from 'ora';
 import * as AWS from 'aws-sdk';
 import { formulateSomId } from '../lib';
-import { tabulate } from './lib/tables';
-import * as cdkExec from './lib/cdkExec';
-import * as ssm from './lib/ssm';
-import * as iam from './lib/iam';
-import * as status from './lib/status';
+import { tabulate } from '../lib/ui/tables';
+import * as cdkExec from '../lib/aws/cdkExec';
+import * as ssm from '../lib/aws/ssm';
+import * as iam from '../lib/aws/iam';
+import * as secretsmanager from '../lib/aws/secretsmanager';
+import * as status from '../lib/status';
 import { AWS_REGION, CLS, SomState } from '../lib/consts';
-import { getParam } from './lib/utils';
-import { formatStatus, getSomTxtRecord } from './lib/status';
-import { removeVerificationCnameRecord } from './lib/route53';
-import { deleteAllPublicKeys } from './lib/iam';
-import { getSiteConnectionStatus } from './lib/http';
+import { getParam } from '../lib/utils';
+import { formatStatus, getSomTxtRecord } from '../lib/status';
+import { removeVerificationCnameRecord } from '../lib/aws/route53';
+import { deleteAllPublicKeys } from '../lib/aws/iam';
+import { getSiteConnectionStatus } from '../lib/http';
+import { getRegistrarConnector } from '../lib/registrar/index';
 
 // ----------------------------------------------------------------------
 // ACTIONS
@@ -42,6 +44,7 @@ const actionLoadManifest =
     state.somId = formulateSomId(state.manifest.rootDomain);
     state.rootDomain = state.manifest.rootDomain;
     state.siteUrl = `https://${state.manifest.rootDomain}/`;
+    state.registrar = state.manifest.registrar;
 
     vorpal.log(`Loaded manifest for: ${state.manifest.rootDomain}`);
 
@@ -61,7 +64,9 @@ const actionShowManifest =
 const actionListUsers =
   (vorpal: Vorpal, state: SomState) =>
   async (args: Vorpal.Args): Promise<void> => {
+    state.spinner.start();
     const users = await iam.listSomUsers(AWS_REGION);
+    state.spinner.stop();
 
     vorpal.log(tabulate(users, ['UserName']));
   };
@@ -69,15 +74,49 @@ const actionListUsers =
 const actionAddUser =
   (vorpal: Vorpal, state: SomState) =>
   async (args: Vorpal.Args): Promise<void> => {
+    state.spinner.start();
     const users = await iam.addSomUser(AWS_REGION, args.username);
+    state.spinner.stop();
 
     vorpal.log(tabulate(users, ['UserName']));
+  };
+
+const actionListSecrets =
+  (vorpal: Vorpal, state: SomState) =>
+  async (args: Vorpal.Args): Promise<void> => {
+    state.spinner.start();
+    const data = await secretsmanager.listSomSecrets(AWS_REGION);
+    state.spinner.stop();
+
+    vorpal.log(tabulate(data, ['Name']));
+  };
+
+const actionAddSecret =
+  (vorpal: Vorpal, state: SomState) =>
+  async (args: Vorpal.Args): Promise<void> => {
+    state.spinner.start();
+    const data = await secretsmanager.addSomSecret(AWS_REGION, args.name, args.value);
+    state.spinner.stop();
+
+    vorpal.log(tabulate(data, ['Name']));
+  };
+
+const actionDeleteSecret =
+  (vorpal: Vorpal, state: SomState) =>
+  async (args: Vorpal.Args): Promise<void> => {
+    state.spinner.start();
+    const data = await secretsmanager.deleteSomSecret(AWS_REGION, args.name);
+    state.spinner.stop();
+
+    vorpal.log(tabulate(data, ['Name']));
   };
 
 const actionListPublicKeys =
   (vorpal: Vorpal, state: SomState) =>
   async (args: Vorpal.Args): Promise<void> => {
+    state.spinner.start();
     const keys = await iam.listPublicKeys(AWS_REGION, args.username);
+    state.spinner.stop();
 
     vorpal.log(tabulate(keys, ['SSHPublicKeyId', 'Status', 'Remote']));
   };
@@ -85,8 +124,10 @@ const actionListPublicKeys =
 const actionAddPublicKey =
   (vorpal: Vorpal, state: SomState) =>
   async (args: Vorpal.Args): Promise<void> => {
+    state.spinner.start();
     const publicKey = await fs.promises.readFile(args.pathToPublicKeyFile);
     const keys = await iam.addPublicKey(AWS_REGION, args.username, publicKey.toString());
+    state.spinner.stop();
 
     vorpal.log(tabulate(keys, ['SSHPublicKeyId', 'Status']));
   };
@@ -94,7 +135,9 @@ const actionAddPublicKey =
 const actionDeletePublicKey =
   (vorpal: Vorpal, state: SomState) =>
   async (args: Vorpal.Args): Promise<void> => {
+    state.spinner.start();
     const keys = await iam.deletePublicKey(AWS_REGION, args.username, args.keyId);
+    state.spinner.stop();
 
     vorpal.log(tabulate(keys, ['SSHPublicKeyId', 'Status']));
   };
@@ -114,6 +157,16 @@ const actionInfo =
     state.status = await status.getStatus(state);
     state.verificationTxtRecord = await getSomTxtRecord(state.rootDomain);
     const connectionStatus = await getSiteConnectionStatus(state.siteUrl);
+    if (state.registrar) {
+      const registrarConnector = getRegistrarConnector(state.registrar);
+      const somSecrets = await secretsmanager.getSomSecrets(AWS_REGION, registrarConnector.SECRETS);
+      if (!registrarConnector.SECRETS.every((secretName) => somSecrets[secretName])) {
+        vorpal.log(`WARNING: secrets required by registrar connector missing: ${registrarConnector.SECRETS}`);
+      } else {
+        state.registrarNameservers = await registrarConnector.getNameServers(somSecrets, state.rootDomain as string);
+      }
+    }
+
     state.spinner.stop();
 
     vorpal.log(
@@ -128,6 +181,14 @@ const actionInfo =
           {
             Param: chalk.bold('pipelineType'),
             Value: state.manifest.pipelineType,
+          },
+          {
+            Param: chalk.bold('registrar'),
+            Value: state.registrar || '-',
+          },
+          {
+            Param: chalk.bold('registrar nameservers'),
+            Value: state.registrarNameservers || '-',
           },
           {
             Param: 'verification TXT',
@@ -190,6 +251,33 @@ const actionDestroy =
     }
   };
 
+const actionSetNameServersWithRegistrar =
+  (vorpal: Vorpal, state: SomState) =>
+  async (args: Vorpal.Args): Promise<void> => {
+    if (!state.registrar) {
+      vorpal.log('ERROR: no registrar specified in manifest');
+      return;
+    }
+    state.spinner.start();
+    const registrarConnector = getRegistrarConnector(state.registrar);
+    const somSecrets = await secretsmanager.getSomSecrets(AWS_REGION, registrarConnector.SECRETS);
+    if (!registrarConnector.SECRETS.every((secretName) => somSecrets[secretName])) {
+      vorpal.log(`ERROR: secrets required by registrar connector missing: ${registrarConnector.SECRETS}`);
+      return;
+    }
+
+    const nameservers = getParam(state, 'hosted-zone-name-servers')?.split(',');
+    if (!nameservers || nameservers.length === 0) {
+      vorpal.log('ERROR: missing nameservers, is the hosted zone deployed?');
+      return;
+    }
+
+    const result = await registrarConnector.setNameServers(somSecrets, state.rootDomain as string, nameservers);
+    state.spinner.stop();
+
+    vorpal.log(`Set nameservers: ${result}`);
+  };
+
 // ----------------------------------------------------------------------
 // MAIN
 async function main() {
@@ -210,17 +298,24 @@ async function main() {
   vorpal.command('ls users', 'List users').action(actionListUsers(vorpal, state));
   vorpal.command('add user <username>', 'Add a user').action(actionAddUser(vorpal, state));
 
+  vorpal.command('ls secrets', 'List secrets').action(actionListSecrets(vorpal, state));
+  vorpal.command('add secret <name> <value>', 'Add a secret').action(actionAddSecret(vorpal, state));
+  vorpal.command('del secret <name>', 'Delete a secret').action(actionDeleteSecret(vorpal, state));
+
   vorpal
-    .command('ls keys <username>', 'List public keys added for the given user')
+    .command('ls keys <username>', 'List SSH public keys added for the given user')
     .action(actionListPublicKeys(vorpal, state));
   vorpal
-    .command('add key <username> <pathToPublicKeyFile>', 'Add a public key for the given user')
+    .command('add key <username> <pathToPublicKeyFile>', 'Add a SSH public key for the given user')
     .action(actionAddPublicKey(vorpal, state));
   vorpal
-    .command('del key <username> <keyId>', 'Delete a public key for the given user')
+    .command('del key <username> <keyId>', 'Delete a SSH public key for the given user')
     .action(actionDeletePublicKey(vorpal, state));
 
   vorpal.command('deploy <username>', 'Deploy the site under the given user').action(actionDeploy(vorpal, state));
+  vorpal
+    .command('set nameservers', 'Set the nameservers automatically with the registrar, if configured')
+    .action(actionSetNameServersWithRegistrar(vorpal, state));
   vorpal.command('destroy', 'Destroy the site').action(actionDestroy(vorpal, state));
 
   vorpal.show();

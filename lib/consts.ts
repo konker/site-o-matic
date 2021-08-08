@@ -43,6 +43,8 @@ export interface SomState {
   rootDomain?: string;
   siteUrl?: string;
   somId?: string;
+  registrar?: string;
+  registrarNameservers?: Array<string>;
   pathToManifestFile?: string;
   manifest?: any;
   params?: Array<SomParam>;

@@ -1,5 +1,5 @@
 import * as AWS from 'aws-sdk';
-import { SOM_TAG_NAME } from '../../lib/consts';
+import { SOM_TAG_NAME } from '../consts';
 
 export async function listSomUsers(region: string): Promise<Array<{ [key: string]: string }>> {
   AWS.config.update({ region });

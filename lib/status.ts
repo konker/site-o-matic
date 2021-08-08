@@ -12,7 +12,7 @@ import {
   SOM_STATUS_SITE_FUNCTIONAL,
   SomState,
   SomStatus,
-} from '../../lib/consts';
+} from './consts';
 import { getParam } from './utils';
 
 export async function getSomTxtRecord(rootDomain?: string): Promise<string | undefined> {
