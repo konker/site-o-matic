@@ -38,7 +38,12 @@ export async function cdkDeploy(
   ]);
 }
 
-export async function cdkDestroy(vorpal: Vorpal, pathToManifestFile?: string, somId?: string): Promise<number> {
+export async function cdkDestroy(
+  vorpal: Vorpal,
+  pathToManifestFile?: string,
+  somId?: string,
+  iamUsername?: string
+): Promise<number> {
   if (!somId) return 1;
   return cdkExec(vorpal, 'npx', [
     'yarn',
@@ -48,5 +53,7 @@ export async function cdkDestroy(vorpal: Vorpal, pathToManifestFile?: string, so
     '--force',
     '--context',
     `pathToManifestFile=${pathToManifestFile}`,
+    '--context',
+    `iamUsername=${iamUsername}`,
   ]);
 }

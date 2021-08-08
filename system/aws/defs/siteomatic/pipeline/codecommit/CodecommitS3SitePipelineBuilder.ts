@@ -1,10 +1,11 @@
 import * as codepipeline from '@aws-cdk/aws-codepipeline';
 import * as actions from '@aws-cdk/aws-codepipeline-actions';
 import * as ssm from '@aws-cdk/aws-ssm';
-import { SITE_PIPELINE_TYPE_CODECOMMIT_S3 } from '../../../../../../lib/consts';
+import { SITE_PIPELINE_TYPE_CODECOMMIT_S3, SOM_TAG_NAME } from '../../../../../../lib/consts';
 import { CodecommitS3SitePipelineResources, SitePipelineProps, toSsmParamName } from '../../../../../../lib/types';
 import { SiteStack } from '../../site/SiteStack';
 import * as CodecommitSitePipelineStack from './BaseCodecommitSitePipelineBuilder';
+import { Tags } from '@aws-cdk/core';
 
 export async function build(
   siteStack: SiteStack,
@@ -17,6 +18,7 @@ export async function build(
   const codePipeline = new codepipeline.Pipeline(siteStack, 'CodePipeline', {
     pipelineName: siteStack.somId,
   });
+  Tags.of(codePipeline).add(SOM_TAG_NAME, siteStack.somId);
 
   const sourceOutput = new codepipeline.Artifact();
   const CodeCommitAction = new actions.CodeCommitSourceAction({
@@ -51,7 +53,7 @@ export async function build(
 
   // ----------------------------------------------------------------------
   // SSM Params
-  new ssm.StringParameter(siteStack, 'SSmCodePipelineArn', {
+  new ssm.StringParameter(siteStack, 'SsmCodePipelineArn', {
     parameterName: toSsmParamName(siteStack.somId, 'code-pipeline-arn'),
     stringValue: codePipeline.pipelineArn,
     type: ssm.ParameterType.STRING,

@@ -3,6 +3,8 @@ import * as route53 from '@aws-cdk/aws-route53';
 import * as ssm from '@aws-cdk/aws-ssm';
 import { DnsConfigMx, HostedZoneStackResources, SiteHostedZoneProps, toSsmParamName } from '../../../../../lib/types';
 import { SiteStack } from '../site/SiteStack';
+import { Tags } from '@aws-cdk/core';
+import { SOM_TAG_NAME } from '../../../../../lib/consts';
 
 export async function build(siteStack: SiteStack, props: SiteHostedZoneProps): Promise<HostedZoneStackResources> {
   // ----------------------------------------------------------------------
@@ -10,6 +12,7 @@ export async function build(siteStack: SiteStack, props: SiteHostedZoneProps): P
   const hostedZone = new route53.PublicHostedZone(siteStack, 'HostedZone', {
     zoneName: siteStack.siteProps.rootDomain,
   });
+  Tags.of(hostedZone).add(SOM_TAG_NAME, siteStack.somId);
 
   new route53.TxtRecord(siteStack, 'DnsRecordSet_TXT_Som', {
     zone: hostedZone,
@@ -56,13 +59,13 @@ export async function build(siteStack: SiteStack, props: SiteHostedZoneProps): P
 
   // ----------------------------------------------------------------------
   // SSM Params
-  new ssm.StringParameter(siteStack, 'SSmHostedZoneId', {
+  new ssm.StringParameter(siteStack, 'SsmHostedZoneId', {
     parameterName: toSsmParamName(siteStack.somId, 'hosted-zone-id'),
     stringValue: hostedZone.hostedZoneId,
     type: ssm.ParameterType.STRING,
     tier: ssm.ParameterTier.STANDARD,
   });
-  new ssm.StringParameter(siteStack, 'SSmHostedZoneNameServers', {
+  new ssm.StringParameter(siteStack, 'SsmHostedZoneNameServers', {
     parameterName: toSsmParamName(siteStack.somId, 'hosted-zone-name-servers'),
     stringValue: cdk.Fn.join(',', hostedZone.hostedZoneNameServers || []),
     type: ssm.ParameterType.STRING,

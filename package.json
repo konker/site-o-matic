@@ -46,6 +46,7 @@
     "@aws-cdk/aws-ssm": "^1.115.0",
     "@aws-cdk/core": "1.115.0",
     "aws-sdk": "^2.955.0",
+    "cfonts": "^2.9.3",
     "cli-table": "^0.3.6",
     "got": "^11.8.2",
     "handlebars": "^4.7.7",

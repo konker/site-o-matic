@@ -1,3 +1,5 @@
+// @ts-ignore
+import * as cfonts from 'cfonts';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as YAML from 'yaml';
@@ -16,7 +18,6 @@ import { AWS_REGION, CLS, SomState } from '../lib/consts';
 import { getParam } from '../lib/utils';
 import { formatStatus, getSomTxtRecord } from '../lib/status';
 import { removeVerificationCnameRecord } from '../lib/aws/route53';
-import { deleteAllPublicKeys } from '../lib/aws/iam';
 import { getSiteConnectionStatus } from '../lib/http';
 import { getRegistrarConnector } from '../lib/registrar/index';
 
@@ -235,17 +236,17 @@ const actionDestroy =
       vorpal.log(`ERROR: no manifest loaded`);
       return;
     }
-
+    const username = getParam(state, 'domain-user-name');
     const response = await vorpal.activeCommand.prompt({
       type: 'input',
       name: 'confirm',
-      message: chalk.red(chalk.bold(`Are you sure you want to destroy site: ${state.somId}? [y/n] `)),
+      message: chalk.red(
+        `Are you sure you want to destroy site: ${chalk.bold(state.somId)} under user ${chalk.bold(username)}? [y/n] `
+      ),
     });
     if (response.confirm === 'y') {
       await removeVerificationCnameRecord(AWS_REGION, getParam(state, 'hosted-zone-id') as string);
-      await deleteAllPublicKeys(AWS_REGION, getParam(state, 'domain-user-name') as string);
-
-      await cdkExec.cdkDestroy(vorpal, state.pathToManifestFile, state.somId);
+      await cdkExec.cdkDestroy(vorpal, state.pathToManifestFile, state.somId, username);
     } else {
       vorpal.log('Aborted');
     }
@@ -288,6 +289,16 @@ async function main() {
     spinner: ora(),
   };
 
+  cfonts.say('Site-O-Matic', {
+    font: 'block',
+    align: 'left',
+    colors: ['#0075bd', '#fff', '#0075bd'],
+    background: 'transparent',
+    letterSpacing: 1,
+    lineHeight: 1,
+    env: 'node',
+  });
+
   vorpal.delimiter('site-o-matic$');
 
   vorpal.command('clear', 'Clear the screen').alias('cls').action(actionClearScreen(vorpal, state));
@@ -318,7 +329,8 @@ async function main() {
     .action(actionSetNameServersWithRegistrar(vorpal, state));
   vorpal.command('destroy', 'Destroy the site').action(actionDestroy(vorpal, state));
 
-  vorpal.show();
+  await vorpal.exec('help');
+  await vorpal.show();
 }
 
 main().then(console.log).catch(console.error);

@@ -9,6 +9,8 @@ import * as targets from '@aws-cdk/aws-route53-targets';
 import * as ssm from '@aws-cdk/aws-ssm';
 import { SiteHostingProps, SiteHostingStackResources, toSsmParamName } from '../../../../../lib/types';
 import { SiteStack } from '../site/SiteStack';
+import { Tags } from '@aws-cdk/core';
+import { SOM_TAG_NAME } from '../../../../../lib/consts';
 
 export async function build(siteStack: SiteStack, props: SiteHostingProps): Promise<SiteHostingStackResources> {
   // ----------------------------------------------------------------------
@@ -27,6 +29,7 @@ export async function build(siteStack: SiteStack, props: SiteHostingProps): Prom
     removalPolicy: cdk.RemovalPolicy.DESTROY,
     autoDeleteObjects: true,
   });
+  Tags.of(domainBucket).add(SOM_TAG_NAME, siteStack.somId);
 
   domainBucket.addToResourcePolicy(
     new iam.PolicyStatement({
@@ -52,6 +55,7 @@ export async function build(siteStack: SiteStack, props: SiteHostingProps): Prom
     hostedZone: siteStack.hostedZoneResources.hostedZone,
     region: 'us-east-1',
   });
+  Tags.of(domainCertificate).add(SOM_TAG_NAME, siteStack.somId);
 
   // ----------------------------------------------------------------------
   // Cloudfront distribution
@@ -83,6 +87,7 @@ export async function build(siteStack: SiteStack, props: SiteHostingProps): Prom
       },
     ],
   });
+  Tags.of(cloudFrontDistribution).add(SOM_TAG_NAME, siteStack.somId);
 
   // ----------------------------------------------------------------------
   // DNS records
@@ -97,7 +102,7 @@ export async function build(siteStack: SiteStack, props: SiteHostingProps): Prom
 
   // ----------------------------------------------------------------------
   // SSM Params
-  new ssm.StringParameter(siteStack, 'SSmDomainBucketName', {
+  new ssm.StringParameter(siteStack, 'SsmDomainBucketName', {
     parameterName: toSsmParamName(siteStack.somId, 'domain-bucket-name'),
     stringValue: domainBucket.bucketName,
     type: ssm.ParameterType.STRING,

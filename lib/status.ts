@@ -31,7 +31,8 @@ export async function getStatus(state: SomState): Promise<SomStatus> {
   if (getParam(state, 'code-pipeline-arn')) return SOM_STATUS_SITE_FUNCTIONAL;
   if (getParam(state, 'cloudfront-distribution-id')) return SOM_STATUS_HOSTING_DEPLOYED;
   if (txtRecord && getParam(state, 'hosted-zone-id') === txtRecord) return SOM_STATUS_HOSTED_ZONE_OK;
-  if (getParam(state, 'hosted-zone-name-servers') && !txtRecord) return SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG;
+  if (txtRecord && getParam(state, 'hosted-zone-id') !== txtRecord) return SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG;
+  if (!txtRecord && getParam(state, 'hosted-zone-name-servers')) return SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG;
   return SOM_STATUS_NOT_STARTED;
 }
 

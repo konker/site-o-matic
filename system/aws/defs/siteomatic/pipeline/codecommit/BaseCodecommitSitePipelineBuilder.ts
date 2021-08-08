@@ -3,6 +3,8 @@ import * as ssm from '@aws-cdk/aws-ssm';
 import { BaseCodecommitSitePipelineResources, SitePipelineProps, toSsmParamName } from '../../../../../../lib/types';
 import { SiteStack } from '../../site/SiteStack';
 import * as SitePipelineStack from '../BaseSitePipelineBuilder';
+import { Tags } from '@aws-cdk/core';
+import { SOM_TAG_NAME } from '../../../../../../lib/consts';
 
 export async function build(
   siteStack: SiteStack,
@@ -15,11 +17,14 @@ export async function build(
   const codeCommitRepo = new codecommit.Repository(siteStack, 'CodeCommitRepo', {
     repositoryName: siteStack.somId,
   });
-  codeCommitRepo.grantPullPush(siteStack.domainUser);
+  Tags.of(codeCommitRepo).add(SOM_TAG_NAME, siteStack.somId);
+
+  // Allow access to the domain role
+  codeCommitRepo.grantPullPush(siteStack.domainGroup);
 
   // ----------------------------------------------------------------------
   // SSM Params
-  new ssm.StringParameter(siteStack, 'SSmCodeCommitCloneUrlSsh', {
+  new ssm.StringParameter(siteStack, 'SsmCodeCommitCloneUrlSsh', {
     parameterName: toSsmParamName(siteStack.somId, 'code-commit-clone-url-ssh'),
     stringValue: codeCommitRepo.repositoryCloneUrlSsh,
     type: ssm.ParameterType.STRING,

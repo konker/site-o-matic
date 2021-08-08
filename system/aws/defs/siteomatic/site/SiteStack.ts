@@ -6,9 +6,9 @@ import * as ssm from '@aws-cdk/aws-ssm';
 import {
   HostedZoneStackResources,
   SiteHostingStackResources,
-  toSsmParamName,
   SitePipelineResources,
   SiteProps,
+  toSsmParamName,
 } from '../../../../../lib/types';
 import {
   DEFAULT_STACK_PROPS,
@@ -25,6 +25,7 @@ export class SiteStack extends cdk.Stack {
   public readonly somId: string;
 
   public domainUser: iam.IUser;
+  public domainGroup: iam.Group;
   public hostedZoneResources: HostedZoneStackResources;
   public hostingResources: SiteHostingStackResources;
   public sitePipelineResources: SitePipelineResources;
@@ -46,13 +47,13 @@ export class SiteStack extends cdk.Stack {
 
   async build() {
     // ----------------------------------------------------------------------
-    new ssm.StringParameter(this, 'SSmRootDomain', {
+    new ssm.StringParameter(this, 'SsmRootDomain', {
       parameterName: toSsmParamName(this.somId, 'root-domain'),
       stringValue: this.siteProps.rootDomain,
       type: ssm.ParameterType.STRING,
       tier: ssm.ParameterTier.STANDARD,
     });
-    new ssm.StringParameter(this, 'SSmWebmasterEmail', {
+    new ssm.StringParameter(this, 'SsmWebmasterEmail', {
       parameterName: toSsmParamName(this.somId, 'webmaster-email'),
       stringValue: this.siteProps.webmasterEmail,
       type: ssm.ParameterType.STRING,
@@ -62,10 +63,18 @@ export class SiteStack extends cdk.Stack {
     // ----------------------------------------------------------------------
     // User for all resources
     this.domainUser = iam.User.fromUserName(this, 'DomainUser', this.siteProps.username);
+    this.domainGroup = new iam.Group(this, 'DomainGroup', { groupName: `${this.somId}-group` });
+    this.domainGroup.addUser(this.domainUser);
 
-    new ssm.StringParameter(this, 'SSmDomainUserName', {
+    new ssm.StringParameter(this, 'SsmDomainUserName', {
       parameterName: toSsmParamName(this.somId, 'domain-user-name'),
       stringValue: this.domainUser.userName,
+      type: ssm.ParameterType.STRING,
+      tier: ssm.ParameterTier.STANDARD,
+    });
+    new ssm.StringParameter(this, 'SsmDomainGroupName', {
+      parameterName: toSsmParamName(this.somId, 'domain-group-name'),
+      stringValue: this.domainGroup.groupName,
       type: ssm.ParameterType.STRING,
       tier: ssm.ParameterTier.STANDARD,
     });

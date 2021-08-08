@@ -2,10 +2,11 @@ import * as codebuild from '@aws-cdk/aws-codebuild';
 import * as codepipeline from '@aws-cdk/aws-codepipeline';
 import * as actions from '@aws-cdk/aws-codepipeline-actions';
 import * as ssm from '@aws-cdk/aws-ssm';
-import { SITE_PIPELINE_TYPE_CODECOMMIT_NPM } from '../../../../../../lib/consts';
+import { SITE_PIPELINE_TYPE_CODECOMMIT_NPM, SOM_TAG_NAME } from '../../../../../../lib/consts';
 import { CodecommitNpmSitePipelineResources, SitePipelineProps, toSsmParamName } from '../../../../../../lib/types';
 import * as CodecommitSitePipelineStack from './BaseCodecommitSitePipelineBuilder';
 import { SiteStack } from '../../site/SiteStack';
+import { Tags } from '@aws-cdk/core';
 
 export async function build(
   siteStack: SiteStack,
@@ -17,9 +18,10 @@ export async function build(
   const codePipeline = new codepipeline.Pipeline(siteStack, 'CodePipeline', {
     pipelineName: siteStack.somId,
   });
+  Tags.of(codePipeline).add(SOM_TAG_NAME, siteStack.somId);
 
   // ----------------------------------------------------------------------
-  const CodeBuildPipelineProject = new codebuild.PipelineProject(siteStack, 'CodeBuildPipelineProject', {
+  const codeBuildPipelineProject = new codebuild.PipelineProject(siteStack, 'CodeBuildPipelineProject', {
     projectName: siteStack.somId,
     buildSpec: codebuild.BuildSpec.fromObject({
       version: '0.2',
@@ -49,7 +51,7 @@ export async function build(
   });
   const codeBuildAction = new actions.CodeBuildAction({
     actionName: 'CodeBuildAction',
-    project: CodeBuildPipelineProject,
+    project: codeBuildPipelineProject,
     input: sourceOutput,
     outputs: [buildOutput],
   });
@@ -84,7 +86,7 @@ export async function build(
 
   // ----------------------------------------------------------------------
   // SSM Params
-  new ssm.StringParameter(siteStack, 'SSmCodePipelineArn', {
+  new ssm.StringParameter(siteStack, 'SsmCodePipelineArn', {
     parameterName: toSsmParamName(siteStack.somId, 'code-pipeline-arn'),
     stringValue: codePipeline.pipelineArn,
     type: ssm.ParameterType.STRING,
