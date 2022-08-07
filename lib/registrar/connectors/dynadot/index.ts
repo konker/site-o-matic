@@ -1,24 +1,22 @@
 import got from 'got';
+import { XMLParser } from 'fast-xml-parser';
 
 export const ID = 'dynadot';
 export const SECRETS = ['DYNADOT_API_KEY'];
 
-const OK = 'ok,';
 const SUCCESS = 'success';
 
-const API_ENDPOINT = 'https://api.dynadot.com/api2.html';
+const API_ENDPOINT = 'https://api.dynadot.com/api3.xml';
+const XML_PARSER = new XMLParser();
 
 export async function getNameServers(secrets: { [key: string]: string }, domain: string): Promise<Array<string>> {
   const apiUrl = `${API_ENDPOINT}?key=${secrets.DYNADOT_API_KEY}&command=get_ns&domain=${domain}`;
   const result = await got.get(apiUrl);
 
-  const data = result.body.split('\n');
-  if (data[0] !== OK) throw new Error(data[1]);
+  const data = XML_PARSER.parse(result.body);
+  if (data?.GetNsResponse?.GetNsHeader?.Status !== SUCCESS) throw new Error(data[1]);
 
-  const nameservers = data[2].split(',');
-  if (nameservers[0] !== SUCCESS) return [];
-
-  return nameservers.slice(1, -1).filter(Boolean);
+  return data.GetNsResponse.NsContent.Host;
 }
 
 export async function setNameServers(
@@ -30,8 +28,8 @@ export async function setNameServers(
   const apiUrl = `${API_ENDPOINT}?key=${secrets.DYNADOT_API_KEY}&command=set_ns&domain=${domain}&${hostsForUrl}`;
   const result = await got.get(apiUrl);
 
-  const data = result.body.split('\n');
-  if (data[0] !== OK) throw new Error(data[1]);
+  const data = XML_PARSER.parse(result.body);
+  if (data?.SetNsResponse?.SetNsHeader?.Status !== SUCCESS) throw new Error(data[1]);
 
   return getNameServers(secrets, domain);
 }

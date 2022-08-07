@@ -48,6 +48,7 @@
     "aws-sdk": "^2.955.0",
     "cfonts": "^2.9.3",
     "cli-table": "^0.3.6",
+    "fast-xml-parser": "^4.0.7",
     "got": "^11.8.2",
     "handlebars": "^4.7.7",
     "jszip": "^3.6.0",
