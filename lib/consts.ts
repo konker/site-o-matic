@@ -36,11 +36,12 @@ export type SomStatus =
   | typeof SOM_STATUS_PIPELINE_DEPLOYED
   | typeof SOM_STATUS_SITE_FUNCTIONAL;
 
-export type SomParam = { [key: string]: string };
+export type SomParam = Record<string, string>;
 
 export interface SomState {
   spinner: any;
   rootDomain?: string;
+  subdomains?: Array<string>;
   siteUrl?: string;
   somId?: string;
   registrar?: string;

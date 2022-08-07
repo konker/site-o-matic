@@ -58,6 +58,24 @@ export async function build(siteStack: SiteStack, props: SiteHostingProps): Prom
   Tags.of(domainCertificate).add(SOM_TAG_NAME, siteStack.somId);
 
   // ----------------------------------------------------------------------
+  // SSL certificates for subdomains
+  if (siteStack.siteProps.subdomains && siteStack.siteProps.contextParams.deploySubdomainCerts) {
+    siteStack.siteProps.subdomains.forEach((subdomain) => {
+      const subdomainCertificate = new certificatemanager.DnsValidatedCertificate(
+        siteStack,
+        `DomainCertificate-${subdomain.domainName}`,
+        {
+          domainName: subdomain.domainName,
+          subjectAlternativeNames: [`*.${subdomain.domainName}`],
+          hostedZone: siteStack.subdomainHostedZoneResources[subdomain.domainName].hostedZone,
+          region: 'us-east-1',
+        }
+      );
+      Tags.of(subdomainCertificate).add(SOM_TAG_NAME, siteStack.somId);
+    });
+  }
+
+  // ----------------------------------------------------------------------
   // Cloudfront distribution
   const cloudFrontDistribution = new cloudfront.Distribution(siteStack, 'CloudFrontDistribution', {
     defaultBehavior: {

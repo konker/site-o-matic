@@ -10,12 +10,21 @@ import { formulateSomId } from '../../../lib';
 async function main(): Promise<void> {
   const app = new cdk.App();
 
-  const username = app.node.tryGetContext('iamUsername');
-  const manifestPath = app.node.tryGetContext('pathToManifestFile');
+  const paramKeys = app.node.tryGetContext('paramsKeys') ?? '[]';
+  const contextParams: Record<string, string> = JSON.parse(paramKeys).reduce(
+    (acc: Record<string, string>, val: string) => {
+      acc[val] = app.node.tryGetContext(val);
+      return acc;
+    },
+    {}
+  );
+
+  const username = contextParams.iamUsername;
+  const manifestPath = contextParams.pathToManifestFile;
   const manifestYaml = await fs.promises.readFile(manifestPath);
   const manifest = YAML.parse(manifestYaml.toString());
 
-  const stack = new SiteStack(app, formulateSomId(manifest.rootDomain), { ...manifest, username });
+  const stack = new SiteStack(app, formulateSomId(manifest.rootDomain), { ...manifest, username, contextParams });
   await stack.build();
 }
 

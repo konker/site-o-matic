@@ -44,6 +44,7 @@ const actionLoadManifest =
     state.manifest = YAML.parse(manifestYaml.toString());
     state.somId = formulateSomId(state.manifest.rootDomain);
     state.rootDomain = state.manifest.rootDomain;
+    state.subdomains = state.manifest.subdomains?.map((i: any) => i.domainName) ?? [];
     state.siteUrl = `https://${state.manifest.rootDomain}/`;
     state.registrar = state.manifest.registrar;
 
@@ -192,6 +193,10 @@ const actionInfo =
             Value: state.registrarNameservers || '-',
           },
           {
+            Param: chalk.bold('subdomains'),
+            Value: state.subdomains?.join('\n') || '-',
+          },
+          {
             Param: 'verification TXT',
             Value: state.verificationTxtRecord,
           },
@@ -208,7 +213,7 @@ const actionInfo =
 const actionDeploy =
   (vorpal: Vorpal, state: SomState) =>
   async (args: Vorpal.Args): Promise<void> => {
-    if (!state.manifest) {
+    if (!state.manifest || !state.pathToManifestFile) {
       vorpal.log(`ERROR: no manifest loaded`);
       return;
     }
@@ -223,7 +228,11 @@ const actionDeploy =
       ),
     });
     if (response.confirm === 'y') {
-      await cdkExec.cdkDeploy(vorpal, state.pathToManifestFile, state.somId, args.username);
+      await cdkExec.cdkDeploy(vorpal, state.somId, {
+        pathToManifestFile: state.pathToManifestFile,
+        iamUsername: args.username,
+        deploySubdomainCerts: 'true',
+      });
     } else {
       vorpal.log('Aborted');
     }

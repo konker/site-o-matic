@@ -21,21 +21,17 @@ async function cdkExec(vorpal: Vorpal, command: string, args: Array<string>): Pr
 
 export async function cdkDeploy(
   vorpal: Vorpal,
-  pathToManifestFile?: string,
   somId?: string,
-  iamUsername?: string
+  params: Record<string, string> | undefined = {}
 ): Promise<number> {
-  if (!somId || !iamUsername) return 1;
-  return cdkExec(vorpal, 'npx', [
-    'yarn',
-    'cdk',
-    'deploy',
-    `${somId}`,
-    '--context',
-    `pathToManifestFile=${pathToManifestFile}`,
-    '--context',
-    `iamUsername=${iamUsername}`,
-  ]);
+  if (!somId || !params.iamUsername) return 1;
+  return cdkExec(
+    vorpal,
+    'npx',
+    ['yarn', 'cdk', 'deploy', `${somId}`]
+      .concat(['--context', `paramsKeys=${JSON.stringify(Object.keys(params))}`])
+      .concat(...Object.entries(params).map(([k, v]) => ['---context', `${k}=${v}`]))
+  );
 }
 
 export async function cdkDestroy(

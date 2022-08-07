@@ -27,12 +27,14 @@ export class SiteStack extends cdk.Stack {
   public domainUser: iam.IUser;
   public domainGroup: iam.Group;
   public hostedZoneResources: HostedZoneStackResources;
+  public subdomainHostedZoneResources: Record<string, HostedZoneStackResources>;
   public hostingResources: SiteHostingStackResources;
   public sitePipelineResources: SitePipelineResources;
 
   constructor(scope: cdk.Construct, somId: string, props: SiteProps) {
     super(scope, somId, DEFAULT_STACK_PROPS(somId));
 
+    this.subdomainHostedZoneResources = {};
     this.siteProps = {
       rootDomain: props.rootDomain,
       webmasterEmail: props.webmasterEmail,
@@ -40,7 +42,9 @@ export class SiteStack extends cdk.Stack {
       contentProducerId: props.contentProducerId,
       pipelineType: props.pipelineType,
       extraDnsConfig: props.extraDnsConfig,
+      subdomains: props.subdomains,
       protected: props.protected,
+      contextParams: props.contextParams,
     };
     this.somId = somId;
   }
@@ -81,8 +85,10 @@ export class SiteStack extends cdk.Stack {
 
     // ----------------------------------------------------------------------
     // HostedZone
-    this.hostedZoneResources = await SiteHostedZoneBuilder.build(this, {
+    this.hostedZoneResources = SiteHostedZoneBuilder.build(this, {
+      domainName: this.siteProps.rootDomain,
       extraDnsConfig: this.siteProps.extraDnsConfig,
+      subdomains: this.siteProps.subdomains,
     });
 
     const verificationTxt = await (async () => {

@@ -10,77 +10,86 @@ import { SITE_PIPELINE_TYPE_CODECOMMIT_NPM, SITE_PIPELINE_TYPE_CODECOMMIT_S3 } f
 export type SitePipelineType = typeof SITE_PIPELINE_TYPE_CODECOMMIT_S3 | typeof SITE_PIPELINE_TYPE_CODECOMMIT_NPM;
 
 export interface DnsConfigMx {
-  type: 'MX';
-  hostName: string;
-  priority: number;
+  readonly type: 'MX';
+  readonly hostName: string;
+  readonly priority: number;
 }
 
 export interface DnsConfigCname {
-  type: 'CNAME';
-  recordName: string;
-  domainName: string;
+  readonly type: 'CNAME';
+  readonly recordName: string;
+  readonly domainName: string;
 }
 
 export interface DnsConfigTxt {
-  type: 'TXT';
-  recordName: string;
-  values: Array<string>;
+  readonly type: 'TXT';
+  readonly recordName: string;
+  readonly values: Array<string>;
 }
 
 export type SiteHostedZoneDnsConfig = DnsConfigMx | DnsConfigCname | DnsConfigTxt;
 
-export interface SiteProps {
-  rootDomain: string;
-  webmasterEmail: string;
-  username: string;
-  contentProducerId: string;
-  pipelineType: SitePipelineType;
-  extraDnsConfig: Array<SiteHostedZoneDnsConfig>;
-  protected: boolean;
+export interface HostedZoneConfig {
+  readonly domainName: string;
+  readonly extraDnsConfig: Array<SiteHostedZoneDnsConfig>;
 }
 
 export interface SiteHostedZoneProps {
-  extraDnsConfig: Array<SiteHostedZoneDnsConfig>;
+  readonly domainName: string;
+  readonly extraDnsConfig: Array<SiteHostedZoneDnsConfig>;
+  readonly subdomains?: Array<HostedZoneConfig>;
+}
+
+export interface SiteProps {
+  readonly rootDomain: string;
+  readonly webmasterEmail: string;
+  readonly username: string;
+  readonly contentProducerId: string;
+  readonly pipelineType: SitePipelineType;
+  readonly extraDnsConfig: Array<SiteHostedZoneDnsConfig>;
+  readonly subdomains?: Array<HostedZoneConfig>;
+  readonly protected: boolean;
+  readonly contextParams: Record<string, string>;
 }
 
 export interface HostedZoneStackResources {
-  hostedZone: route53.PublicHostedZone;
+  readonly hostedZone: route53.PublicHostedZone;
 }
 
 export interface SiteHostingProps {}
 
 export interface SiteHostingStackResources {
-  domainCertificate: certificatemanager.ICertificate;
-  domainBucket: s3.Bucket;
-  originAccessIdentity: cloudfront.OriginAccessIdentity;
-  cloudFrontDistribution: cloudfront.Distribution;
+  readonly domainCertificate: certificatemanager.ICertificate;
+  readonly domainBucket: s3.Bucket;
+  readonly originAccessIdentity: cloudfront.OriginAccessIdentity;
+  readonly cloudFrontDistribution: cloudfront.Distribution;
 }
 
 export interface SitePipelineProps {
-  pipelineType: SitePipelineType;
+  readonly pipelineType: SitePipelineType;
 }
 
 export interface BaseSitePipelineResources {
-  invalidateCloudfrontCodeBuildProject: codebuild.PipelineProject;
+  readonly invalidateCloudfrontCodeBuildProject: codebuild.PipelineProject;
 }
 
 export interface BaseCodecommitSitePipelineResources {
-  invalidateCloudfrontCodeBuildProject: codebuild.PipelineProject;
-  codeCommitRepo: codecommit.Repository;
+  readonly invalidateCloudfrontCodeBuildProject: codebuild.PipelineProject;
+  readonly codeCommitRepo: codecommit.Repository;
 }
 
 export interface CodecommitS3SitePipelineResources {
-  type: typeof SITE_PIPELINE_TYPE_CODECOMMIT_S3;
-  invalidateCloudfrontCodeBuildProject: codebuild.PipelineProject;
-  codeCommitRepo: codecommit.Repository;
-  codePipeline: codepipeline.Pipeline;
+  readonly type: typeof SITE_PIPELINE_TYPE_CODECOMMIT_S3;
+  readonly invalidateCloudfrontCodeBuildProject: codebuild.PipelineProject;
+  readonly codeCommitRepo: codecommit.Repository;
+  readonly codePipeline: codepipeline.Pipeline;
 }
 
 export interface CodecommitNpmSitePipelineResources {
-  type: typeof SITE_PIPELINE_TYPE_CODECOMMIT_NPM;
-  invalidateCloudfrontCodeBuildProject: codebuild.PipelineProject;
-  codeCommitRepo: codecommit.Repository;
-  codePipeline: codepipeline.Pipeline;
+  readonly type: typeof SITE_PIPELINE_TYPE_CODECOMMIT_NPM;
+  readonly invalidateCloudfrontCodeBuildProject: codebuild.PipelineProject;
+  readonly codeCommitRepo: codecommit.Repository;
+  readonly codePipeline: codepipeline.Pipeline;
 }
 
 export type SitePipelineResources = CodecommitS3SitePipelineResources | CodecommitNpmSitePipelineResources;

@@ -13,6 +13,7 @@ test('Empty Stack', () => {
     pipelineType: 'codecommit-s3',
     extraDnsConfig: [],
     protected: false,
+    contextParams: {},
   });
   // THEN
   expectCDK(stack).to(
