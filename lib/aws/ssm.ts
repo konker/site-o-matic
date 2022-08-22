@@ -1,15 +1,42 @@
-import * as AWS from 'aws-sdk';
-import { SomParam } from '../consts';
+import { SSMClient, GetParametersByPathCommand, GetParameterCommand } from '@aws-sdk/client-ssm';
+import { STSClient, AssumeRoleCommand, Credentials } from '@aws-sdk/client-sts';
+import { SomConfig, SomParam } from '../consts';
+import { assumeSomRole } from './sts';
 
-export async function getSsmParams(region: string, somId?: string): Promise<Array<SomParam>> {
+export async function getSsmParam(region: string, paramName: string): Promise<string | undefined> {
+  const client = new SSMClient({ region });
+  try {
+    const cmd1 = new GetParameterCommand({
+      Name: paramName,
+      WithDecryption: true,
+    });
+
+    const result = await client.send(cmd1);
+    return result?.Parameter?.Value;
+  } catch (ex: any) {
+    console.error(ex);
+    return undefined;
+  }
+}
+
+export async function getSsmParams(config: SomConfig, region: string, somId?: string): Promise<Array<SomParam>> {
   if (!somId) return [];
+  const path = `/som/${somId}`;
+
+  const somRoleCredentials = await assumeSomRole(config, region);
+  const client = new SSMClient({
+    region,
+    credentials: somRoleCredentials,
+  });
 
   async function _fetchSsmParams(nextToken: string | undefined = undefined): Promise<Array<SomParam>> {
-    AWS.config.update({ region });
-    const ssm = new AWS.SSM();
-    const path = `/som/${somId}`;
+    const cmd1 = new GetParametersByPathCommand({
+      Path: path,
+      MaxResults: 10,
+      NextToken: nextToken,
+    });
 
-    const result = await ssm.getParametersByPath({ Path: path, MaxResults: 10, NextToken: nextToken }).promise();
+    const result = await client.send(cmd1);
     if (!result || !result.Parameters) return [];
 
     const params = result.Parameters.reduce((acc, { Name, Value }) => {

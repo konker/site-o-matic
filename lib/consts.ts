@@ -1,6 +1,7 @@
 import * as cdk from '@aws-cdk/core';
 
 export const AWS_REGION = 'us-east-1';
+export const DEFAULT_CERTIFICATE_REGION = 'us-east-1';
 export const CLS = '\u001b[2J\u001b[0;0H';
 
 export const SOM_PREFIX = 'som';
@@ -38,7 +39,7 @@ export type SomStatus =
 
 export type SomParam = Record<string, string>;
 
-export interface SomState {
+export type SomState = {
   spinner: any;
   rootDomain?: string;
   subdomains?: Array<string>;
@@ -51,4 +52,10 @@ export interface SomState {
   params?: Array<SomParam>;
   status?: SomStatus;
   verificationTxtRecord?: string;
-}
+};
+
+export type SomConfig = {
+  SOM_PREFIX: string;
+  SOM_TAG_NAME: string;
+  SOM_ROLE_ARN: string;
+};

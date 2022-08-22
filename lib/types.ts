@@ -1,3 +1,4 @@
+import * as cdk from '@aws-cdk/core';
 import * as route53 from '@aws-cdk/aws-route53';
 import * as s3 from '@aws-cdk/aws-s3';
 import * as certificatemanager from '@aws-cdk/aws-certificatemanager';
@@ -9,88 +10,107 @@ import { SITE_PIPELINE_TYPE_CODECOMMIT_NPM, SITE_PIPELINE_TYPE_CODECOMMIT_S3 } f
 
 export type SitePipelineType = typeof SITE_PIPELINE_TYPE_CODECOMMIT_S3 | typeof SITE_PIPELINE_TYPE_CODECOMMIT_NPM;
 
-export interface DnsConfigMx {
+export type DnsConfigMx = {
   readonly type: 'MX';
   readonly hostName: string;
   readonly priority: number;
-}
+};
 
-export interface DnsConfigCname {
+export type DnsConfigCname = {
   readonly type: 'CNAME';
   readonly recordName: string;
   readonly domainName: string;
-}
+};
 
-export interface DnsConfigTxt {
+export type DnsConfigTxt = {
   readonly type: 'TXT';
   readonly recordName: string;
   readonly values: Array<string>;
-}
+};
 
 export type SiteHostedZoneDnsConfig = DnsConfigMx | DnsConfigCname | DnsConfigTxt;
 
-export interface HostedZoneConfig {
+export type HostedZoneConfig = {
   readonly domainName: string;
   readonly extraDnsConfig: Array<SiteHostedZoneDnsConfig>;
-}
+};
 
-export interface SiteHostedZoneProps {
+export type SiteHostedZoneProps = {
   readonly domainName: string;
   readonly extraDnsConfig: Array<SiteHostedZoneDnsConfig>;
   readonly subdomains?: Array<HostedZoneConfig>;
-}
+};
 
-export interface SiteProps {
+export type CertificateCloneSpec = {
+  readonly account: number;
+  readonly region: string;
+};
+
+export type SiteProps = cdk.StackProps & {
   readonly rootDomain: string;
   readonly webmasterEmail: string;
   readonly username: string;
   readonly contentProducerId: string;
   readonly pipelineType: SitePipelineType;
   readonly extraDnsConfig: Array<SiteHostedZoneDnsConfig>;
-  readonly subdomains?: Array<HostedZoneConfig>;
+  readonly subdomains: Array<HostedZoneConfig>;
+  readonly certificateClones: Array<CertificateCloneSpec>;
   readonly protected: boolean;
   readonly contextParams: Record<string, string>;
-}
+};
 
-export interface HostedZoneStackResources {
+export type HostedZoneStackResources = {
   readonly hostedZone: route53.PublicHostedZone;
-}
+};
 
-export interface SiteHostingProps {}
+export type SiteCertificateProps = {
+  region: string;
+  domainName: string;
+  hostedZoneId: string;
+  subdomains: Array<HostedZoneConfig>;
+  subdomainHostedZoneIds: Record<string, string>;
+};
 
-export interface SiteHostingStackResources {
+export type SiteCertificateStackResources = {
   readonly domainCertificate: certificatemanager.ICertificate;
+};
+
+export type SiteHostingProps = {
+  readonly domainCertificate: certificatemanager.ICertificate;
+};
+
+export type SiteHostingStackResources = {
   readonly domainBucket: s3.Bucket;
   readonly originAccessIdentity: cloudfront.OriginAccessIdentity;
   readonly cloudFrontDistribution: cloudfront.Distribution;
-}
+};
 
-export interface SitePipelineProps {
+export type SitePipelineProps = {
   readonly pipelineType: SitePipelineType;
-}
+};
 
-export interface BaseSitePipelineResources {
+export type BaseSitePipelineResources = {
   readonly invalidateCloudfrontCodeBuildProject: codebuild.PipelineProject;
-}
+};
 
-export interface BaseCodecommitSitePipelineResources {
+export type BaseCodecommitSitePipelineResources = {
   readonly invalidateCloudfrontCodeBuildProject: codebuild.PipelineProject;
   readonly codeCommitRepo: codecommit.Repository;
-}
+};
 
-export interface CodecommitS3SitePipelineResources {
+export type CodecommitS3SitePipelineResources = {
   readonly type: typeof SITE_PIPELINE_TYPE_CODECOMMIT_S3;
   readonly invalidateCloudfrontCodeBuildProject: codebuild.PipelineProject;
   readonly codeCommitRepo: codecommit.Repository;
   readonly codePipeline: codepipeline.Pipeline;
-}
+};
 
-export interface CodecommitNpmSitePipelineResources {
+export type CodecommitNpmSitePipelineResources = {
   readonly type: typeof SITE_PIPELINE_TYPE_CODECOMMIT_NPM;
   readonly invalidateCloudfrontCodeBuildProject: codebuild.PipelineProject;
   readonly codeCommitRepo: codecommit.Repository;
   readonly codePipeline: codepipeline.Pipeline;
-}
+};
 
 export type SitePipelineResources = CodecommitS3SitePipelineResources | CodecommitNpmSitePipelineResources;
 

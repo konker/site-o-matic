@@ -16,7 +16,7 @@ export async function getSiteConnectionStatus(siteUrl?: string) {
       statusMessage: response.statusMessage,
       timing: response.timings.phases.total,
     };
-  } catch (ex) {
+  } catch (ex: any) {
     return {
       statusCode: 'ERROR',
       statusMessage: ex?.code || 'UNKNOWN',

@@ -1,85 +1,116 @@
-import * as AWS from 'aws-sdk';
-import { SOM_TAG_NAME } from '../consts';
+import {
+  CreateUserCommand,
+  DeleteSSHPublicKeyCommand,
+  IAMClient,
+  ListSSHPublicKeysCommand,
+  ListUsersCommand,
+  ListUserTagsCommand,
+  UploadSSHPublicKeyCommand,
+} from '@aws-sdk/client-iam';
+import { SOM_TAG_NAME, SomConfig } from '../consts';
+import { assumeSomRole } from './sts';
 
-export async function listSomUsers(region: string): Promise<Array<{ [key: string]: string }>> {
-  AWS.config.update({ region });
-  const iam = new AWS.IAM();
+export async function listSomUsers(config: SomConfig, region: string): Promise<Array<Record<string, string>>> {
+  const somRoleCredentials = await assumeSomRole(config, region);
 
-  const users = await iam.listUsers().promise();
+  const client = new IAMClient({ region, credentials: somRoleCredentials });
+
+  const cmd1 = new ListUsersCommand({});
+  const users = await client.send(cmd1);
   if (!users || !users.Users) return [];
 
   const usersWithTags = await Promise.all(
     users.Users.map(async (user) => {
-      user.Tags = (await iam.listUserTags({ UserName: user.UserName }).promise()).Tags;
+      const cmd2 = new ListUserTagsCommand({ UserName: user.UserName });
+      user.Tags = (await client.send(cmd2)).Tags;
       return user;
     })
   );
 
   return usersWithTags
-    .filter(({ Tags }) => Tags && Tags.find(({ Key }) => Key === SOM_TAG_NAME))
+    .filter(({ Tags, UserName }) => UserName && Tags && Tags.find(({ Key }) => Key === SOM_TAG_NAME))
     .map(({ UserName }) => ({
-      UserName,
+      UserName: UserName as string,
     }));
 }
 
-export async function addSomUser(region: string, username: string): Promise<Array<{ [key: string]: string }>> {
-  AWS.config.update({ region });
-  const iam = new AWS.IAM();
+export async function addSomUser(
+  config: SomConfig,
+  region: string,
+  username: string
+): Promise<Array<{ [key: string]: string }>> {
+  const somRoleCredentials = await assumeSomRole(config, region);
+  const client = new IAMClient({ region, credentials: somRoleCredentials });
 
-  await iam.createUser({ UserName: username, Tags: [{ Key: SOM_TAG_NAME, Value: SOM_TAG_NAME }] }).promise();
+  const cmd1 = new CreateUserCommand({ UserName: username, Tags: [{ Key: SOM_TAG_NAME, Value: SOM_TAG_NAME }] });
+  await client.send(cmd1);
 
-  return listSomUsers(region);
+  return listSomUsers(config, region);
 }
 
-export async function listPublicKeys(region: string, userName: string): Promise<Array<{ [key: string]: string }>> {
-  AWS.config.update({ region });
-  const iam = new AWS.IAM();
+export async function listPublicKeys(
+  config: SomConfig,
+  region: string,
+  userName: string
+): Promise<Array<Record<string, string>>> {
+  const somRoleCredentials = await assumeSomRole(config, region);
+  const client = new IAMClient({ region, credentials: somRoleCredentials });
 
-  const result = await iam.listSSHPublicKeys({ UserName: userName }).promise();
+  const cmd1 = new ListSSHPublicKeysCommand({ UserName: userName });
+  const result = await client.send(cmd1);
   if (!result || !result.SSHPublicKeys) return [];
 
-  return result.SSHPublicKeys.map(({ SSHPublicKeyId, Status }) => ({
-    SSHPublicKeyId,
-    Status,
-  }));
+  return result.SSHPublicKeys.filter(({ SSHPublicKeyId, Status }) => !!SSHPublicKeyId && !!Status).map(
+    ({ SSHPublicKeyId, Status }) => ({
+      SSHPublicKeyId: SSHPublicKeyId as string,
+      Status: Status as string,
+    })
+  );
 }
 
 export async function addPublicKey(
+  config: SomConfig,
   region: string,
   userName: string,
   publicKey: string
 ): Promise<Array<{ [key: string]: string }>> {
-  AWS.config.update({ region });
-  const iam = new AWS.IAM();
+  const somRoleCredentials = await assumeSomRole(config, region);
+  const client = new IAMClient({ region, credentials: somRoleCredentials });
 
-  await iam.uploadSSHPublicKey({ UserName: userName, SSHPublicKeyBody: publicKey }).promise();
+  const cmd1 = new UploadSSHPublicKeyCommand({ UserName: userName, SSHPublicKeyBody: publicKey });
+  await client.send(cmd1);
 
-  return listPublicKeys(region, userName);
+  return listPublicKeys(config, region, userName);
 }
 
 export async function deletePublicKey(
+  config: SomConfig,
   region: string,
   userName: string,
   publicKeyId: string
 ): Promise<Array<{ [key: string]: string }>> {
-  AWS.config.update({ region });
-  const iam = new AWS.IAM();
+  const somRoleCredentials = await assumeSomRole(config, region);
+  const client = new IAMClient({ region, credentials: somRoleCredentials });
 
-  await iam.deleteSSHPublicKey({ UserName: userName, SSHPublicKeyId: publicKeyId }).promise();
+  const cmd1 = new DeleteSSHPublicKeyCommand({ UserName: userName, SSHPublicKeyId: publicKeyId });
+  await client.send(cmd1);
 
-  return listPublicKeys(region, userName);
+  return listPublicKeys(config, region, userName);
 }
 
-export async function deleteAllPublicKeys(region: string, userName: string): Promise<void> {
-  AWS.config.update({ region });
-  const iam = new AWS.IAM();
-
+export async function deleteAllPublicKeys(config: SomConfig, region: string, userName: string): Promise<void> {
   if (!userName) return;
 
+  const somRoleCredentials = await assumeSomRole(config, region);
+  const client = new IAMClient({ region, credentials: somRoleCredentials });
+
   try {
-    const publicKeys = await listPublicKeys(region, userName);
+    const publicKeys = await listPublicKeys(config, region, userName);
     await Promise.all(
-      publicKeys.map((i) => iam.deleteSSHPublicKey({ UserName: userName, SSHPublicKeyId: i.SSHPublicKeyId }).promise())
+      publicKeys.map((i) => {
+        const cmd1 = new DeleteSSHPublicKeyCommand({ UserName: userName, SSHPublicKeyId: i.SSHPublicKeyId });
+        return client.send(cmd1);
+      })
     );
   } catch (ex) {
     console.log('FAILED: ', ex);

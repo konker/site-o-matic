@@ -1,11 +1,24 @@
-import * as AWS from 'aws-sdk';
-import { SOM_TAG_NAME } from '../consts';
+import {
+  CreateSecretCommand,
+  DeleteSecretCommand,
+  GetSecretValueCommand,
+  ListSecretsCommand,
+  SecretsManagerClient,
+} from '@aws-sdk/client-secrets-manager';
+import { SOM_TAG_NAME, SomConfig } from '../consts';
+import { assumeSomRole } from './sts';
 
-export async function getSomSecrets(region: string, secretNames: Array<string>): Promise<{ [key: string]: string }> {
-  AWS.config.update({ region });
-  const secretsmanager = new AWS.SecretsManager();
+export async function getSomSecrets(
+  config: SomConfig,
+  region: string,
+  secretNames: Array<string>
+): Promise<Record<string, string>> {
+  const somRoleCredentials = await assumeSomRole(config, region);
 
-  const secrets = await secretsmanager.listSecrets().promise();
+  const client = new SecretsManagerClient({ region, credentials: somRoleCredentials });
+
+  const cmd1 = new ListSecretsCommand({});
+  const secrets = await client.send(cmd1);
   if (!secrets || !secrets.SecretList) return {};
 
   const somSecretNames = secrets.SecretList.filter(({ Tags }) => Tags && Tags.find(({ Key }) => Key === SOM_TAG_NAME))
@@ -14,7 +27,8 @@ export async function getSomSecrets(region: string, secretNames: Array<string>):
 
   const somSecrets = await Promise.all(
     somSecretNames.map(async (Name) => {
-      const secretValue = await secretsmanager.getSecretValue({ SecretId: Name as string }).promise();
+      const cmd2 = new GetSecretValueCommand({ SecretId: Name as string });
+      const secretValue = await client.send(cmd2);
       return { Name: Name as string, Value: secretValue.SecretString as string };
     })
   );
@@ -22,14 +36,15 @@ export async function getSomSecrets(region: string, secretNames: Array<string>):
   return somSecrets.reduce((acc, val) => {
     acc[val.Name] = val.Value;
     return acc;
-  }, {} as { [key: string]: string });
+  }, {} as Record<string, string>);
 }
 
-export async function listSomSecrets(region: string): Promise<Array<{ [key: string]: string }>> {
-  AWS.config.update({ region });
-  const secretsmanager = new AWS.SecretsManager();
+export async function listSomSecrets(config: SomConfig, region: string): Promise<Array<Record<string, string>>> {
+  const somRoleCredentials = await assumeSomRole(config, region);
+  const client = new SecretsManagerClient({ region, credentials: somRoleCredentials });
 
-  const secrets = await secretsmanager.listSecrets().promise();
+  const cmd1 = new ListSecretsCommand({});
+  const secrets = await client.send(cmd1);
   if (!secrets || !secrets.SecretList) return [];
 
   return secrets.SecretList.filter(({ Tags }) => Tags && Tags.find(({ Key }) => Key === SOM_TAG_NAME)).map(
@@ -38,25 +53,34 @@ export async function listSomSecrets(region: string): Promise<Array<{ [key: stri
 }
 
 export async function addSomSecret(
+  config: SomConfig,
   region: string,
   name: string,
   value: string
-): Promise<Array<{ [key: string]: string }>> {
-  AWS.config.update({ region });
-  const secretsmanager = new AWS.SecretsManager();
+): Promise<Array<Record<string, string>>> {
+  const somRoleCredentials = await assumeSomRole(config, region);
+  const client = new SecretsManagerClient({ region, credentials: somRoleCredentials });
 
-  await secretsmanager
-    .createSecret({ Name: name, SecretString: value, Tags: [{ Key: SOM_TAG_NAME, Value: SOM_TAG_NAME }] })
-    .promise();
+  const cmd1 = new CreateSecretCommand({
+    Name: name,
+    SecretString: value,
+    Tags: [{ Key: SOM_TAG_NAME, Value: SOM_TAG_NAME }],
+  });
+  await client.send(cmd1);
 
-  return listSomSecrets(region);
+  return listSomSecrets(config, region);
 }
 
-export async function deleteSomSecret(region: string, name: string): Promise<Array<{ [key: string]: string }>> {
-  AWS.config.update({ region });
-  const secretsmanager = new AWS.SecretsManager();
+export async function deleteSomSecret(
+  config: SomConfig,
+  region: string,
+  name: string
+): Promise<Array<Record<string, string>>> {
+  const somRoleCredentials = await assumeSomRole(config, region);
+  const client = new SecretsManagerClient({ region, credentials: somRoleCredentials });
 
-  await secretsmanager.deleteSecret({ SecretId: name, ForceDeleteWithoutRecovery: true }).promise();
+  const cmd1 = new DeleteSecretCommand({ SecretId: name, ForceDeleteWithoutRecovery: true });
+  await client.send(cmd1);
 
-  return listSomSecrets(region);
+  return listSomSecrets(config, region);
 }
