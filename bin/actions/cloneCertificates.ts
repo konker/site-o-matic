@@ -1,9 +1,9 @@
 import Vorpal from 'vorpal';
-import { SomState } from '../../lib/consts';
+import { SomConfig, SomState } from '../../lib/consts';
 import chalk from 'chalk';
 import * as cdkExec from '../../lib/aws/cdkExec';
 
-export function actionCloneCertificates(vorpal: Vorpal, state: SomState) {
+export function actionCloneCertificates(vorpal: Vorpal, config: SomConfig, state: SomState) {
   return async (args: Vorpal.Args): Promise<void> => {
     if (!state.manifest || !state.pathToManifestFile) {
       vorpal.log(`ERROR: no manifest loaded`);

@@ -1,0 +1,5 @@
+{
+  "SOM_PREFIX": "som",
+  "SOM_TAG_NAME": "Site-o-Matic",
+  "SOM_ROLE_ARN": "arn:aws:iam::919976498930:role/OrganizationAccountAccessRole"
+}

@@ -1,26 +1,31 @@
 import * as dns from 'dns';
-import * as AWS from 'aws-sdk';
 import * as cdk from '@aws-cdk/core';
 import * as iam from '@aws-cdk/aws-iam';
 import * as ssm from '@aws-cdk/aws-ssm';
 import {
   HostedZoneStackResources,
+  SiteCertificateStackResources,
   SiteHostingStackResources,
   SitePipelineResources,
   SiteProps,
   toSsmParamName,
 } from '../../../../../lib/types';
 import {
+  DEFAULT_CERTIFICATE_REGION,
   DEFAULT_STACK_PROPS,
   SITE_PIPELINE_TYPE_CODECOMMIT_NPM,
   SITE_PIPELINE_TYPE_CODECOMMIT_S3,
+  SomConfig,
 } from '../../../../../lib/consts';
 import * as SiteHostedZoneBuilder from '../hostedzone/SiteHostedZoneBuilder';
+import * as SiteCertificateBuilder from '../hosting/SiteCertificateBuilder';
 import * as SiteHostingBuilder from '../hosting/SiteHostingBuilder';
 import * as CodecommitS3SitePipelineBuilder from '../pipeline/codecommit/CodecommitS3SitePipelineBuilder';
 import * as CodecommitNpmSitePipelineBuilder from '../pipeline/codecommit/CodecommitNpmSitePipelineBuilder';
+import { getSsmParam } from '../../../../../lib/aws/ssm';
 
 export class SiteStack extends cdk.Stack {
+  public readonly config: SomConfig;
   public readonly siteProps: SiteProps;
   public readonly somId: string;
 
@@ -28,12 +33,14 @@ export class SiteStack extends cdk.Stack {
   public domainGroup: iam.Group;
   public hostedZoneResources: HostedZoneStackResources;
   public subdomainHostedZoneResources: Record<string, HostedZoneStackResources>;
+  public certificateResources: SiteCertificateStackResources;
   public hostingResources: SiteHostingStackResources;
   public sitePipelineResources: SitePipelineResources;
 
-  constructor(scope: cdk.Construct, somId: string, props: SiteProps) {
-    super(scope, somId, DEFAULT_STACK_PROPS(somId));
+  constructor(scope: cdk.Construct, config: SomConfig, somId: string, props: SiteProps) {
+    super(scope, somId, Object.assign({}, DEFAULT_STACK_PROPS(somId), props));
 
+    this.config = Object.assign({}, config);
     this.subdomainHostedZoneResources = {};
     this.siteProps = {
       rootDomain: props.rootDomain,
@@ -41,10 +48,11 @@ export class SiteStack extends cdk.Stack {
       username: props.username,
       contentProducerId: props.contentProducerId,
       pipelineType: props.pipelineType,
-      extraDnsConfig: props.extraDnsConfig,
-      subdomains: props.subdomains,
+      extraDnsConfig: props.extraDnsConfig ?? [],
+      subdomains: props.subdomains ?? [],
+      certificateClones: props.certificateClones ?? [],
       protected: props.protected,
-      contextParams: props.contextParams,
+      contextParams: props.contextParams ?? {},
     };
     this.somId = somId;
   }
@@ -99,17 +107,8 @@ export class SiteStack extends cdk.Stack {
         return undefined;
       }
     })();
-    const hostedZoneId = await (async () => {
-      try {
-        AWS.config.update({ region: this.region });
-        const ssmSdk = new AWS.SSM();
 
-        const result = await ssmSdk.getParameter({ Name: toSsmParamName(this.somId, 'hosted-zone-id') }).promise();
-        return result?.Parameter?.Value;
-      } catch (ex) {
-        return undefined;
-      }
-    })();
+    const hostedZoneId = await getSsmParam(this.region, toSsmParamName(this.somId, 'hosted-zone-id'));
 
     if (!verificationTxt || verificationTxt !== hostedZoneId) {
       console.error(
@@ -121,8 +120,23 @@ export class SiteStack extends cdk.Stack {
     }
 
     // ----------------------------------------------------------------------
+    // SSL Certificates
+    this.certificateResources = await SiteCertificateBuilder.build(this, {
+      region: DEFAULT_CERTIFICATE_REGION,
+      domainName: this.siteProps.rootDomain,
+      hostedZoneId: this.hostedZoneResources.hostedZone.hostedZoneId,
+      subdomains: this.siteProps.subdomains ?? [],
+      subdomainHostedZoneIds: Object.keys(this.subdomainHostedZoneResources).reduce((acc, val: string) => {
+        acc[val] = this.subdomainHostedZoneResources[val].hostedZone.hostedZoneId;
+        return acc;
+      }, {} as Record<string, string>),
+    });
+
+    // ----------------------------------------------------------------------
     // Hosting
-    this.hostingResources = await SiteHostingBuilder.build(this, {});
+    this.hostingResources = await SiteHostingBuilder.build(this, {
+      domainCertificate: this.certificateResources.domainCertificate,
+    });
 
     // ----------------------------------------------------------------------
     // Pipeline for the site

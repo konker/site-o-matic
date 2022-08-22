@@ -1,5 +1,5 @@
 import Vorpal from 'vorpal';
-import { AWS_REGION, SomState } from '../../lib/consts';
+import { AWS_REGION, SomConfig, SomState } from '../../lib/consts';
 import * as ssm from '../../lib/aws/ssm';
 import * as status from '../../lib/status';
 import { formatStatus, getSomTxtRecord } from '../../lib/status';
@@ -9,7 +9,7 @@ import * as secretsmanager from '../../lib/aws/secretsmanager';
 import { tabulate } from '../../lib/ui/tables';
 import chalk from 'chalk';
 
-export function actionInfo(vorpal: Vorpal, state: SomState) {
+export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
   return async (args: Vorpal.Args): Promise<void> => {
     const STATE_INFO_KEYS: Array<keyof SomState> = ['pathToManifestFile', 'somId'];
 
@@ -19,13 +19,13 @@ export function actionInfo(vorpal: Vorpal, state: SomState) {
     }
 
     state.spinner.start();
-    state.params = await ssm.getSsmParams(AWS_REGION, state.somId);
+    state.params = await ssm.getSsmParams(config, AWS_REGION, state.somId);
     state.status = await status.getStatus(state);
     state.verificationTxtRecord = await getSomTxtRecord(state.rootDomain);
     const connectionStatus = await getSiteConnectionStatus(state.siteUrl);
     if (state.registrar) {
       const registrarConnector = getRegistrarConnector(state.registrar);
-      const somSecrets = await secretsmanager.getSomSecrets(AWS_REGION, registrarConnector.SECRETS);
+      const somSecrets = await secretsmanager.getSomSecrets(config, AWS_REGION, registrarConnector.SECRETS);
       if (!registrarConnector.SECRETS.every((secretName) => somSecrets[secretName])) {
         vorpal.log(`WARNING: secrets required by registrar connector missing: ${registrarConnector.SECRETS}`);
       } else {

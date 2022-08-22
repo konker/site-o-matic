@@ -1,12 +1,12 @@
 import Vorpal from 'vorpal';
-import { SomState } from '../../lib/consts';
+import { SomConfig, SomState } from '../../lib/consts';
 import path from 'path';
 import fs from 'fs';
 import * as YAML from 'yaml';
 import { formulateSomId } from '../../lib/index';
 import { actionInfo } from './info';
 
-export function actionLoadManifest(vorpal: Vorpal, state: SomState) {
+export function actionLoadManifest(vorpal: Vorpal, config: SomConfig, state: SomState) {
   return async (args: Vorpal.Args): Promise<void> => {
     state.pathToManifestFile = path.resolve(args.pathToManifestFile);
 
@@ -20,6 +20,6 @@ export function actionLoadManifest(vorpal: Vorpal, state: SomState) {
 
     vorpal.log(`Loaded manifest for: ${state.manifest.rootDomain}`);
 
-    await actionInfo(vorpal, state)({ options: {} });
+    await actionInfo(vorpal, config, state)({ options: {} });
   };
 }

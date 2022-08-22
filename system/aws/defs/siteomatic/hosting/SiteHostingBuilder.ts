@@ -1,4 +1,5 @@
 import * as cdk from '@aws-cdk/core';
+import { Tags } from '@aws-cdk/core';
 import * as certificatemanager from '@aws-cdk/aws-certificatemanager';
 import * as cloudfront from '@aws-cdk/aws-cloudfront';
 import * as origins from '@aws-cdk/aws-cloudfront-origins';
@@ -9,7 +10,6 @@ import * as targets from '@aws-cdk/aws-route53-targets';
 import * as ssm from '@aws-cdk/aws-ssm';
 import { SiteHostingProps, SiteHostingStackResources, toSsmParamName } from '../../../../../lib/types';
 import { SiteStack } from '../site/SiteStack';
-import { Tags } from '@aws-cdk/core';
 import { SOM_TAG_NAME } from '../../../../../lib/consts';
 
 export async function build(siteStack: SiteStack, props: SiteHostingProps): Promise<SiteHostingStackResources> {
@@ -48,34 +48,6 @@ export async function build(siteStack: SiteStack, props: SiteHostingProps): Prom
   domainBucket.grantRead(originAccessIdentity);
 
   // ----------------------------------------------------------------------
-  // SSL certificate for apex and wildcard subdomains
-  const domainCertificate = new certificatemanager.DnsValidatedCertificate(siteStack, 'DomainCertificate', {
-    domainName: siteStack.siteProps.rootDomain,
-    subjectAlternativeNames: [`*.${siteStack.siteProps.rootDomain}`],
-    hostedZone: siteStack.hostedZoneResources.hostedZone,
-    region: 'us-east-1',
-  });
-  Tags.of(domainCertificate).add(SOM_TAG_NAME, siteStack.somId);
-
-  // ----------------------------------------------------------------------
-  // SSL certificates for subdomains
-  if (siteStack.siteProps.subdomains && siteStack.siteProps.contextParams.deploySubdomainCerts) {
-    siteStack.siteProps.subdomains.forEach((subdomain) => {
-      const subdomainCertificate = new certificatemanager.DnsValidatedCertificate(
-        siteStack,
-        `DomainCertificate-${subdomain.domainName}`,
-        {
-          domainName: subdomain.domainName,
-          subjectAlternativeNames: [`*.${subdomain.domainName}`],
-          hostedZone: siteStack.subdomainHostedZoneResources[subdomain.domainName].hostedZone,
-          region: 'us-east-1',
-        }
-      );
-      Tags.of(subdomainCertificate).add(SOM_TAG_NAME, siteStack.somId);
-    });
-  }
-
-  // ----------------------------------------------------------------------
   // Cloudfront distribution
   const cloudFrontDistribution = new cloudfront.Distribution(siteStack, 'CloudFrontDistribution', {
     defaultBehavior: {
@@ -95,7 +67,7 @@ export async function build(siteStack: SiteStack, props: SiteHostingProps): Prom
       }),
     },
     domainNames: [siteStack.siteProps.rootDomain],
-    certificate: domainCertificate,
+    certificate: props.domainCertificate,
     priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
     defaultRootObject: 'index.html',
     errorResponses: [
@@ -140,7 +112,6 @@ export async function build(siteStack: SiteStack, props: SiteHostingProps): Prom
   });
 
   return {
-    domainCertificate,
     domainBucket,
     originAccessIdentity,
     cloudFrontDistribution,
