@@ -7,7 +7,7 @@ import * as cdkExec from '../../lib/aws/cdkExec';
 
 export function actionDestroy(vorpal: Vorpal, config: SomConfig, state: SomState) {
   return async (args: Vorpal.Args): Promise<void> => {
-    if (!state.manifest) {
+    if (!state.manifest || !state.pathToManifestFile) {
       vorpal.log(`ERROR: no manifest loaded`);
       return;
     }
@@ -21,7 +21,11 @@ export function actionDestroy(vorpal: Vorpal, config: SomConfig, state: SomState
     });
     if (response.confirm === 'y') {
       await removeVerificationCnameRecord(config, getParam(state, 'hosted-zone-id') as string);
-      await cdkExec.cdkDestroy(vorpal, state.pathToManifestFile, state.somId, username);
+      await cdkExec.cdkDestroy(vorpal, state.pathToManifestFile, state.somId, {
+        pathToManifestFile: state.pathToManifestFile,
+        iamUsername: args.username,
+        deploySubdomainCerts: 'true',
+      });
     } else {
       vorpal.log('Aborted');
     }

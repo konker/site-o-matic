@@ -1,5 +1,4 @@
-import { SSMClient, GetParametersByPathCommand, GetParameterCommand } from '@aws-sdk/client-ssm';
-import { STSClient, AssumeRoleCommand, Credentials } from '@aws-sdk/client-sts';
+import { GetParameterCommand, GetParametersByPathCommand, SSMClient } from '@aws-sdk/client-ssm';
 import { SomConfig, SomParam } from '../consts';
 import { assumeSomRole } from './sts';
 

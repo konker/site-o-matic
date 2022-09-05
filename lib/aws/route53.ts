@@ -15,7 +15,6 @@ export async function findHostedZoneId(config: SomConfig, domainName: string): P
       DNSName: domainName,
     });
     const result1 = await client.send(cmd1);
-    console.log('KONK90', result1);
     if (result1.HostedZones) {
       return result1.HostedZones[0]?.Id;
     }
