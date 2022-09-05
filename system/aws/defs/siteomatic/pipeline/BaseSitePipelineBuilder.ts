@@ -1,5 +1,5 @@
-import * as codebuild from '@aws-cdk/aws-codebuild';
-import * as iam from '@aws-cdk/aws-iam';
+import * as codebuild from 'aws-cdk-lib/aws-codebuild';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { SitePipelineProps, BaseSitePipelineResources } from '../../../../../lib/types';
 import { SiteStack } from '../site/SiteStack';
 

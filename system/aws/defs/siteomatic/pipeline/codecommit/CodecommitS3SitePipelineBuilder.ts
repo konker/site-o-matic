@@ -1,11 +1,11 @@
-import * as codepipeline from '@aws-cdk/aws-codepipeline';
-import * as actions from '@aws-cdk/aws-codepipeline-actions';
-import * as ssm from '@aws-cdk/aws-ssm';
+import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
+import * as actions from 'aws-cdk-lib/aws-codepipeline-actions';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { SITE_PIPELINE_TYPE_CODECOMMIT_S3, SOM_TAG_NAME } from '../../../../../../lib/consts';
 import { CodecommitS3SitePipelineResources, SitePipelineProps, toSsmParamName } from '../../../../../../lib/types';
 import { SiteStack } from '../../site/SiteStack';
 import * as CodecommitSitePipelineStack from './BaseCodecommitSitePipelineBuilder';
-import { Tags } from '@aws-cdk/core';
+import { Tags } from 'aws-cdk-lib';
 
 export async function build(
   siteStack: SiteStack,
@@ -17,6 +17,7 @@ export async function build(
   // Code Pipeline
   const codePipeline = new codepipeline.Pipeline(siteStack, 'CodePipeline', {
     pipelineName: siteStack.somId,
+    crossAccountKeys: false,
   });
   Tags.of(codePipeline).add(SOM_TAG_NAME, siteStack.somId);
 

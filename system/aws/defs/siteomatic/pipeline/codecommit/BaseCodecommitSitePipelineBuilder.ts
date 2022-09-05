@@ -1,9 +1,9 @@
-import * as codecommit from '@aws-cdk/aws-codecommit';
-import * as ssm from '@aws-cdk/aws-ssm';
+import * as codecommit from 'aws-cdk-lib/aws-codecommit';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { BaseCodecommitSitePipelineResources, SitePipelineProps, toSsmParamName } from '../../../../../../lib/types';
 import { SiteStack } from '../../site/SiteStack';
 import * as SitePipelineStack from '../BaseSitePipelineBuilder';
-import { Tags } from '@aws-cdk/core';
+import { Tags } from 'aws-cdk-lib';
 import { SOM_TAG_NAME } from '../../../../../../lib/consts';
 
 export async function build(

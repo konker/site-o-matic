@@ -1,11 +1,11 @@
-import * as cdk from '@aws-cdk/core';
-import * as route53 from '@aws-cdk/aws-route53';
-import * as s3 from '@aws-cdk/aws-s3';
-import * as certificatemanager from '@aws-cdk/aws-certificatemanager';
-import * as cloudfront from '@aws-cdk/aws-cloudfront';
-import * as codebuild from '@aws-cdk/aws-codebuild';
-import * as codecommit from '@aws-cdk/aws-codecommit';
-import * as codepipeline from '@aws-cdk/aws-codepipeline';
+import * as cdk from 'aws-cdk-lib';
+import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as certificatemanager from 'aws-cdk-lib/aws-certificatemanager';
+import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
+import * as codebuild from 'aws-cdk-lib/aws-codebuild';
+import * as codecommit from 'aws-cdk-lib/aws-codecommit';
+import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
 import { SITE_PIPELINE_TYPE_CODECOMMIT_NPM, SITE_PIPELINE_TYPE_CODECOMMIT_S3 } from './consts';
 
 export type SitePipelineType = typeof SITE_PIPELINE_TYPE_CODECOMMIT_S3 | typeof SITE_PIPELINE_TYPE_CODECOMMIT_NPM;
@@ -46,6 +46,11 @@ export type CertificateCloneSpec = {
   readonly region: string;
 };
 
+export type CrossAccountAccessGrantRoleSpec = {
+  readonly name: string;
+  readonly arn: string;
+};
+
 export type SiteProps = cdk.StackProps & {
   readonly rootDomain: string;
   readonly webmasterEmail: string;
@@ -55,8 +60,10 @@ export type SiteProps = cdk.StackProps & {
   readonly extraDnsConfig: Array<SiteHostedZoneDnsConfig>;
   readonly subdomains: Array<HostedZoneConfig>;
   readonly certificateClones: Array<CertificateCloneSpec>;
+  readonly crossAccountAccess: Array<CrossAccountAccessGrantRoleSpec>;
   readonly protected: boolean;
   readonly contextParams: Record<string, string>;
+  readonly env?: Record<string, string>;
 };
 
 export type HostedZoneStackResources = {
@@ -68,7 +75,6 @@ export type SiteCertificateProps = {
   domainName: string;
   hostedZoneId: string;
   subdomains: Array<HostedZoneConfig>;
-  subdomainHostedZoneIds: Record<string, string>;
 };
 
 export type SiteCertificateStackResources = {

@@ -1,7 +1,7 @@
 import * as dns from 'dns';
-import * as cdk from '@aws-cdk/core';
-import * as iam from '@aws-cdk/aws-iam';
-import * as ssm from '@aws-cdk/aws-ssm';
+import * as cdk from 'aws-cdk-lib';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import {
   HostedZoneStackResources,
   SiteCertificateStackResources,
@@ -23,6 +23,8 @@ import * as SiteHostingBuilder from '../hosting/SiteHostingBuilder';
 import * as CodecommitS3SitePipelineBuilder from '../pipeline/codecommit/CodecommitS3SitePipelineBuilder';
 import * as CodecommitNpmSitePipelineBuilder from '../pipeline/codecommit/CodecommitNpmSitePipelineBuilder';
 import { getSsmParam } from '../../../../../lib/aws/ssm';
+import { Construct } from 'constructs';
+import { _id } from '../../../../../lib/utils';
 
 export class SiteStack extends cdk.Stack {
   public readonly config: SomConfig;
@@ -31,17 +33,18 @@ export class SiteStack extends cdk.Stack {
 
   public domainUser: iam.IUser;
   public domainGroup: iam.Group;
+  public domainRole: iam.Role;
+  public domainPolicy: iam.Policy;
   public hostedZoneResources: HostedZoneStackResources;
-  public subdomainHostedZoneResources: Record<string, HostedZoneStackResources>;
   public certificateResources: SiteCertificateStackResources;
   public hostingResources: SiteHostingStackResources;
   public sitePipelineResources: SitePipelineResources;
+  public crossAccountGrantRoles: Array<iam.IRole>;
 
-  constructor(scope: cdk.Construct, config: SomConfig, somId: string, props: SiteProps) {
-    super(scope, somId, Object.assign({}, DEFAULT_STACK_PROPS(somId), props));
+  constructor(scope: Construct, config: SomConfig, somId: string, props: SiteProps) {
+    super(scope, somId, Object.assign({}, DEFAULT_STACK_PROPS(somId, props), props));
 
     this.config = Object.assign({}, config);
-    this.subdomainHostedZoneResources = {};
     this.siteProps = {
       rootDomain: props.rootDomain,
       webmasterEmail: props.webmasterEmail,
@@ -51,8 +54,10 @@ export class SiteStack extends cdk.Stack {
       extraDnsConfig: props.extraDnsConfig ?? [],
       subdomains: props.subdomains ?? [],
       certificateClones: props.certificateClones ?? [],
+      crossAccountAccess: props.crossAccountAccess ?? [],
       protected: props.protected,
       contextParams: props.contextParams ?? {},
+      env: props.env ?? {},
     };
     this.somId = somId;
   }
@@ -77,6 +82,19 @@ export class SiteStack extends cdk.Stack {
     this.domainUser = iam.User.fromUserName(this, 'DomainUser', this.siteProps.username);
     this.domainGroup = new iam.Group(this, 'DomainGroup', { groupName: `${this.somId}-group` });
     this.domainGroup.addUser(this.domainUser);
+
+    // ----------------------------------------------------------------------
+    // Policy for access to resources
+    this.domainPolicy = new iam.Policy(this, 'DomainPolicy', {
+      statements: [],
+    });
+
+    // Initialize cross account access grant roles, if any
+    this.crossAccountGrantRoles = this.siteProps.crossAccountAccess.map((spec) =>
+      iam.Role.fromRoleArn(this, _id('CrossAccountGrantRole', spec.name, false), spec.arn, {
+        mutable: true,
+      })
+    );
 
     new ssm.StringParameter(this, 'SsmDomainUserName', {
       parameterName: toSsmParamName(this.somId, 'domain-user-name'),
@@ -126,10 +144,6 @@ export class SiteStack extends cdk.Stack {
       domainName: this.siteProps.rootDomain,
       hostedZoneId: this.hostedZoneResources.hostedZone.hostedZoneId,
       subdomains: this.siteProps.subdomains ?? [],
-      subdomainHostedZoneIds: Object.keys(this.subdomainHostedZoneResources).reduce((acc, val: string) => {
-        acc[val] = this.subdomainHostedZoneResources[val].hostedZone.hostedZoneId;
-        return acc;
-      }, {} as Record<string, string>),
     });
 
     // ----------------------------------------------------------------------
@@ -156,5 +170,15 @@ export class SiteStack extends cdk.Stack {
       default:
         throw new Error(`Could not create pipeline of type: ${this.siteProps.pipelineType}`);
     }
+
+    // ----------------------------------------------------------------------
+    // Allow cross account roles to assume domain role
+    this.domainRole = new iam.Role(this, 'DomainRole', {
+      assumedBy: new iam.CompositePrincipal(...this.crossAccountGrantRoles),
+    });
+
+    // ----------------------------------------------------------------------
+    // Attach the hosted zone policy to the domain role
+    this.domainRole.attachInlinePolicy(this.domainPolicy);
   }
 }

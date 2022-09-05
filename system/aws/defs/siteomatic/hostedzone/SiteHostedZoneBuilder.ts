@@ -1,6 +1,8 @@
-import * as cdk from '@aws-cdk/core';
-import * as route53 from '@aws-cdk/aws-route53';
-import * as ssm from '@aws-cdk/aws-ssm';
+import * as cdk from 'aws-cdk-lib';
+import { Tags } from 'aws-cdk-lib';
+import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import {
   DnsConfigMx,
   HostedZoneConfig,
@@ -9,9 +11,22 @@ import {
   toSsmParamName,
 } from '../../../../../lib/types';
 import { SiteStack } from '../site/SiteStack';
-import { Tags } from '@aws-cdk/core';
 import { SOM_TAG_NAME } from '../../../../../lib/consts';
 import { _id } from '../../../../../lib/utils';
+
+export function buildCrossAccountAccess(
+  siteStack: SiteStack,
+  hostedZonesPolicy: iam.Policy,
+  hostedZone: route53.PublicHostedZone
+) {
+  hostedZonesPolicy.addStatements(
+    new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      resources: [hostedZone.hostedZoneArn],
+      actions: ['route53:ListResourceRecordSets', 'route53:ChangeResourceRecordSets'],
+    })
+  );
+}
 
 export function buildExtraDnsConfig(
   siteStack: SiteStack,
@@ -58,6 +73,15 @@ export function buildExtraDnsConfig(
 }
 
 export function build(siteStack: SiteStack, props: SiteHostedZoneProps): HostedZoneStackResources {
+  // Add basic list permissions to the domain policy
+  siteStack.domainPolicy.addStatements(
+    new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      resources: ['*'], //[FIXME: tighten with conditions clause which specifies ARN?]
+      actions: ['route53:ListHostedZones', 'route53:GetHostedZoneCount', 'route53:ListHostedZonesByName'],
+    })
+  );
+
   // ----------------------------------------------------------------------
   // DNS HostedZone
   const hostedZone = new route53.PublicHostedZone(siteStack, _id('HostedZone', props.domainName, true), {
@@ -72,33 +96,14 @@ export function build(siteStack: SiteStack, props: SiteHostedZoneProps): HostedZ
   });
 
   buildExtraDnsConfig(siteStack, props, hostedZone, true);
+  buildCrossAccountAccess(siteStack, siteStack.domainPolicy, hostedZone);
 
   // ----------------------------------------------------------------------
   // Provision subdomains
   props.subdomains?.forEach((subdomain: HostedZoneConfig) => {
-    // Create the hosted zone for the subdomain
-    const subdomainHostedZone = new route53.PublicHostedZone(
-      siteStack,
-      _id('HostedZone', subdomain.domainName, false),
-      {
-        zoneName: subdomain.domainName,
-      }
-    );
-    Tags.of(subdomainHostedZone).add(SOM_TAG_NAME, siteStack.somId);
-
-    // Add an NS record to the root domain for this subdomain
-    new route53.NsRecord(siteStack, _id('NsRecordSet_TXT_Som', subdomain.domainName, false), {
-      zone: hostedZone,
-      recordName: subdomain.domainName,
-      values: subdomainHostedZone.hostedZoneNameServers ?? [],
-    });
-
     // Build any extra DNS entries for the subdomain
-    buildExtraDnsConfig(siteStack, subdomain, subdomainHostedZone, false);
-
-    siteStack.subdomainHostedZoneResources[subdomain.domainName] = {
-      hostedZone: subdomainHostedZone,
-    };
+    buildExtraDnsConfig(siteStack, subdomain, hostedZone, false);
+    buildCrossAccountAccess(siteStack, siteStack.domainPolicy, hostedZone);
   });
 
   // ----------------------------------------------------------------------

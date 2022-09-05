@@ -1,4 +1,5 @@
-import * as cdk from '@aws-cdk/core';
+import * as cdk from 'aws-cdk-lib';
+import { SiteProps } from './types';
 
 export const AWS_REGION = 'us-east-1';
 export const DEFAULT_CERTIFICATE_REGION = 'us-east-1';
@@ -11,8 +12,11 @@ export const MAX_SOM_ID_LEN = 48;
 export const SITE_PIPELINE_TYPE_CODECOMMIT_S3 = 'codecommit-s3';
 export const SITE_PIPELINE_TYPE_CODECOMMIT_NPM = 'codecommit-npm';
 
-export const DEFAULT_STACK_PROPS = (somId: string): cdk.StackProps => ({
-  env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+export const DEFAULT_STACK_PROPS = (somId: string, siteProps?: SiteProps): cdk.StackProps => ({
+  env: {
+    account: siteProps?.env?.account ?? process.env.CDK_DEFAULT_ACCOUNT,
+    region: siteProps?.env?.region ?? process.env.CDK_DEFAULT_REGION,
+  },
   tags: { [SOM_TAG_NAME]: somId },
 });
 

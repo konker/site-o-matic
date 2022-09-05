@@ -3,7 +3,7 @@
 import * as fs from 'fs';
 import * as YAML from 'yaml';
 import 'source-map-support/register';
-import * as cdk from '@aws-cdk/core';
+import * as cdk from 'aws-cdk-lib';
 import { SiteStack } from '../defs/siteomatic/site/SiteStack';
 import { formulateSomId } from '../../../lib';
 import { CertificateCloneStack } from '../defs/siteomatic/site/CertificateCloneStack';

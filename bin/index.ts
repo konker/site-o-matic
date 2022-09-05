@@ -18,11 +18,12 @@ import { actionAddSecret } from './actions/addSecret';
 import { actionAddPublicKey } from './actions/addPublicKey';
 import { actionListUsers } from './actions/listUsers';
 import { actionAddUser } from './actions/addUser';
-import { actionCloneCertificates } from './actions/cloneCertificates';
+import { actionCloneCertificatesManual } from './actions/cloneCertificates';
 import 'json5/lib/register';
 
 // @ts-ignore
 import config from '../site-o-matic.config.json5';
+import { actionSynthesize } from './actions/synthesize';
 
 // ----------------------------------------------------------------------
 // MAIN
@@ -67,14 +68,20 @@ async function main() {
     .action(actionDeletePublicKey(vorpal, config, state));
 
   vorpal
+    .command('synth <username>', 'Synthesize the CDK stack under the given user')
+    .action(actionSynthesize(vorpal, config, state));
+  vorpal
     .command('deploy <username>', 'Deploy the site under the given user')
     .action(actionDeploy(vorpal, config, state));
   vorpal
     .command('set nameservers', 'Set the nameservers automatically with the registrar, if configured')
     .action(actionSetNameServersWithRegistrar(vorpal, config, state));
   vorpal
-    .command('cloneCerts <username>', 'Clone the SSL certificates under the given user')
-    .action(actionCloneCertificates(vorpal, config, state));
+    .command(
+      'cloneCertsManual <username>',
+      'Clone the SSL certificates, with manual verification, under the given user'
+    )
+    .action(actionCloneCertificatesManual(vorpal, config, state));
   vorpal.command('destroy', 'Destroy the site').action(actionDestroy(vorpal, config, state));
 
   await vorpal.exec('help');

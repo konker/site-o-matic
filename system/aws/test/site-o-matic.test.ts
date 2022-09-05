@@ -1,5 +1,5 @@
-import { expect as expectCDK, MatchStyle, matchTemplate } from '@aws-cdk/assert';
-import * as cdk from '@aws-cdk/core';
+import { Template, Match } from 'aws-cdk-lib/assertions';
+import * as cdk from 'aws-cdk-lib';
 import { SiteStack } from '../defs/siteomatic/site/SiteStack';
 import 'json5/lib/register';
 
@@ -18,16 +18,11 @@ test('Empty Stack', () => {
     subdomains: [],
     extraDnsConfig: [],
     certificateClones: [],
+    crossAccountAccess: [],
     protected: false,
     contextParams: {},
   });
+  const template = Template.fromStack(stack);
   // THEN
-  expectCDK(stack).to(
-    matchTemplate(
-      {
-        Resources: {},
-      },
-      MatchStyle.EXACT
-    )
-  );
+  template.hasResourceProperties('', Match.anyValue());
 });
