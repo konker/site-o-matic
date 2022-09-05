@@ -20,7 +20,7 @@ export async function build(
   Tags.of(codeCommitRepo).add(SOM_TAG_NAME, siteStack.somId);
 
   // Allow access to the domain role
-  codeCommitRepo.grantPullPush(siteStack.domainGroup);
+  codeCommitRepo.grantPullPush(siteStack.domainUser);
 
   // ----------------------------------------------------------------------
   // SSM Params
