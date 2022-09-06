@@ -1,4 +1,3 @@
-import * as dns from "dns";
 import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as ssm from "aws-cdk-lib/aws-ssm";
@@ -22,9 +21,8 @@ import * as SiteCertificateBuilder from "../hosting/SiteCertificateBuilder";
 import * as SiteHostingBuilder from "../hosting/SiteHostingBuilder";
 import * as CodecommitS3SitePipelineBuilder from "../pipeline/codecommit/CodecommitS3SitePipelineBuilder";
 import * as CodecommitNpmSitePipelineBuilder from "../pipeline/codecommit/CodecommitNpmSitePipelineBuilder";
-import { getSsmParam } from "../../../../../lib/aws/ssm";
 import { Construct } from "constructs";
-import { _id } from "../../../../../lib/utils";
+import { _id, _somMeta } from "../../../../../lib/utils";
 
 export class SiteStack extends cdk.Stack {
   public readonly config: SomConfig;
@@ -72,18 +70,21 @@ export class SiteStack extends cdk.Stack {
 
   async build() {
     // ----------------------------------------------------------------------
-    new ssm.StringParameter(this, "SsmRootDomain", {
+    const res1 = new ssm.StringParameter(this, "SsmRootDomain", {
       parameterName: toSsmParamName(this.somId, "root-domain"),
       stringValue: this.siteProps.rootDomain,
       type: ssm.ParameterType.STRING,
       tier: ssm.ParameterTier.STANDARD,
     });
-    new ssm.StringParameter(this, "SsmWebmasterEmail", {
+    _somMeta(res1, this.somId, this.siteProps.protected);
+
+    const res2 = new ssm.StringParameter(this, "SsmWebmasterEmail", {
       parameterName: toSsmParamName(this.somId, "webmaster-email"),
       stringValue: this.siteProps.webmasterEmail,
       type: ssm.ParameterType.STRING,
       tier: ssm.ParameterTier.STANDARD,
     });
+    _somMeta(res2, this.somId, this.siteProps.protected);
 
     // ----------------------------------------------------------------------
     // User for all resources
@@ -98,6 +99,7 @@ export class SiteStack extends cdk.Stack {
     this.domainPolicy = new iam.Policy(this, "DomainPolicy", {
       statements: [],
     });
+    _somMeta(this.domainPolicy, this.somId, this.siteProps.protected);
 
     // ----------------------------------------------------------------------
     // Initialize cross account access grant roles, if any
@@ -138,13 +140,13 @@ export class SiteStack extends cdk.Stack {
 
     // ----------------------------------------------------------------------
     // Allow cross account roles to assume domain role
-    this.domainRole = new iam.Role(this, "DomainRole", {
-      assumedBy: new iam.CompositePrincipal(...this.crossAccountGrantRoles),
-    });
-
-    // ----------------------------------------------------------------------
-    // Attach the hosted zone policy to the domain role
-    this.domainRole.attachInlinePolicy(this.domainPolicy);
+    if (this.siteProps.crossAccountAccess.length > 0) {
+      this.domainRole = new iam.Role(this, "DomainRole", {
+        assumedBy: new iam.CompositePrincipal(...this.crossAccountGrantRoles),
+      });
+      _somMeta(this.domainRole, this.somId, this.siteProps.protected);
+      this.domainRole.attachInlinePolicy(this.domainPolicy);
+    }
 
     // ----------------------------------------------------------------------
     // Pipeline for the site
@@ -168,5 +170,15 @@ export class SiteStack extends cdk.Stack {
           `Could not create pipeline of type: ${this.siteProps.pipelineType}`
         );
     }
+
+    // ----------------------------------------------------------------------
+    // Set the protection status SSM param
+    const res3 = new ssm.StringParameter(this, "SsmProtectedStatus", {
+      parameterName: toSsmParamName(this.somId, "protected-status"),
+      stringValue: this.siteProps.protected ? "true" : "false",
+      type: ssm.ParameterType.STRING,
+      tier: ssm.ParameterTier.STANDARD,
+    });
+    _somMeta(res3, this.somId, this.siteProps.protected);
   }
 }

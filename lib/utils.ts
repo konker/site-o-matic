@@ -1,11 +1,33 @@
-import { SomState } from './consts';
+import { SOM_TAG_NAME, SomState } from "./consts";
+import { RemovalPolicy, Resource, Tags } from "aws-cdk-lib";
 
 export function getParam(state: SomState, name: string): string | undefined {
   return state.params?.find((i: any) => i.Param === name)?.Value;
 }
 
-export function _id(prefix: string, domainName: string, isRoot: boolean): string {
+export function _id(
+  prefix: string,
+  domainName: string,
+  isRoot: boolean
+): string {
   return isRoot ? prefix : `${prefix}-${domainName}`;
+}
+
+export function _removalPolicyFromBoolean(protect: boolean): RemovalPolicy {
+  return protect ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY;
+}
+
+export function _somRemovalPolicy(resource: Resource, protect: boolean) {
+  resource.applyRemovalPolicy(_removalPolicyFromBoolean(protect));
+}
+
+export function _somTag(resource: Resource, somId: string) {
+  Tags.of(resource).add(SOM_TAG_NAME, somId);
+}
+
+export function _somMeta(resource: Resource, somId: string, protect: boolean) {
+  _somRemovalPolicy(resource, protect);
+  _somTag(resource, somId);
 }
 
 /**
@@ -20,8 +42,11 @@ export async function asyncReduce<T, S>(
   f: (acc: S, t: T, i: number, orig: Array<T>) => Promise<S>,
   s: S
 ): Promise<S> {
-  return a.reduce(async (accP: Promise<S>, val: T, i: number, orig: Array<T>) => {
-    const acc: S = await accP;
-    return f(acc, val, i, orig);
-  }, Promise.resolve(s));
+  return a.reduce(
+    async (accP: Promise<S>, val: T, i: number, orig: Array<T>) => {
+      const acc: S = await accP;
+      return f(acc, val, i, orig);
+    },
+    Promise.resolve(s)
+  );
 }

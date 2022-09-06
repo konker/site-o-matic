@@ -1,9 +1,13 @@
-import Vorpal from 'vorpal';
-import { SomConfig, SomState } from '../../lib/consts';
-import chalk from 'chalk';
-import * as cdkExec from '../../lib/aws/cdkExec';
+import Vorpal from "vorpal";
+import { SomConfig, SomState } from "../../lib/consts";
+import chalk from "chalk";
+import * as cdkExec from "../../lib/aws/cdkExec";
 
-export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomState) {
+export function actionDeploy(
+  vorpal: Vorpal,
+  config: SomConfig,
+  state: SomState
+) {
   return async (args: Vorpal.Args): Promise<void> => {
     if (!state.manifest || !state.pathToManifestFile) {
       vorpal.log(`ERROR: no manifest loaded`);
@@ -11,22 +15,26 @@ export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomState)
     }
 
     const response = await vorpal.activeCommand.prompt({
-      type: 'input',
-      name: 'confirm',
+      type: "input",
+      name: "confirm",
       message: chalk.green(
-        `Are you sure you want to deploy site: ${chalk.bold(state.somId)} under user ${chalk.bold(
-          args.username
-        )}? [y/n] `
+        `Are you sure you want to deploy site: ${chalk.bold(
+          state.somId
+        )} under user ${chalk.bold(args.username)}? [y/n] `
       ),
     });
-    if (response.confirm === 'y') {
-      await cdkExec.cdkDeploy(vorpal, state.somId, {
-        pathToManifestFile: state.pathToManifestFile,
-        iamUsername: args.username,
-        deploySubdomainCerts: 'true',
-      });
+    if (response.confirm === "y") {
+      try {
+        await cdkExec.cdkDeploy(vorpal, state.somId, {
+          pathToManifestFile: state.pathToManifestFile,
+          iamUsername: args.username,
+          deploySubdomainCerts: "true",
+        });
+      } catch (ex: any) {
+        vorpal.log(ex);
+      }
     } else {
-      vorpal.log('Aborted');
+      vorpal.log("Aborted");
     }
   };
 }
