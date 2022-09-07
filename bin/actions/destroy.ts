@@ -7,7 +7,7 @@ import {
 } from "../../lib/consts";
 import { getParam } from "../../lib/utils";
 import chalk from "chalk";
-import { removeVerificationCnameRecord } from "../../lib/aws/route53";
+import { removeVerificationCnameRecords } from "../../lib/aws/route53";
 import * as cdkExec from "../../lib/aws/cdkExec";
 
 export function actionDestroy(
@@ -33,7 +33,7 @@ export function actionDestroy(
     if (response.confirm === "y") {
       // Check that the SSM protected status is set to 'false'
       if (state.protectedSsm === "false") {
-        await removeVerificationCnameRecord(
+        await removeVerificationCnameRecords(
           config,
           getParam(state, SSM_PARAM_NAME_HOSTED_ZONE_ID) as string
         );
