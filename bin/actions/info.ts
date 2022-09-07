@@ -1,8 +1,14 @@
 import Vorpal from "vorpal";
-import { AWS_REGION, SomConfig, SomState } from "../../lib/consts";
+import {
+  AWS_REGION,
+  SomConfig,
+  SomState,
+  SSM_PARAM_NAME_HOSTED_ZONE_ID,
+  SSM_PARAM_NAME_PROTECTED_STATUS,
+} from "../../lib/consts";
 import * as ssm from "../../lib/aws/ssm";
 import * as status from "../../lib/status";
-import { formatStatus, getSomTxtRecord } from "../../lib/status";
+import { formatStatus, getSomTxtRecordViaDns } from "../../lib/status";
 import { getSiteConnectionStatus } from "../../lib/http";
 import { getRegistrarConnector } from "../../lib/registrar/index";
 import * as secretsmanager from "../../lib/aws/secretsmanager";
@@ -27,8 +33,11 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
     try {
       state.params = await ssm.getSsmParams(config, AWS_REGION, state.somId);
       state.status = await status.getStatus(state);
-      state.verificationTxtRecord = await getSomTxtRecord(state.rootDomain);
-      state.protectedSsm = getParam(state, "protected-status") ?? "false";
+      state.verificationTxtRecordViaDns = await getSomTxtRecordViaDns(
+        state.rootDomain
+      );
+      state.protectedSsm =
+        getParam(state, SSM_PARAM_NAME_PROTECTED_STATUS) ?? "false";
 
       const connectionStatus = await getSiteConnectionStatus(state.siteUrl);
       if (state.registrar) {
@@ -53,14 +62,21 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
           );
         }
       }
+      const nameserversSet = !!(
+        state.registrarNameservers &&
+        state.registrarNameservers.join(",") ===
+          getParam(state, "hosted-zone-name-servers")
+      );
+      const hostedZoneVerified = !!(
+        state.verificationTxtRecordViaDns &&
+        state.verificationTxtRecordViaDns ===
+          getParam(state, SSM_PARAM_NAME_HOSTED_ZONE_ID)
+      );
 
       state.spinner.stop();
 
       /*[TODO]
-        - subdomains
         - certificate clones
-        - cross account access
-        - protected status (ssm/manifest)
        */
       vorpal.log(
         tabulate(
@@ -80,19 +96,25 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
             },
             {
               Param: chalk.bold(chalk.white("registrar")),
-              Value: state.registrar || "-",
+              Value: state.registrar,
             },
             {
               Param: chalk.bold(chalk.white("registrar nameservers")),
-              Value: state.registrarNameservers || "-",
+              Value: nameserversSet
+                ? chalk.green(state.registrarNameservers)
+                : state.registrarNameservers,
             },
             {
               Param: chalk.bold(chalk.white("subdomains")),
-              Value: state.subdomains?.join("\n") || "-",
+              Value: state.subdomains?.join("\n"),
+            },
+            {
+              Param: chalk.bold(chalk.white("certificate clones")),
+              Value: state.certificateCloneNames?.join("\n"),
             },
             {
               Param: chalk.bold(chalk.white("cross account access")),
-              Value: state.crossAccountAccessNames?.join("\n") || "-",
+              Value: state.crossAccountAccessNames?.join("\n"),
             },
             {
               Param: chalk.bold(chalk.white("protected")),
@@ -102,7 +124,9 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
             },
             {
               Param: "verification TXT",
-              Value: state.verificationTxtRecord,
+              Value: hostedZoneVerified
+                ? chalk.green(state.verificationTxtRecordViaDns)
+                : state.verificationTxtRecordViaDns,
             },
             ...state.params,
             ...STATE_INFO_KEYS.reduce((acc, param) => {

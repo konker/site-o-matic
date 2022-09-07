@@ -1,5 +1,10 @@
 import Vorpal from "vorpal";
-import { SomConfig, SomState } from "../../lib/consts";
+import {
+  SomConfig,
+  SomState,
+  SSM_PARAM_NAME_DOMAIN_USER_NAME,
+  SSM_PARAM_NAME_HOSTED_ZONE_ID,
+} from "../../lib/consts";
 import { getParam } from "../../lib/utils";
 import chalk from "chalk";
 import { removeVerificationCnameRecord } from "../../lib/aws/route53";
@@ -15,7 +20,7 @@ export function actionDestroy(
       vorpal.log(`ERROR: no manifest loaded`);
       return;
     }
-    const username = getParam(state, "domain-user-name");
+    const username = getParam(state, SSM_PARAM_NAME_DOMAIN_USER_NAME);
     const response = await vorpal.activeCommand.prompt({
       type: "input",
       name: "confirm",
@@ -30,7 +35,7 @@ export function actionDestroy(
       if (state.protectedSsm === "false") {
         await removeVerificationCnameRecord(
           config,
-          getParam(state, "hosted-zone-id") as string
+          getParam(state, SSM_PARAM_NAME_HOSTED_ZONE_ID) as string
         );
         await cdkExec.cdkDestroy(
           vorpal,

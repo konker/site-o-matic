@@ -1,5 +1,5 @@
 import * as cdk from "aws-cdk-lib";
-import { SiteProps } from "./types";
+import { SiteStackProps } from "./types";
 
 export const AWS_REGION = "us-east-1";
 export const DEFAULT_CERTIFICATE_REGION = "us-east-1";
@@ -9,12 +9,16 @@ export const SOM_PREFIX = "som";
 export const SOM_TAG_NAME = "Site-o-Matic";
 export const MAX_SOM_ID_LEN = 48;
 
+export const SSM_PARAM_NAME_DOMAIN_USER_NAME = "domain-user-name";
+export const SSM_PARAM_NAME_HOSTED_ZONE_ID = "hosted-zone-id";
+export const SSM_PARAM_NAME_PROTECTED_STATUS = "protected-status";
+
 export const SITE_PIPELINE_TYPE_CODECOMMIT_S3 = "codecommit-s3";
 export const SITE_PIPELINE_TYPE_CODECOMMIT_NPM = "codecommit-npm";
 
 export const DEFAULT_STACK_PROPS = (
   somId: string,
-  siteProps?: SiteProps
+  siteProps?: SiteStackProps
 ): cdk.StackProps => ({
   env: {
     account: siteProps?.env?.account ?? process.env.CDK_DEFAULT_ACCOUNT,
@@ -22,6 +26,27 @@ export const DEFAULT_STACK_PROPS = (
   },
   tags: { [SOM_TAG_NAME]: somId },
 });
+
+export const SOM_STAGE_DNS = "SOM_STAGE_DNS";
+export const SOM_STAGE_NAMESERVERS_SET = "SOM_STAGE_NAMESERVERS_SET";
+export const SOM_STAGE_CERTIFCATES = "SOM_STAGE_CERTIFCATES";
+export const SOM_STAGE_WEB_HOSTING = "SOM_STAGE_WEB_HOSTING";
+export const SOM_STAGE_PIPELINE = "SOM_STAGE_PIPELINE";
+
+export type SomStage =
+  | typeof SOM_STAGE_DNS
+  | typeof SOM_STAGE_NAMESERVERS_SET
+  | typeof SOM_STAGE_CERTIFCATES
+  | typeof SOM_STAGE_WEB_HOSTING
+  | typeof SOM_STAGE_PIPELINE;
+
+export const SOM_STAGES: Array<SomStage> = [
+  SOM_STAGE_DNS,
+  SOM_STAGE_NAMESERVERS_SET,
+  SOM_STAGE_CERTIFCATES,
+  SOM_STAGE_WEB_HOSTING,
+  SOM_STAGE_PIPELINE,
+];
 
 export const SOM_STATUS_NOT_STARTED = "NotStarted";
 export const SOM_STATUS_HOSTED_ZONE_DEPLOYMENT_IN_PROGRESS =
@@ -54,6 +79,7 @@ export type SomState = {
   spinner: any;
   rootDomain?: string;
   subdomains?: Array<string>;
+  certificateCloneNames?: Array<string>;
   crossAccountAccessNames?: Array<string>;
   siteUrl?: string;
   somId?: string;
@@ -63,7 +89,7 @@ export type SomState = {
   manifest?: any;
   params?: Array<SomParam>;
   status?: SomStatus;
-  verificationTxtRecord?: string;
+  verificationTxtRecordViaDns?: string;
   protectedManifest?: string;
   protectedSsm?: string;
 };

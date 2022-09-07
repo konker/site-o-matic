@@ -2,47 +2,50 @@ import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import {
-  HostedZoneStackResources,
-  SiteCertificateStackResources,
-  SiteHostingStackResources,
-  SitePipelineResources,
-  SiteProps,
-  toSsmParamName,
+  CertificateResources,
+  CrossAccountAccessGrantRoleSpec,
+  HostedZoneResources,
+  PipelineResources,
+  SiteStackProps,
+  WebHostingResources,
 } from "../../../../../lib/types";
 import {
-  DEFAULT_CERTIFICATE_REGION,
   DEFAULT_STACK_PROPS,
-  SITE_PIPELINE_TYPE_CODECOMMIT_NPM,
-  SITE_PIPELINE_TYPE_CODECOMMIT_S3,
   SomConfig,
+  SSM_PARAM_NAME_DOMAIN_USER_NAME,
+  SSM_PARAM_NAME_HOSTED_ZONE_ID,
+  SSM_PARAM_NAME_PROTECTED_STATUS,
 } from "../../../../../lib/consts";
-import * as SiteHostedZoneBuilder from "../hostedzone/SiteHostedZoneBuilder";
-import * as SiteCertificateBuilder from "../hosting/SiteCertificateBuilder";
-import * as SiteHostingBuilder from "../hosting/SiteHostingBuilder";
-import * as CodecommitS3SitePipelineBuilder from "../pipeline/codecommit/CodecommitS3SitePipelineBuilder";
-import * as CodecommitNpmSitePipelineBuilder from "../pipeline/codecommit/CodecommitNpmSitePipelineBuilder";
 import { Construct } from "constructs";
-import { _id, _somMeta } from "../../../../../lib/utils";
+import { _id, _somMeta, _somTag } from "../../../../../lib/utils";
+import { SiteDnsSubStack } from "./substacks/SiteDnsSubStack";
+import { SiteCertificateSubStack } from "./substacks/SiteCertificateSubStack";
+import { SiteWebHostingSubStack } from "./substacks/SiteWebHostingSubStack";
+import { SitePipelineSubStack } from "./substacks/SitePipelineSubStack";
+import { SiteCertificateCloneSubStack } from "./substacks/SiteCertificateCloneSubStack";
+import { getSomTxtRecordViaDns } from "../../../../../lib/status";
+import { getSomSsmParam, toSsmParamName } from "../../../../../lib/aws/ssm";
 
 export class SiteStack extends cdk.Stack {
   public readonly config: SomConfig;
-  public readonly siteProps: SiteProps;
+  public readonly siteProps: SiteStackProps;
   public readonly somId: string;
 
   public domainUser: iam.IUser;
   public domainRole: iam.Role;
   public domainPolicy: iam.Policy;
-  public hostedZoneResources: HostedZoneStackResources;
-  public certificateResources: SiteCertificateStackResources;
-  public hostingResources: SiteHostingStackResources;
-  public sitePipelineResources: SitePipelineResources;
+  public hostedZoneResources: HostedZoneResources;
   public crossAccountGrantRoles: Array<iam.IRole>;
+
+  public certificateResources: CertificateResources;
+  public hostingResources: WebHostingResources;
+  public sitePipelineResources: PipelineResources;
 
   constructor(
     scope: Construct,
     config: SomConfig,
     somId: string,
-    props: SiteProps
+    props: SiteStackProps
   ) {
     super(
       scope,
@@ -66,6 +69,7 @@ export class SiteStack extends cdk.Stack {
       env: props.env ?? {},
     };
     this.somId = somId;
+    console.log("Created SiteStack");
   }
 
   async build() {
@@ -86,6 +90,28 @@ export class SiteStack extends cdk.Stack {
     });
     _somMeta(res2, this.somId, this.siteProps.protected);
 
+    const res3 = new ssm.StringParameter(this, "SsmProtectedStatus", {
+      parameterName: toSsmParamName(
+        this.somId,
+        SSM_PARAM_NAME_PROTECTED_STATUS
+      ),
+      stringValue: this.siteProps.protected ? "true" : "false",
+      type: ssm.ParameterType.STRING,
+      tier: ssm.ParameterTier.STANDARD,
+    });
+    _somMeta(res3, this.somId, this.siteProps.protected);
+
+    const res4 = new ssm.StringParameter(this, "SsmDomainUserName", {
+      parameterName: toSsmParamName(
+        this.somId,
+        SSM_PARAM_NAME_DOMAIN_USER_NAME
+      ),
+      stringValue: this.siteProps.username,
+      type: ssm.ParameterType.STRING,
+      tier: ssm.ParameterTier.STANDARD,
+    });
+    _somMeta(res4, this.somId, this.siteProps.protected);
+
     // ----------------------------------------------------------------------
     // User for all resources
     this.domainUser = iam.User.fromUserName(
@@ -104,7 +130,7 @@ export class SiteStack extends cdk.Stack {
     // ----------------------------------------------------------------------
     // Initialize cross account access grant roles, if any
     this.crossAccountGrantRoles = this.siteProps.crossAccountAccess.map(
-      (spec) =>
+      (spec: CrossAccountAccessGrantRoleSpec) =>
         iam.Role.fromRoleArn(
           this,
           _id("CrossAccountGrantRole", spec.name, false),
@@ -116,69 +142,78 @@ export class SiteStack extends cdk.Stack {
     );
 
     // ----------------------------------------------------------------------
-    // HostedZone
-    this.hostedZoneResources = SiteHostedZoneBuilder.build(this, {
-      domainName: this.siteProps.rootDomain,
-      extraDnsConfig: this.siteProps.extraDnsConfig,
-      subdomains: this.siteProps.subdomains,
-    });
+    // DNS / HostedZone
+    const dnsSubStack = new SiteDnsSubStack(this, {});
+    await dnsSubStack.build();
+    _somTag(dnsSubStack, this.somId);
 
-    // ----------------------------------------------------------------------
-    // SSL Certificates
-    this.certificateResources = await SiteCertificateBuilder.build(this, {
-      region: DEFAULT_CERTIFICATE_REGION,
-      domainName: this.siteProps.rootDomain,
-      hostedZoneId: this.hostedZoneResources.hostedZone.hostedZoneId,
-      subdomains: this.siteProps.subdomains ?? [],
-    });
+    const verificationTxtRecordViaDns = await getSomTxtRecordViaDns(
+      this.siteProps.rootDomain
+    );
+    const verificationSsmParam = await getSomSsmParam(
+      this.somId,
+      this.region,
+      SSM_PARAM_NAME_HOSTED_ZONE_ID
+    );
 
-    // ----------------------------------------------------------------------
-    // Hosting
-    this.hostingResources = await SiteHostingBuilder.build(this, {
-      domainCertificate: this.certificateResources.domainCertificate,
-    });
+    // Check to see if DNS has been configured correctly,
+    // including that the nameservers have been set with the registrar
+    if (
+      verificationTxtRecordViaDns &&
+      verificationTxtRecordViaDns === verificationSsmParam
+    ) {
+      // ----------------------------------------------------------------------
+      // SSL Certificates
+      const certificateSubStack = new SiteCertificateSubStack(this, {});
+      await certificateSubStack.build();
+      certificateSubStack.addDependency(dnsSubStack);
+      _somTag(certificateSubStack, this.somId);
 
-    // ----------------------------------------------------------------------
-    // Allow cross account roles to assume domain role
-    if (this.siteProps.crossAccountAccess.length > 0) {
-      this.domainRole = new iam.Role(this, "DomainRole", {
-        assumedBy: new iam.CompositePrincipal(...this.crossAccountGrantRoles),
-      });
-      _somMeta(this.domainRole, this.somId, this.siteProps.protected);
-      this.domainRole.attachInlinePolicy(this.domainPolicy);
-    }
-
-    // ----------------------------------------------------------------------
-    // Pipeline for the site
-    switch (this.siteProps.pipelineType) {
-      case SITE_PIPELINE_TYPE_CODECOMMIT_S3: {
-        this.sitePipelineResources =
-          await CodecommitS3SitePipelineBuilder.build(this, {
-            pipelineType: SITE_PIPELINE_TYPE_CODECOMMIT_S3,
-          });
-        break;
+      // ----------------------------------------------------------------------
+      // Certificate clones, if any
+      if (this.siteProps.certificateClones?.length > 0) {
+        for (const certificateClone of this.siteProps.certificateClones) {
+          console.log(
+            `[site-o-matic] Cloning certificates to: ${certificateClone.account}/${certificateClone.region}`
+          );
+          const certificateCloneSubStack = new SiteCertificateCloneSubStack(
+            this,
+            {
+              env: {
+                account: certificateClone.account,
+                region: certificateClone.region,
+              },
+            }
+          );
+          await certificateCloneSubStack.build();
+          certificateCloneSubStack.addDependency(certificateSubStack);
+          _somTag(certificateCloneSubStack, this.somId);
+        }
       }
-      case SITE_PIPELINE_TYPE_CODECOMMIT_NPM: {
-        this.sitePipelineResources =
-          await CodecommitNpmSitePipelineBuilder.build(this, {
-            pipelineType: SITE_PIPELINE_TYPE_CODECOMMIT_NPM,
-          });
-        break;
-      }
-      default:
-        throw new Error(
-          `Could not create pipeline of type: ${this.siteProps.pipelineType}`
-        );
-    }
 
-    // ----------------------------------------------------------------------
-    // Set the protection status SSM param
-    const res3 = new ssm.StringParameter(this, "SsmProtectedStatus", {
-      parameterName: toSsmParamName(this.somId, "protected-status"),
-      stringValue: this.siteProps.protected ? "true" : "false",
-      type: ssm.ParameterType.STRING,
-      tier: ssm.ParameterTier.STANDARD,
-    });
-    _somMeta(res3, this.somId, this.siteProps.protected);
+      // ----------------------------------------------------------------------
+      // Web Hosting
+      const webHostingSubStack = new SiteWebHostingSubStack(this, {});
+      await webHostingSubStack.build();
+      webHostingSubStack.addDependency(certificateSubStack);
+      _somTag(webHostingSubStack, this.somId);
+
+      // ----------------------------------------------------------------------
+      // Pipeline for the site
+      const pipelineSubStack = new SitePipelineSubStack(this, {});
+      await pipelineSubStack.build();
+      pipelineSubStack.addDependency(webHostingSubStack);
+      _somTag(pipelineSubStack, this.somId);
+
+      // ----------------------------------------------------------------------
+      // Allow cross account roles to assume domain role
+      if (this.siteProps.crossAccountAccess.length > 0) {
+        this.domainRole = new iam.Role(this, "DomainRole", {
+          assumedBy: new iam.CompositePrincipal(...this.crossAccountGrantRoles),
+        });
+        _somMeta(this.domainRole, this.somId, this.siteProps.protected);
+        this.domainRole.attachInlinePolicy(this.domainPolicy);
+      }
+    }
   }
 }

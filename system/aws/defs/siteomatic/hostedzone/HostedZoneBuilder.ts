@@ -5,15 +5,17 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import {
   DnsConfigMx,
   HostedZoneConfig,
-  HostedZoneStackResources,
-  SiteHostedZoneProps,
-  toSsmParamName,
+  HostedZoneResources,
+  HostedZoneBuilderProps,
 } from "../../../../../lib/types";
 import { SiteStack } from "../site/SiteStack";
 import { _id, _somMeta } from "../../../../../lib/utils";
+import { Construct } from "constructs";
+import { toSsmParamName } from "../../../../../lib/aws/ssm";
+import { SSM_PARAM_NAME_HOSTED_ZONE_ID } from "../../../../../lib/consts";
 
 export function buildCrossAccountAccess(
-  siteStack: SiteStack,
+  scope: Construct,
   hostedZonesPolicy: iam.Policy,
   hostedZone: route53.PublicHostedZone
 ) {
@@ -30,6 +32,7 @@ export function buildCrossAccountAccess(
 }
 
 export function buildExtraDnsConfig(
+  scope: Construct,
   siteStack: SiteStack,
   props: HostedZoneConfig,
   hostedZone: route53.PublicHostedZone,
@@ -42,7 +45,7 @@ export function buildExtraDnsConfig(
 
     if (mxConfigs.length > 0) {
       const res = new route53.MxRecord(
-        siteStack,
+        scope,
         _id("DnsRecordSet_MX", props.domainName, isRoot),
         {
           zone: hostedZone,
@@ -61,7 +64,7 @@ export function buildExtraDnsConfig(
         switch (dnsConfig.type) {
           case "CNAME":
             const res1 = new route53.CnameRecord(
-              siteStack,
+              scope,
               _id(`DnsRecordSet_CNAME_${i}`, props.domainName, isRoot),
               {
                 zone: hostedZone,
@@ -73,7 +76,7 @@ export function buildExtraDnsConfig(
             break;
           case "TXT":
             const res2 = new route53.TxtRecord(
-              siteStack,
+              scope,
               _id(`DnsRecordSet_TXT_${i}`, props.domainName, isRoot),
               {
                 zone: hostedZone,
@@ -92,13 +95,13 @@ export function buildExtraDnsConfig(
   }
 }
 
-export function build(
-  siteStack: SiteStack,
-  props: SiteHostedZoneProps
-): HostedZoneStackResources {
+export async function build(
+  scope: Construct,
+  props: HostedZoneBuilderProps
+): Promise<HostedZoneResources> {
   // ----------------------------------------------------------------------
   // Add basic list permissions to the domain policy
-  siteStack.domainPolicy.addStatements(
+  props.siteStack.domainPolicy.addStatements(
     new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       resources: ["*"], //[FIXME: tighten with conditions clause which specifies ARN?]
@@ -112,68 +115,60 @@ export function build(
 
   // ----------------------------------------------------------------------
   // DNS HostedZone
-  const hostedZone = new route53.PublicHostedZone(
-    siteStack,
-    _id("HostedZone", props.domainName, true),
-    {
-      zoneName: props.domainName,
-    }
+  const hostedZone = new route53.PublicHostedZone(scope, "HostedZone", {
+    zoneName: props.domainName,
+  });
+  _somMeta(
+    hostedZone,
+    props.siteStack.somId,
+    props.siteStack.siteProps.protected
   );
-  _somMeta(hostedZone, siteStack.somId, siteStack.siteProps.protected);
 
-  const txtRecord = new route53.TxtRecord(
-    siteStack,
-    _id("DnsRecordSet_TXT_Som", props.domainName, true),
-    {
-      zone: hostedZone,
-      recordName: "_som",
-      values: [hostedZone.hostedZoneId.toString()],
-    }
+  const txtRecord = new route53.TxtRecord(scope, "DnsRecordSet_TXT_Som", {
+    zone: hostedZone,
+    recordName: "_som",
+    values: [hostedZone.hostedZoneId.toString()],
+  });
+  _somMeta(
+    txtRecord,
+    props.siteStack.somId,
+    props.siteStack.siteProps.protected
   );
-  _somMeta(txtRecord, siteStack.somId, siteStack.siteProps.protected);
 
-  buildExtraDnsConfig(siteStack, props, hostedZone, true);
-  buildCrossAccountAccess(siteStack, siteStack.domainPolicy, hostedZone);
+  buildExtraDnsConfig(scope, props.siteStack, props, hostedZone, true);
+  buildCrossAccountAccess(scope, props.siteStack.domainPolicy, hostedZone);
 
   // ----------------------------------------------------------------------
   // Provision subdomains
   props.subdomains?.forEach((subdomain: HostedZoneConfig) => {
     // Build any extra DNS entries for the subdomain
-    buildExtraDnsConfig(siteStack, subdomain, hostedZone, false);
-    buildCrossAccountAccess(siteStack, siteStack.domainPolicy, hostedZone);
+    buildExtraDnsConfig(scope, props.siteStack, subdomain, hostedZone, false);
+    buildCrossAccountAccess(scope, props.siteStack.domainPolicy, hostedZone);
   });
 
   // ----------------------------------------------------------------------
   // SSM Params
-  const res1 = new ssm.StringParameter(
-    siteStack,
-    _id("SsmHostedZoneId", props.domainName, true),
-    {
-      parameterName: toSsmParamName(
-        siteStack.somId,
-        _id("hosted-zone-id", props.domainName, true)
-      ),
-      stringValue: hostedZone.hostedZoneId,
-      type: ssm.ParameterType.STRING,
-      tier: ssm.ParameterTier.STANDARD,
-    }
-  );
-  _somMeta(res1, siteStack.somId, siteStack.siteProps.protected);
+  const res1 = new ssm.StringParameter(scope, "SsmHostedZoneId", {
+    parameterName: toSsmParamName(
+      props.siteStack.somId,
+      SSM_PARAM_NAME_HOSTED_ZONE_ID
+    ),
+    stringValue: hostedZone.hostedZoneId,
+    type: ssm.ParameterType.STRING,
+    tier: ssm.ParameterTier.STANDARD,
+  });
+  _somMeta(res1, props.siteStack.somId, props.siteStack.siteProps.protected);
 
-  const res2 = new ssm.StringParameter(
-    siteStack,
-    _id("SsmHostedZoneNameServers", props.domainName, true),
-    {
-      parameterName: toSsmParamName(
-        siteStack.somId,
-        _id("hosted-zone-name-servers", props.domainName, true)
-      ),
-      stringValue: cdk.Fn.join(",", hostedZone.hostedZoneNameServers || []),
-      type: ssm.ParameterType.STRING,
-      tier: ssm.ParameterTier.STANDARD,
-    }
-  );
-  _somMeta(res2, siteStack.somId, siteStack.siteProps.protected);
+  const res2 = new ssm.StringParameter(scope, "SsmHostedZoneNameServers", {
+    parameterName: toSsmParamName(
+      props.siteStack.somId,
+      "hosted-zone-name-servers"
+    ),
+    stringValue: cdk.Fn.join(",", hostedZone.hostedZoneNameServers || []),
+    type: ssm.ParameterType.STRING,
+    tier: ssm.ParameterTier.STANDARD,
+  });
+  _somMeta(res2, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   // ----------------------------------------------------------------------
   // Returned resources

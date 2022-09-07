@@ -1,5 +1,5 @@
 import { SOM_TAG_NAME, SomState } from "./consts";
-import { RemovalPolicy, Resource, Tags } from "aws-cdk-lib";
+import { RemovalPolicy, Resource, Stack, Tags } from "aws-cdk-lib";
 
 export function getParam(state: SomState, name: string): string | undefined {
   return state.params?.find((i: any) => i.Param === name)?.Value;
@@ -21,7 +21,7 @@ export function _somRemovalPolicy(resource: Resource, protect: boolean) {
   resource.applyRemovalPolicy(_removalPolicyFromBoolean(protect));
 }
 
-export function _somTag(resource: Resource, somId: string) {
+export function _somTag(resource: Resource | Stack, somId: string) {
   Tags.of(resource).add(SOM_TAG_NAME, somId);
 }
 

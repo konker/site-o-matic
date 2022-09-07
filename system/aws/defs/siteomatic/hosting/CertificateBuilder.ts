@@ -1,25 +1,25 @@
 import * as certificatemanager from "aws-cdk-lib/aws-certificatemanager";
 import {
-  SiteCertificateProps,
-  SiteCertificateStackResources,
+  CertificateResources,
+  CertificateBuilderProps,
 } from "../../../../../lib/types";
-import { SiteStack } from "../site/SiteStack";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import { _id, _somMeta, _somTag } from "../../../../../lib/utils";
+import { Construct } from "constructs";
 
 export async function build(
-  siteStack: SiteStack,
-  props: SiteCertificateProps
-): Promise<SiteCertificateStackResources> {
+  scope: Construct,
+  props: CertificateBuilderProps
+): Promise<CertificateResources> {
   // ----------------------------------------------------------------------
   // Retrieve HostedZone
   const hostedZone = (() => {
-    if (siteStack.hostedZoneResources.hostedZone) {
-      return siteStack.hostedZoneResources.hostedZone;
+    if (props.siteStack.hostedZoneResources.hostedZone) {
+      return props.siteStack.hostedZoneResources.hostedZone;
     }
 
     return route53.HostedZone.fromHostedZoneAttributes(
-      siteStack,
+      scope,
       _id("HostedZone", props.domainName, true),
       {
         zoneName: props.domainName,
@@ -31,29 +31,29 @@ export async function build(
   // ----------------------------------------------------------------------
   // SSL certificate for apex and wildcard subdomains
   const domainCertificate = new certificatemanager.DnsValidatedCertificate(
-    siteStack,
+    scope,
     "DomainCertificate",
     {
-      domainName: siteStack.siteProps.rootDomain,
-      subjectAlternativeNames: [`*.${siteStack.siteProps.rootDomain}`],
+      domainName: props.siteStack.siteProps.rootDomain,
+      subjectAlternativeNames: [`*.${props.siteStack.siteProps.rootDomain}`],
       hostedZone: hostedZone,
       region: props.region,
     }
   );
-  _somTag(domainCertificate, siteStack.somId);
+  _somTag(domainCertificate, props.siteStack.somId);
   // Setting removalPolicy does not work: https://github.com/aws/aws-cdk/issues/20649
-  // _somMeta(domainCertificate, siteStack.somId, siteStack.siteProps.protected);
+  // _somMeta(domainCertificate, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   // ----------------------------------------------------------------------
   // SSL certificates for subdomains
   if (
-    siteStack.siteProps.subdomains &&
-    siteStack.siteProps.contextParams.deploySubdomainCerts
+    props.siteStack.siteProps.subdomains &&
+    props.siteStack.siteProps.contextParams.deploySubdomainCerts
   ) {
-    siteStack.siteProps.subdomains.forEach((subdomain) => {
+    props.siteStack.siteProps.subdomains.forEach((subdomain) => {
       const subdomainCertificate =
         new certificatemanager.DnsValidatedCertificate(
-          siteStack,
+          scope,
           `DomainCertificate-${subdomain.domainName}`,
           {
             domainName: subdomain.domainName,
@@ -62,9 +62,9 @@ export async function build(
             region: props.region,
           }
         );
-      _somTag(subdomainCertificate, siteStack.somId);
+      _somTag(subdomainCertificate, props.siteStack.somId);
       // Setting removalPolicy does not work: https://github.com/aws/aws-cdk/issues/20649
-      // _somMeta(subdomainCertificate, siteStack.somId, siteStack.siteProps.protected);
+      // _somMeta(subdomainCertificate, props.siteStack.somId, props.siteStack.siteProps.protected);
     });
   }
 
@@ -74,30 +74,34 @@ export async function build(
 }
 
 export async function buildManualValidation(
-  siteStack: SiteStack,
-  props: SiteCertificateProps
-): Promise<SiteCertificateStackResources> {
+  scope: Construct,
+  props: CertificateBuilderProps
+): Promise<CertificateResources> {
   // ----------------------------------------------------------------------
   // SSL certificate for apex and wildcard subdomains
   const domainCertificate = new certificatemanager.Certificate(
-    siteStack,
+    scope,
     "DomainCertificate",
     {
-      domainName: siteStack.siteProps.rootDomain,
-      subjectAlternativeNames: [`*.${siteStack.siteProps.rootDomain}`],
+      domainName: props.siteStack.siteProps.rootDomain,
+      subjectAlternativeNames: [`*.${props.siteStack.siteProps.rootDomain}`],
     }
   );
-  _somMeta(domainCertificate, siteStack.somId, siteStack.siteProps.protected);
+  _somMeta(
+    domainCertificate,
+    props.siteStack.somId,
+    props.siteStack.siteProps.protected
+  );
 
   // ----------------------------------------------------------------------
   // SSL certificates for subdomains
   if (
-    siteStack.siteProps.subdomains &&
-    siteStack.siteProps.contextParams.deploySubdomainCerts
+    props.siteStack.siteProps.subdomains &&
+    props.siteStack.siteProps.contextParams.deploySubdomainCerts
   ) {
-    siteStack.siteProps.subdomains.forEach((subdomain) => {
+    props.siteStack.siteProps.subdomains.forEach((subdomain) => {
       const subdomainCertificate = new certificatemanager.Certificate(
-        siteStack,
+        scope,
         `DomainCertificate-${subdomain.domainName}`,
         {
           domainName: subdomain.domainName,
@@ -106,8 +110,8 @@ export async function buildManualValidation(
       );
       _somMeta(
         subdomainCertificate,
-        siteStack.somId,
-        siteStack.siteProps.protected
+        props.siteStack.somId,
+        props.siteStack.siteProps.protected
       );
     });
   }

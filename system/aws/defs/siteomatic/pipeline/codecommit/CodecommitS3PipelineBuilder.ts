@@ -4,29 +4,30 @@ import * as ssm from "aws-cdk-lib/aws-ssm";
 import { SITE_PIPELINE_TYPE_CODECOMMIT_S3 } from "../../../../../../lib/consts";
 import {
   CodecommitS3SitePipelineResources,
-  SitePipelineProps,
-  toSsmParamName,
+  PipelineBuilderProps,
 } from "../../../../../../lib/types";
-import { SiteStack } from "../../site/SiteStack";
-import * as CodecommitSitePipelineStack from "./BaseCodecommitSitePipelineBuilder";
+import * as CodecommitSitePipelineStack from "./BaseCodecommitPipelineBuilder";
 import { _somMeta } from "../../../../../../lib/utils";
+import { toSsmParamName } from "../../../../../../lib/aws/ssm";
+import { Construct } from "constructs";
 
 export async function build(
-  siteStack: SiteStack,
-  props: SitePipelineProps
+  scope: Construct,
+  props: PipelineBuilderProps
 ): Promise<CodecommitS3SitePipelineResources> {
-  const parentResources = await CodecommitSitePipelineStack.build(
-    siteStack,
-    props
-  );
+  const parentResources = await CodecommitSitePipelineStack.build(scope, props);
 
   // ----------------------------------------------------------------------
   // Code Pipeline
-  const codePipeline = new codepipeline.Pipeline(siteStack, "CodePipeline", {
-    pipelineName: siteStack.somId,
+  const codePipeline = new codepipeline.Pipeline(scope, "CodePipeline", {
+    pipelineName: props.siteStack.somId,
     crossAccountKeys: false,
   });
-  _somMeta(codePipeline, siteStack.somId, siteStack.siteProps.protected);
+  _somMeta(
+    codePipeline,
+    props.siteStack.somId,
+    props.siteStack.siteProps.protected
+  );
 
   const sourceOutput = new codepipeline.Artifact();
   const codeCommitAction = new actions.CodeCommitSourceAction({
@@ -37,7 +38,7 @@ export async function build(
   });
   const deployAction = new actions.S3DeployAction({
     actionName: "S3DeployAction",
-    bucket: siteStack.hostingResources.domainBucket,
+    bucket: props.siteStack.hostingResources.domainBucket,
     input: sourceOutput,
   });
   const invalidateAction = new actions.CodeBuildAction({
@@ -61,13 +62,13 @@ export async function build(
 
   // ----------------------------------------------------------------------
   // SSM Params
-  const res1 = new ssm.StringParameter(siteStack, "SsmCodePipelineArn", {
-    parameterName: toSsmParamName(siteStack.somId, "code-pipeline-arn"),
+  const res1 = new ssm.StringParameter(scope, "SsmCodePipelineArn", {
+    parameterName: toSsmParamName(props.siteStack.somId, "code-pipeline-arn"),
     stringValue: codePipeline.pipelineArn,
     type: ssm.ParameterType.STRING,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(res1, siteStack.somId, siteStack.siteProps.protected);
+  _somMeta(res1, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   return {
     type: SITE_PIPELINE_TYPE_CODECOMMIT_S3,

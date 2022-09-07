@@ -1,5 +1,5 @@
-import * as dns from 'dns';
-import chalk from 'chalk';
+import * as dns from "dns";
+import chalk from "chalk";
 import {
   SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG,
   SOM_STATUS_HOSTED_ZONE_DEPLOYMENT_IN_PROGRESS,
@@ -12,10 +12,13 @@ import {
   SOM_STATUS_SITE_FUNCTIONAL,
   SomState,
   SomStatus,
-} from './consts';
-import { getParam } from './utils';
+  SSM_PARAM_NAME_HOSTED_ZONE_ID,
+} from "./consts";
+import { getParam } from "./utils";
 
-export async function getSomTxtRecord(rootDomain?: string): Promise<string | undefined> {
+export async function getSomTxtRecordViaDns(
+  rootDomain?: string
+): Promise<string | undefined> {
   if (!rootDomain) return undefined;
 
   try {
@@ -27,12 +30,16 @@ export async function getSomTxtRecord(rootDomain?: string): Promise<string | und
 }
 
 export async function getStatus(state: SomState): Promise<SomStatus> {
-  const txtRecord = await getSomTxtRecord(state.rootDomain);
-  if (getParam(state, 'code-pipeline-arn')) return SOM_STATUS_SITE_FUNCTIONAL;
-  if (getParam(state, 'cloudfront-distribution-id')) return SOM_STATUS_HOSTING_DEPLOYED;
-  if (txtRecord && getParam(state, 'hosted-zone-id') === txtRecord) return SOM_STATUS_HOSTED_ZONE_OK;
-  if (txtRecord && getParam(state, 'hosted-zone-id') !== txtRecord) return SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG;
-  if (!txtRecord && getParam(state, 'hosted-zone-name-servers')) return SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG;
+  const txtRecord = await getSomTxtRecordViaDns(state.rootDomain);
+  if (getParam(state, "code-pipeline-arn")) return SOM_STATUS_SITE_FUNCTIONAL;
+  if (getParam(state, "cloudfront-distribution-id"))
+    return SOM_STATUS_HOSTING_DEPLOYED;
+  if (txtRecord && getParam(state, SSM_PARAM_NAME_HOSTED_ZONE_ID) === txtRecord)
+    return SOM_STATUS_HOSTED_ZONE_OK;
+  if (txtRecord && getParam(state, SSM_PARAM_NAME_HOSTED_ZONE_ID) !== txtRecord)
+    return SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG;
+  if (!txtRecord && getParam(state, "hosted-zone-name-servers"))
+    return SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG;
   return SOM_STATUS_NOT_STARTED;
 }
 

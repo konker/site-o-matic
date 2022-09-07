@@ -6,43 +6,49 @@ import * as route53 from "aws-cdk-lib/aws-route53";
 import * as targets from "aws-cdk-lib/aws-route53-targets";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import {
-  SiteHostingProps,
-  SiteHostingStackResources,
-  toSsmParamName,
+  WebHostingBuilderProps,
+  WebHostingResources,
 } from "../../../../../lib/types";
-import { SiteStack } from "../site/SiteStack";
 import { _removalPolicyFromBoolean, _somMeta } from "../../../../../lib/utils";
+import { Construct } from "constructs";
+import { toSsmParamName } from "../../../../../lib/aws/ssm";
 
 export async function build(
-  siteStack: SiteStack,
-  props: SiteHostingProps
-): Promise<SiteHostingStackResources> {
+  scope: Construct,
+  props: WebHostingBuilderProps
+): Promise<WebHostingResources> {
   // ----------------------------------------------------------------------
   // Origin access identity which will be used by the cloudfront distribution
   const originAccessIdentity = new cloudfront.OriginAccessIdentity(
-    siteStack,
+    scope,
     "OriginAccessIdentity",
     {
-      comment: `OriginAccessIdentity for ${siteStack.somId}`,
+      comment: `OriginAccessIdentity for ${props.siteStack.somId}`,
     }
   );
   _somMeta(
     originAccessIdentity,
-    siteStack.somId,
-    siteStack.siteProps.protected
+    props.siteStack.somId,
+    props.siteStack.siteProps.protected
   );
 
   // ----------------------------------------------------------------------
   // Domain www content bucket and bucket policy
-  const domainBucket = new s3.Bucket(siteStack, "DomainBucket", {
-    bucketName: `wwwbucket-${siteStack.somId}`,
+  const domainBucket = new s3.Bucket(scope, "DomainBucket", {
+    bucketName: `wwwbucket-${props.siteStack.somId}`,
     blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
     encryption: s3.BucketEncryption.S3_MANAGED,
     versioned: false,
-    removalPolicy: _removalPolicyFromBoolean(siteStack.siteProps.protected),
-    autoDeleteObjects: !siteStack.siteProps.protected,
+    removalPolicy: _removalPolicyFromBoolean(
+      props.siteStack.siteProps.protected
+    ),
+    autoDeleteObjects: !props.siteStack.siteProps.protected,
   });
-  _somMeta(domainBucket, siteStack.somId, siteStack.siteProps.protected);
+  _somMeta(
+    domainBucket,
+    props.siteStack.somId,
+    props.siteStack.siteProps.protected
+  );
 
   domainBucket.addToResourcePolicy(
     new iam.PolicyStatement({
@@ -54,14 +60,14 @@ export async function build(
         "s3:PutObjectAcl",
       ],
       resources: [`${domainBucket.bucketArn}/*`],
-      principals: [siteStack.domainUser],
+      principals: [props.siteStack.domainUser],
     })
   );
   domainBucket.addToResourcePolicy(
     new iam.PolicyStatement({
       actions: ["s3:ListBucket"],
       resources: [domainBucket.bucketArn],
-      principals: [siteStack.domainUser],
+      principals: [props.siteStack.domainUser],
     })
   );
   domainBucket.grantRead(originAccessIdentity);
@@ -69,7 +75,7 @@ export async function build(
   // ----------------------------------------------------------------------
   // Cloudfront distribution
   const cloudFrontDistribution = new cloudfront.Distribution(
-    siteStack,
+    scope,
     "CloudFrontDistribution",
     {
       defaultBehavior: {
@@ -80,7 +86,7 @@ export async function build(
         allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         cachePolicy: new cloudfront.CachePolicy(
-          siteStack,
+          scope,
           "CloudFrontDistributionCachePolicy",
           {
             queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
@@ -88,7 +94,7 @@ export async function build(
           }
         ),
         originRequestPolicy: new cloudfront.OriginRequestPolicy(
-          siteStack,
+          scope,
           "OriginRequestPolicy",
           {
             queryStringBehavior:
@@ -97,7 +103,7 @@ export async function build(
           }
         ),
       },
-      domainNames: [siteStack.siteProps.rootDomain],
+      domainNames: [props.siteStack.siteProps.rootDomain],
       certificate: props.domainCertificate,
       priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
       defaultRootObject: "index.html",
@@ -111,60 +117,59 @@ export async function build(
   );
   _somMeta(
     cloudFrontDistribution,
-    siteStack.somId,
-    siteStack.siteProps.protected
+    props.siteStack.somId,
+    props.siteStack.siteProps.protected
   );
 
   // ----------------------------------------------------------------------
   // DNS records
-  const res1 = new route53.ARecord(siteStack, "DnsRecordSet_A", {
-    zone: siteStack.hostedZoneResources.hostedZone,
+  const res1 = new route53.ARecord(scope, "DnsRecordSet_A", {
+    zone: props.siteStack.hostedZoneResources.hostedZone,
     target: route53.RecordTarget.fromAlias(
       new targets.CloudFrontTarget(cloudFrontDistribution)
     ),
   });
-  _somMeta(res1, siteStack.somId, siteStack.siteProps.protected);
+  _somMeta(res1, props.siteStack.somId, props.siteStack.siteProps.protected);
 
-  const res2 = new route53.AaaaRecord(siteStack, "DnsRecordSet_AAAA", {
-    zone: siteStack.hostedZoneResources.hostedZone,
+  const res2 = new route53.AaaaRecord(scope, "DnsRecordSet_AAAA", {
+    zone: props.siteStack.hostedZoneResources.hostedZone,
     target: route53.RecordTarget.fromAlias(
       new targets.CloudFrontTarget(cloudFrontDistribution)
     ),
   });
-  _somMeta(res2, siteStack.somId, siteStack.siteProps.protected);
+  _somMeta(res2, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   // ----------------------------------------------------------------------
   // SSM Params
-  const res3 = new ssm.StringParameter(siteStack, "SsmDomainBucketName", {
-    parameterName: toSsmParamName(siteStack.somId, "domain-bucket-name"),
+  const res3 = new ssm.StringParameter(scope, "SsmDomainBucketName", {
+    parameterName: toSsmParamName(props.siteStack.somId, "domain-bucket-name"),
     stringValue: domainBucket.bucketName,
     type: ssm.ParameterType.STRING,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(res3, siteStack.somId, siteStack.siteProps.protected);
+  _somMeta(res3, props.siteStack.somId, props.siteStack.siteProps.protected);
 
-  const res4 = new ssm.StringParameter(
-    siteStack,
-    "SsmCloudfrontDistributionId",
-    {
-      parameterName: toSsmParamName(
-        siteStack.somId,
-        "cloudfront-distribution-id"
-      ),
-      stringValue: cloudFrontDistribution.distributionId,
-      type: ssm.ParameterType.STRING,
-      tier: ssm.ParameterTier.STANDARD,
-    }
-  );
-  _somMeta(res4, siteStack.somId, siteStack.siteProps.protected);
+  const res4 = new ssm.StringParameter(scope, "SsmCloudfrontDistributionId", {
+    parameterName: toSsmParamName(
+      props.siteStack.somId,
+      "cloudfront-distribution-id"
+    ),
+    stringValue: cloudFrontDistribution.distributionId,
+    type: ssm.ParameterType.STRING,
+    tier: ssm.ParameterTier.STANDARD,
+  });
+  _somMeta(res4, props.siteStack.somId, props.siteStack.siteProps.protected);
 
-  const res5 = new ssm.StringParameter(siteStack, "SsmCloudfrontDomainName", {
-    parameterName: toSsmParamName(siteStack.somId, "cloudfront-domain-name"),
+  const res5 = new ssm.StringParameter(scope, "SsmCloudfrontDomainName", {
+    parameterName: toSsmParamName(
+      props.siteStack.somId,
+      "cloudfront-domain-name"
+    ),
     stringValue: cloudFrontDistribution.distributionDomainName,
     type: ssm.ParameterType.STRING,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(res5, siteStack.somId, siteStack.siteProps.protected);
+  _somMeta(res5, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   return {
     domainBucket,

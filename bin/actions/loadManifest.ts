@@ -22,6 +22,8 @@ export function actionLoadManifest(
     state.rootDomain = state.manifest.rootDomain;
     state.subdomains =
       state.manifest.subdomains?.map((i: any) => i.domainName) ?? [];
+    state.certificateCloneNames =
+      state.manifest.certificateClones?.map((i: any) => i.name) ?? [];
     state.crossAccountAccessNames =
       state.manifest.crossAccountAccess?.map((i: any) => i.name) ?? [];
     state.siteUrl = `https://${state.manifest.rootDomain}/`;
