@@ -1,15 +1,14 @@
-import { SOM_TAG_NAME, SomState } from "./consts";
-import { RemovalPolicy, Resource, Stack, Tags } from "aws-cdk-lib";
+import type { Resource, Stack } from 'aws-cdk-lib';
+import { RemovalPolicy, Tags } from 'aws-cdk-lib';
+
+import type { SomState } from './consts';
+import { SOM_TAG_NAME } from './consts';
 
 export function getParam(state: SomState, name: string): string | undefined {
   return state.params?.find((i: any) => i.Param === name)?.Value;
 }
 
-export function _id(
-  prefix: string,
-  domainName: string,
-  isRoot: boolean
-): string {
+export function _id(prefix: string, domainName: string, isRoot: boolean): string {
   return isRoot ? prefix : `${prefix}-${domainName}`;
 }
 
@@ -42,11 +41,8 @@ export async function asyncReduce<T, S>(
   f: (acc: S, t: T, i: number, orig: Array<T>) => Promise<S>,
   s: S
 ): Promise<S> {
-  return a.reduce(
-    async (accP: Promise<S>, val: T, i: number, orig: Array<T>) => {
-      const acc: S = await accP;
-      return f(acc, val, i, orig);
-    },
-    Promise.resolve(s)
-  );
+  return a.reduce(async (accP: Promise<S>, val: T, i: number, orig: Array<T>) => {
+    const acc: S = await accP;
+    return f(acc, val, i, orig);
+  }, Promise.resolve(s));
 }

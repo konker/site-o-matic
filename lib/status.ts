@@ -1,5 +1,7 @@
-import * as dns from "dns";
-import chalk from "chalk";
+import chalk from 'chalk';
+import * as dns from 'dns';
+
+import type { SomState, SomStatus } from './consts';
 import {
   SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG,
   SOM_STATUS_HOSTED_ZONE_DEPLOYMENT_IN_PROGRESS,
@@ -10,20 +12,19 @@ import {
   SOM_STATUS_PIPELINE_DEPLOYED,
   SOM_STATUS_PIPELINE_DEPLOYMENT_IN_PROGRESS,
   SOM_STATUS_SITE_FUNCTIONAL,
-  SomState,
-  SomStatus,
   SSM_PARAM_NAME_HOSTED_ZONE_ID,
-} from "./consts";
-import { getParam } from "./utils";
+} from './consts';
+import { getParam } from './utils';
 
-export async function getSomTxtRecordViaDns(
-  rootDomain?: string
-): Promise<string | undefined> {
+export async function getSomTxtRecordViaDns(rootDomain?: string): Promise<string | undefined> {
   if (!rootDomain) return undefined;
 
   try {
     const records = await dns.promises.resolveTxt(`_som.${rootDomain}`);
-    return records[0][0];
+    if (records && records[0]) {
+      return records[0][0];
+    }
+    return undefined;
   } catch (ex) {
     return undefined;
   }
@@ -31,15 +32,12 @@ export async function getSomTxtRecordViaDns(
 
 export async function getStatus(state: SomState): Promise<SomStatus> {
   const txtRecord = await getSomTxtRecordViaDns(state.rootDomain);
-  if (getParam(state, "code-pipeline-arn")) return SOM_STATUS_SITE_FUNCTIONAL;
-  if (getParam(state, "cloudfront-distribution-id"))
-    return SOM_STATUS_HOSTING_DEPLOYED;
-  if (txtRecord && getParam(state, SSM_PARAM_NAME_HOSTED_ZONE_ID) === txtRecord)
-    return SOM_STATUS_HOSTED_ZONE_OK;
+  if (getParam(state, 'code-pipeline-arn')) return SOM_STATUS_SITE_FUNCTIONAL;
+  if (getParam(state, 'cloudfront-distribution-id')) return SOM_STATUS_HOSTING_DEPLOYED;
+  if (txtRecord && getParam(state, SSM_PARAM_NAME_HOSTED_ZONE_ID) === txtRecord) return SOM_STATUS_HOSTED_ZONE_OK;
   if (txtRecord && getParam(state, SSM_PARAM_NAME_HOSTED_ZONE_ID) !== txtRecord)
     return SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG;
-  if (!txtRecord && getParam(state, "hosted-zone-name-servers"))
-    return SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG;
+  if (!txtRecord && getParam(state, 'hosted-zone-name-servers')) return SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG;
   return SOM_STATUS_NOT_STARTED;
 }
 

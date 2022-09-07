@@ -1,32 +1,30 @@
-import * as cdk from "aws-cdk-lib";
-import * as route53 from "aws-cdk-lib/aws-route53";
-import * as s3 from "aws-cdk-lib/aws-s3";
-import * as certificatemanager from "aws-cdk-lib/aws-certificatemanager";
-import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
-import * as codebuild from "aws-cdk-lib/aws-codebuild";
-import * as codecommit from "aws-cdk-lib/aws-codecommit";
-import * as codepipeline from "aws-cdk-lib/aws-codepipeline";
-import {
-  SITE_PIPELINE_TYPE_CODECOMMIT_NPM,
-  SITE_PIPELINE_TYPE_CODECOMMIT_S3,
-} from "./consts";
-import { SiteStack } from "../system/aws/defs/siteomatic/site/SiteStack";
+import type * as cdk from 'aws-cdk-lib';
+import type * as certificatemanager from 'aws-cdk-lib/aws-certificatemanager';
+import type * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
+import type * as codebuild from 'aws-cdk-lib/aws-codebuild';
+import type * as codecommit from 'aws-cdk-lib/aws-codecommit';
+import type * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
+import type * as route53 from 'aws-cdk-lib/aws-route53';
+import type * as s3 from 'aws-cdk-lib/aws-s3';
+
+import type { SiteStack } from '../system/aws/defs/siteomatic/site/SiteStack';
+import type { SITE_PIPELINE_TYPE_CODECOMMIT_NPM, SITE_PIPELINE_TYPE_CODECOMMIT_S3 } from './consts';
 
 // ----------------------------------------------------------------------
 export type DnsConfigMx = {
-  readonly type: "MX";
+  readonly type: 'MX';
   readonly hostName: string;
   readonly priority: number;
 };
 
 export type DnsConfigCname = {
-  readonly type: "CNAME";
+  readonly type: 'CNAME';
   readonly recordName: string;
   readonly domainName: string;
 };
 
 export type DnsConfigTxt = {
-  readonly type: "TXT";
+  readonly type: 'TXT';
   readonly recordName: string;
   readonly values: Array<string>;
 };
@@ -75,9 +73,7 @@ export type CodecommitNpmSitePipelineResources = {
   readonly codePipeline: codepipeline.Pipeline;
 };
 
-export type PipelineResources =
-  | CodecommitS3SitePipelineResources
-  | CodecommitNpmSitePipelineResources;
+export type PipelineResources = CodecommitS3SitePipelineResources | CodecommitNpmSitePipelineResources;
 
 // ----------------------------------------------------------------------
 export type HostedZoneBuilderProps = {
@@ -131,9 +127,7 @@ export type WebHostingBuilderProps = {
 };
 
 // ----------------------------------------------------------------------
-export type PipelineType =
-  | typeof SITE_PIPELINE_TYPE_CODECOMMIT_S3
-  | typeof SITE_PIPELINE_TYPE_CODECOMMIT_NPM;
+export type PipelineType = typeof SITE_PIPELINE_TYPE_CODECOMMIT_S3 | typeof SITE_PIPELINE_TYPE_CODECOMMIT_NPM;
 
 export type PipelineBuilderProps = {
   readonly siteStack: SiteStack;

@@ -1,28 +1,31 @@
-// @ts-ignore
-import * as cfonts from 'cfonts';
-import Vorpal from 'vorpal';
-import ora from 'ora';
-import { SomState } from '../lib/consts';
-import { actionShowManifest } from './actions/showManifest';
-import { actionClearScreen } from './actions/clearScreen';
-import { actionSetNameServersWithRegistrar } from './actions/setNameserversWithRegistrar';
-import { actionListPublicKeys } from './actions/listPublicKeys';
-import { actionDeploy } from './actions/deploy';
-import { actionListSecrets } from './actions/listSecrets';
-import { actionDeletePublicKey } from './actions/deletePublicKey';
-import { actionLoadManifest } from './actions/loadManifest';
-import { actionDestroy } from './actions/destroy';
-import { actionInfo } from './actions/info';
-import { actionDeleteSecret } from './actions/deleteSecret';
-import { actionAddSecret } from './actions/addSecret';
-import { actionAddPublicKey } from './actions/addPublicKey';
-import { actionListUsers } from './actions/listUsers';
-import { actionAddUser } from './actions/addUser';
-import { actionCloneCertificatesManual } from './actions/cloneCertificates';
 import 'json5/lib/register';
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import * as cfonts from 'cfonts';
+import ora from 'ora';
+import Vorpal from 'vorpal';
+
+import type { SomState } from '../lib/consts';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import config from '../site-o-matic.config.json5';
+import { actionAddPublicKey } from './actions/addPublicKey';
+import { actionAddSecret } from './actions/addSecret';
+import { actionAddUser } from './actions/addUser';
+import { actionClearScreen } from './actions/clearScreen';
+import { actionCloneCertificatesManual } from './actions/cloneCertificates';
+import { actionDeletePublicKey } from './actions/deletePublicKey';
+import { actionDeleteSecret } from './actions/deleteSecret';
+import { actionDeploy } from './actions/deploy';
+import { actionDestroy } from './actions/destroy';
+import { actionInfo } from './actions/info';
+import { actionListPublicKeys } from './actions/listPublicKeys';
+import { actionListSecrets } from './actions/listSecrets';
+import { actionListUsers } from './actions/listUsers';
+import { actionLoadManifest } from './actions/loadManifest';
+import { actionSetNameServersWithRegistrar } from './actions/setNameserversWithRegistrar';
+import { actionShowManifest } from './actions/showManifest';
 import { actionSynthesize } from './actions/synthesize';
 
 // ----------------------------------------------------------------------

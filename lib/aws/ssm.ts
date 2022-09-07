@@ -1,20 +1,13 @@
-import {
-  GetParameterCommand,
-  GetParametersByPathCommand,
-  SSMClient,
-} from "@aws-sdk/client-ssm";
-import { SomConfig, SomParam } from "../consts";
-import { assumeSomRole } from "./sts";
+import { GetParameterCommand, GetParametersByPathCommand, SSMClient } from '@aws-sdk/client-ssm';
+
+import type { SomConfig, SomParam } from '../consts';
+import { assumeSomRole } from './sts';
 
 export function toSsmParamName(somId: string, name: string) {
   return `/som/${somId}/${name}`;
 }
 
-export async function getSsmParams(
-  config: SomConfig,
-  region: string,
-  somId?: string
-): Promise<Array<SomParam>> {
+export async function getSsmParams(config: SomConfig, region: string, somId?: string): Promise<Array<SomParam>> {
   if (!somId) return [];
   const path = `/som/${somId}`;
 
@@ -24,14 +17,16 @@ export async function getSsmParams(
     credentials: somRoleCredentials,
   });
 
-  async function _fetchSsmParams(
-    nextToken: string | undefined = undefined
-  ): Promise<Array<SomParam>> {
-    const cmd1 = new GetParametersByPathCommand({
-      Path: path,
-      MaxResults: 10,
-      NextToken: nextToken,
-    });
+  async function _fetchSsmParams(nextToken: string | undefined = undefined): Promise<Array<SomParam>> {
+    const cmd1 = new GetParametersByPathCommand(
+      Object.assign(
+        {
+          Path: path,
+          MaxResults: 10,
+        },
+        nextToken ? { NextToken: nextToken } : {}
+      )
+    );
 
     const result = await client.send(cmd1);
     if (!result || !result.Parameters) return [];
@@ -40,7 +35,7 @@ export async function getSsmParams(
       if (Name)
         return acc.concat({
           Param: Name.slice(path.length + 1),
-          Value: Value || "",
+          Value: Value || '',
         });
       return acc;
     }, [] as Array<SomParam>);
@@ -54,10 +49,7 @@ export async function getSsmParams(
   return _fetchSsmParams();
 }
 
-export async function getSsmParam(
-  region: string,
-  paramName: string
-): Promise<string | undefined> {
+export async function getSsmParam(region: string, paramName: string): Promise<string | undefined> {
   const client = new SSMClient({ region });
   try {
     const cmd1 = new GetParameterCommand({
@@ -68,15 +60,10 @@ export async function getSsmParam(
     const result = await client.send(cmd1);
     return result?.Parameter?.Value;
   } catch (ex: any) {
-    console.error(ex);
     return undefined;
   }
 }
 
-export async function getSomSsmParam(
-  somId: string,
-  region: string,
-  name: string
-): Promise<string | undefined> {
+export async function getSomSsmParam(somId: string, region: string, name: string): Promise<string | undefined> {
   return getSsmParam(region, toSsmParamName(somId, name));
 }

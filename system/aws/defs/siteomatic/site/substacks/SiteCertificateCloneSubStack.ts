@@ -1,8 +1,9 @@
-import { DEFAULT_STACK_PROPS } from "../../../../../../lib/consts";
-import * as CertificateBuilder from "../../hosting/CertificateBuilder";
-import { SiteStack } from "../SiteStack";
-import { SiteNestedStackProps } from "../../../../../../lib/types";
-import * as cdk from "aws-cdk-lib";
+import * as cdk from 'aws-cdk-lib';
+
+import { DEFAULT_STACK_PROPS } from '../../../../../../lib/consts';
+import type { SiteNestedStackProps } from '../../../../../../lib/types';
+import * as CertificateBuilder from '../../hosting/CertificateBuilder';
+import type { SiteStack } from '../SiteStack';
 
 export class SiteCertificateCloneSubStack extends cdk.NestedStack {
   public siteStack: SiteStack;
@@ -18,11 +19,7 @@ export class SiteCertificateCloneSubStack extends cdk.NestedStack {
     super(
       scope,
       `${scope.somId}-certificate-clones-nested-${scope.siteProps.env?.account}-${scope.siteProps.env?.region}`,
-      Object.assign(
-        {},
-        DEFAULT_STACK_PROPS(scope.somId, scope.siteProps),
-        props
-      )
+      Object.assign({}, DEFAULT_STACK_PROPS(scope.somId, scope.siteProps), props)
     );
     this.siteStack = scope;
     console.log(
@@ -35,8 +32,7 @@ export class SiteCertificateCloneSubStack extends cdk.NestedStack {
       throw new Error(`[CertificateCloneStack] No region given`);
     }
 
-    const hostedZoneId =
-      this.siteStack?.hostedZoneResources?.hostedZone?.hostedZoneId;
+    const hostedZoneId = this.siteStack?.hostedZoneResources?.hostedZone?.hostedZoneId;
     if (!hostedZoneId) {
       throw new Error(`[CertificateCloneStack] Could not find hostedZoneId`);
     }

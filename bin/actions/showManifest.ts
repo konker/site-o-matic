@@ -1,8 +1,9 @@
-import Vorpal from 'vorpal';
-import { SomConfig, SomState } from '../../lib/consts';
+import type Vorpal from 'vorpal';
 
-export function actionShowManifest(vorpal: Vorpal, config: SomConfig, state: SomState) {
-  return async (args: Vorpal.Args): Promise<void> => {
+import type { SomConfig, SomState } from '../../lib/consts';
+
+export function actionShowManifest(vorpal: Vorpal, _: SomConfig, state: SomState) {
+  return async (_: Vorpal.Args): Promise<void> => {
     if (!state.manifest) {
       vorpal.log(`ERROR: no manifest loaded`);
       return;

@@ -1,5 +1,5 @@
+import type { RegistrarConnector } from './connectors';
 import * as dynadot from './connectors/dynadot';
-import { RegistrarConnector } from './connectors';
 
 export function getRegistrarConnector(id: string): RegistrarConnector {
   switch (id) {

@@ -1,8 +1,10 @@
-import Vorpal from 'vorpal';
-import { CLS, SomConfig, SomState } from '../../lib/consts';
+import type Vorpal from 'vorpal';
 
-export function actionClearScreen(vorpal: Vorpal, config: SomConfig, state: SomState) {
-  return async (args: Vorpal.Args): Promise<void> => {
+import type { SomConfig, SomState } from '../../lib/consts';
+import { CLS } from '../../lib/consts';
+
+export function actionClearScreen(vorpal: Vorpal, _: SomConfig, state: SomState) {
+  return async (_: Vorpal.Args): Promise<void> => {
     state.spinner.stop();
     vorpal.log(CLS);
   };

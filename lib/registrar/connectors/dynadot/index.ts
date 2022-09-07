@@ -1,5 +1,5 @@
-import got from 'got';
 import { XMLParser } from 'fast-xml-parser';
+import got from 'got';
 
 export const ID = 'dynadot';
 export const SECRETS = ['DYNADOT_API_KEY'];

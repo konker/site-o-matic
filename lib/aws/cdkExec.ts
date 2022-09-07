@@ -1,18 +1,18 @@
-import path from 'path';
 import { spawn } from 'child_process';
-import Vorpal from 'vorpal';
+import path from 'path';
+import type Vorpal from 'vorpal';
 
 async function cdkExec(vorpal: Vorpal, command: string, args: Array<string>): Promise<number> {
   return new Promise((resolve, reject) => {
-    const proc = spawn(command, args, { cwd: path.join(__dirname, '..', '..') });
+    const proc = spawn(command, args, {
+      cwd: path.join(__dirname, '..', '..'),
+    });
     proc.stdout.on('data', (data: string) => {
       vorpal.log(data.toString());
     });
-
     proc.stderr.on('data', (data: string) => {
       vorpal.log(data.toString());
     });
-
     proc.on('close', (code: number) => {
       if (code === 0) resolve(code);
       else reject(code);
@@ -52,7 +52,6 @@ export async function cdkDeploy(
 
 export async function cdkDestroy(
   vorpal: Vorpal,
-  pathToManifestFile?: string,
   somId?: string,
   params: Record<string, string> | undefined = {}
 ): Promise<number> {

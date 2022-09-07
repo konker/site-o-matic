@@ -1,11 +1,13 @@
-import Vorpal from 'vorpal';
-import { AWS_REGION, SomConfig, SomState } from '../../lib/consts';
-import { getRegistrarConnector } from '../../lib/registrar/index';
+import type Vorpal from 'vorpal';
+
 import * as secretsmanager from '../../lib/aws/secretsmanager';
+import type { SomConfig, SomState } from '../../lib/consts';
+import { AWS_REGION } from '../../lib/consts';
+import { getRegistrarConnector } from '../../lib/registrar/index';
 import { getParam } from '../../lib/utils';
 
 export function actionSetNameServersWithRegistrar(vorpal: Vorpal, config: SomConfig, state: SomState) {
-  return async (args: Vorpal.Args): Promise<void> => {
+  return async (_: Vorpal.Args): Promise<void> => {
     if (!state.registrar) {
       vorpal.log('ERROR: no registrar specified in manifest');
       return;

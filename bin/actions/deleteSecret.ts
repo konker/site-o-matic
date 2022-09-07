@@ -1,6 +1,8 @@
-import Vorpal from 'vorpal';
-import { AWS_REGION, SomConfig, SomState } from '../../lib/consts';
+import type Vorpal from 'vorpal';
+
 import * as secretsmanager from '../../lib/aws/secretsmanager';
+import type { SomConfig, SomState } from '../../lib/consts';
+import { AWS_REGION } from '../../lib/consts';
 import { tabulate } from '../../lib/ui/tables';
 
 export function actionDeleteSecret(vorpal: Vorpal, config: SomConfig, state: SomState) {

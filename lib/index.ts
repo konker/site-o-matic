@@ -1,4 +1,5 @@
 import * as crypto from 'crypto';
+
 import { MAX_SOM_ID_LEN, SOM_PREFIX } from './consts';
 
 export function calculateDomainHash(domainName: string) {

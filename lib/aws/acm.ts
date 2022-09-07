@@ -4,14 +4,12 @@ import {
   ListCertificatesCommand,
   ListTagsForCertificateCommand,
 } from '@aws-sdk/client-acm';
-import { SOM_TAG_NAME, SomConfig } from '../consts';
-import { Tag } from '@aws-sdk/client-acm/dist-types/models';
+import type { Tag } from '@aws-sdk/client-acm/dist-types/models';
 
-export async function listCertificateTags(
-  config: SomConfig,
-  region: string,
-  certificateArn: string
-): Promise<Array<Tag>> {
+import type { SomConfig } from '../consts';
+import { SOM_TAG_NAME } from '../consts';
+
+export async function listCertificateTags(_: SomConfig, region: string, certificateArn: string): Promise<Array<Tag>> {
   const client = new ACMClient({ region });
 
   const cmd1 = new ListTagsForCertificateCommand({

@@ -3,14 +3,13 @@ import {
   ListHostedZonesByNameCommand,
   ListResourceRecordSetsCommand,
   Route53Client,
-} from "@aws-sdk/client-route-53";
-import { AWS_REGION, SomConfig } from "../consts";
-import { assumeSomRole } from "./sts";
+} from '@aws-sdk/client-route-53';
 
-export async function findHostedZoneId(
-  config: SomConfig,
-  domainName: string
-): Promise<string | undefined> {
+import type { SomConfig } from '../consts';
+import { AWS_REGION } from '../consts';
+import { assumeSomRole } from './sts';
+
+export async function findHostedZoneId(config: SomConfig, domainName: string): Promise<string | undefined> {
   const somRoleCredentials = await assumeSomRole(config, AWS_REGION);
   const client = new Route53Client({
     region: AWS_REGION,
@@ -25,15 +24,12 @@ export async function findHostedZoneId(
       return result1.HostedZones[0]?.Id;
     }
   } catch (ex) {
-    console.log("FAILED: ", ex);
+    console.log('FAILED: ', ex);
   }
   return undefined;
 }
 
-export async function removeVerificationCnameRecords(
-  config: SomConfig,
-  hostedZoneId: string
-): Promise<void> {
+export async function removeVerificationCnameRecords(config: SomConfig, hostedZoneId: string): Promise<void> {
   if (!hostedZoneId) return;
 
   const somRoleCredentials = await assumeSomRole(config, AWS_REGION);
@@ -49,7 +45,7 @@ export async function removeVerificationCnameRecords(
     const verificationRecords =
       result1.ResourceRecordSets?.filter((i) => {
         if (i.ResourceRecords && i.ResourceRecords.length > 0) {
-          return i.ResourceRecords[0].Value?.endsWith(".acm-validations.aws.");
+          return i.ResourceRecords[0]?.Value?.endsWith('.acm-validations.aws.');
         }
         return false;
       }) ?? [];
@@ -60,7 +56,7 @@ export async function removeVerificationCnameRecords(
         ChangeBatch: {
           Changes: [
             {
-              Action: "DELETE",
+              Action: 'DELETE',
               ResourceRecordSet: verificationRecord,
             },
           ],
@@ -69,6 +65,6 @@ export async function removeVerificationCnameRecords(
       await client.send(cmd2);
     }
   } catch (ex) {
-    console.log("FAILED: ", ex);
+    console.log('FAILED: ', ex);
   }
 }

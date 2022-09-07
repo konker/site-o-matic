@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
-import { Construct } from 'constructs';
+import type { Construct } from 'constructs';
+
 import { DEFAULT_STACK_PROPS, SOM_TAG_NAME } from '../../../../../lib/consts';
 
 export class SiteOMaticSystemStack extends cdk.Stack {

@@ -1,4 +1,4 @@
-export interface RegistrarConnector {
+export type RegistrarConnector = {
   ID: string;
   SECRETS: Array<string>;
 
@@ -8,4 +8,4 @@ export interface RegistrarConnector {
     domain: string,
     hosts: Array<string>
   ): Promise<Array<string> | undefined>;
-}
+};

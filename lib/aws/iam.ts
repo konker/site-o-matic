@@ -7,7 +7,9 @@ import {
   ListUserTagsCommand,
   UploadSSHPublicKeyCommand,
 } from '@aws-sdk/client-iam';
-import { SOM_TAG_NAME, SomConfig } from '../consts';
+
+import type { SomConfig } from '../consts';
+import { SOM_TAG_NAME } from '../consts';
 import { assumeSomRole } from './sts';
 
 export async function listSomUsers(config: SomConfig, region: string): Promise<Array<Record<string, string>>> {
@@ -22,7 +24,10 @@ export async function listSomUsers(config: SomConfig, region: string): Promise<A
   const usersWithTags = await Promise.all(
     users.Users.map(async (user) => {
       const cmd2 = new ListUserTagsCommand({ UserName: user.UserName });
-      user.Tags = (await client.send(cmd2)).Tags;
+      const tags = (await client.send(cmd2))?.Tags;
+      if (tags) {
+        user.Tags = tags;
+      }
       return user;
     })
   );
