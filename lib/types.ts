@@ -33,7 +33,7 @@ export type HostedZoneDnsConfig = DnsConfigMx | DnsConfigCname | DnsConfigTxt;
 
 export type HostedZoneConfig = {
   readonly domainName: string;
-  readonly extraDnsConfig: Array<HostedZoneDnsConfig>;
+  readonly extraDnsConfig?: Array<HostedZoneDnsConfig> | undefined;
 };
 // ----------------------------------------------------------------------
 export type HostedZoneResources = {
@@ -80,11 +80,12 @@ export type HostedZoneBuilderProps = {
   readonly siteStack: SiteStack;
   readonly domainName: string;
   readonly extraDnsConfig: Array<HostedZoneDnsConfig>;
-  readonly subdomains?: Array<HostedZoneConfig>;
+  readonly subdomains?: Array<HostedZoneConfig> | undefined;
 };
 
 // ----------------------------------------------------------------------
 export type CertificateCloneSpec = {
+  readonly name: string;
   readonly account: string;
   readonly region: string;
 };
@@ -94,22 +95,46 @@ export type CrossAccountAccessGrantRoleSpec = {
   readonly arn: string;
 };
 
-export type SiteStackProps = cdk.StackProps & {
-  readonly rootDomain: string;
+// ----------------------------------------------------------------------
+export type SomManifest = {
   readonly webmasterEmail: string;
-  readonly username: string;
-  readonly contentProducerId: string;
-  readonly pipelineType: PipelineType;
-  readonly extraDnsConfig: Array<HostedZoneDnsConfig>;
-  readonly subdomains: Array<HostedZoneConfig>;
-  readonly certificateClones: Array<CertificateCloneSpec>;
-  readonly crossAccountAccess: Array<CrossAccountAccessGrantRoleSpec>;
   readonly protected: boolean;
-  readonly contextParams: Record<string, string>;
-  readonly env?: Record<string, string>;
+  readonly registrar?: string | undefined;
+  readonly dns: HostedZoneConfig & {
+    readonly subdomains?: undefined | Array<HostedZoneConfig>;
+  };
+  readonly certificate?:
+    | undefined
+    | {
+        readonly clones?: Array<CertificateCloneSpec>;
+      };
+  readonly webHosting?:
+    | undefined
+    | {
+        readonly type: string;
+      };
+  readonly pipeline?:
+    | undefined
+    | {
+        readonly type: string;
+      };
+  readonly content?:
+    | undefined
+    | {
+        readonly producerId: string;
+      };
+  readonly crossAccountAccess?: undefined | Array<CrossAccountAccessGrantRoleSpec>;
 };
 
-export type SiteNestedStackProps = cdk.StackProps & {};
+// ----------------------------------------------------------------------
+export type SiteStackProps = cdk.StackProps &
+  SomManifest & {
+    readonly username: string;
+    readonly contextParams: Record<string, string>;
+    readonly env?: Record<string, string>;
+  };
+
+export type SiteNestedStackProps = cdk.StackProps;
 
 // ----------------------------------------------------------------------
 export type CertificateBuilderProps = {

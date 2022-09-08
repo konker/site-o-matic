@@ -72,7 +72,7 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
         cookieBehavior: cloudfront.OriginRequestCookieBehavior.none(),
       }),
     },
-    domainNames: [props.siteStack.siteProps.rootDomain],
+    domainNames: [props.siteStack.siteProps.dns.domainName],
     certificate: props.domainCertificate,
     priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
     defaultRootObject: 'index.html',

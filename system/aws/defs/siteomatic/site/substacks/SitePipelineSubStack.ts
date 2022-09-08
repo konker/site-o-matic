@@ -24,7 +24,7 @@ export class SitePipelineSubStack extends cdk.NestedStack {
   }
 
   async build() {
-    switch (this.siteStack.siteProps.pipelineType) {
+    switch (this.siteStack.siteProps.pipeline?.type) {
       case SITE_PIPELINE_TYPE_CODECOMMIT_S3: {
         this.siteStack.sitePipelineResources = await CodecommitS3SitePipelineBuilder.build(this, {
           siteStack: this.siteStack,
@@ -40,7 +40,7 @@ export class SitePipelineSubStack extends cdk.NestedStack {
         break;
       }
       default:
-        throw new Error(`Could not create pipeline of type: ${this.siteStack.siteProps.pipelineType}`);
+        throw new Error(`Could not create pipeline of type: ${this.siteStack.siteProps.pipeline?.type}`);
     }
   }
 }

@@ -26,9 +26,9 @@ export class SiteCertificateSubStack extends cdk.NestedStack {
     this.siteStack.certificateResources = await CertificateBuilder.build(this, {
       siteStack: this.siteStack,
       region: DEFAULT_CERTIFICATE_REGION,
-      domainName: this.siteStack.siteProps.rootDomain,
+      domainName: this.siteStack.siteProps.dns.domainName,
       hostedZoneId: this.siteStack.hostedZoneResources.hostedZone.hostedZoneId,
-      subdomains: this.siteStack.siteProps.subdomains ?? [],
+      subdomains: this.siteStack.siteProps.dns.subdomains ?? [],
     });
   }
 }

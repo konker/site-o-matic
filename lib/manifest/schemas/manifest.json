@@ -1,0 +1,289 @@
+{
+  "$id": "https://schemas.site-o-matic.com/manifest.json",
+  "type": "object",
+  "description": "A site-o-matic manifest",
+  "properties": {
+    "webmasterEmail": {
+      "description": "Email address for the site webmaster",
+      "type": "string",
+      "pattern": "^.+@.+\\..+$"
+    },
+    "protected": {
+      "description": "Whether to preserve resources even if the Cloudformation stack is deleted",
+      "type": "boolean"
+    },
+    "registrar": {
+      "description": "ID of the registrar that the domain has been registered with",
+      "type": "string",
+      "minLength": 1
+    },
+    "dns": {
+      "description": "DNS specification",
+      "$ref": "#/definitions/dnsClause"
+    },
+    "certificate": {
+      "description": "SSL certificate specification",
+      "$ref": "#/definitions/certificateClause"
+    },
+    "webHosting": {
+      "description": "Web hosting specification",
+      "$ref": "#/definitions/webHostingClause"
+    },
+    "content": {
+      "description": "Content generation specification",
+      "$ref": "#/definitions/contentClause"
+    },
+    "pipeline": {
+      "description": "Pipeline specification",
+      "$ref": "#/definitions/pipelineClause"
+    },
+    "crossAccountAccess": {
+      "description": "Cross account permissions specification",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/crossAccountAccessSpec"
+      }
+    }
+  },
+  "required": ["webmasterEmail", "protected", "dns"],
+  "additionalProperties": false,
+  "definitions": {
+    "mxDnsRecordSpec": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "MX"
+        },
+        "hostName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "priority": {
+          "type": "number",
+          "minimum": 10,
+          "multipleOf": 10
+        }
+      }
+    },
+    "cnameDnsRecordSpec": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "CNAME"
+        },
+        "recordName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "domainName": {
+          "type": "string"
+        }
+      }
+    },
+    "txtDnsRecordSpec": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "TXT"
+        },
+        "recordName": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "dnsRecordSpec": {
+      "oneOf": [
+        { "$ref": "#/definitions/mxDnsRecordSpec" },
+        { "$ref": "#/definitions/cnameDnsRecordSpec" },
+        { "$ref": "#/definitions/txtDnsRecordSpec" }
+      ]
+    },
+    "subdomainsClause": {
+      "type": "object",
+      "properties": {
+        "domainName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "extraDnsConfig": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/dnsRecordSpec"
+          }
+        }
+      },
+      "required": ["domainName"],
+      "additionalProperties": false
+    },
+    "dnsClause": {
+      "type": "object",
+      "properties": {
+        "domainName": {
+          "description": "The root domain name for this site",
+          "type": "string",
+          "minLength": 4
+        },
+        "extraDnsConfig": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/dnsRecordSpec"
+          }
+        },
+        "subdomains": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/subdomainsClause"
+          }
+        }
+      },
+      "required": ["domainName"],
+      "additionalProperties": false
+    },
+    "certificateCloneSpec": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Name of the account to clone into",
+          "type": "string",
+          "minLength": 1,
+          "examples": ["mws-development"]
+        },
+        "account": {
+          "description": "AWS account ID",
+          "type": "string",
+          "minLength": 12,
+          "examples": ["111111111111"]
+        },
+        "region": {
+          "description": "AWS region",
+          "type": "string",
+          "minLength": 1,
+          "examples": ["eu-north-1"]
+        }
+      },
+      "required": ["name", "account", "region"],
+      "additionalProperties": false
+    },
+    "certificateClause": {
+      "type": "object",
+      "properties": {
+        "clones": {
+          "description": "Accounts to clone the certificate into",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/certificateCloneSpec"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "webHostingClause": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "enum": [
+            "cloudfront-s3"
+          ]
+        }
+      },
+      "required": ["type"],
+      "additionalProperties": false
+    },
+    "pipelineClause": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "enum": [
+            "codecommit-s3",
+            "codecommit-npm"
+          ]
+        }
+      },
+      "required": ["type"],
+      "additionalProperties": false
+    },
+    "contentClause": {
+      "type": "object",
+      "properties": {
+        "producerId": {
+          "enum": [
+            "default",
+            "metalsmith"
+          ]
+        }
+      },
+      "required": ["producerId"],
+      "additionalProperties": false
+    },
+    "crossAccountAccessSpec": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Name of the account to clone into",
+          "type": "string",
+          "minLength": 1,
+          "examples": ["mws-development"]
+        },
+        "arn": {
+          "description": "AWS account ARN",
+          "type": "string",
+          "pattern": "arn.+"
+        }
+      },
+      "required": ["name", "arn"],
+      "additionalProperties": false
+    }
+  },
+  "examples": [
+    {
+      "webmasterEmail": "webmaster@example.com",
+      "protected": false,
+      "registrar": "dynadot",
+      "certificate": {
+        "clones": []
+      },
+      "webhosting": {
+        "type": "cloudfront-s3"
+      },
+      "content": {
+        "producerId": "default"
+      },
+      "pipeline": {
+        "type": "codecommit-s3"
+      },
+      "crossAccountAccess": [],
+      "dns": {
+        "domainName": "example.com",
+        "extraDnsConfig": [
+          {
+            "type": "MX",
+            "hostName": "in1-smtp.foo.com",
+            "priority": 10
+          },
+          {
+            "type": "MX",
+            "hostName": "in2-smtp.foo.com",
+            "priority": 20
+          },
+          {
+            "type": "CNAME",
+            "recordName": "fm1._domainkey.example.com",
+            "domainName": "fm1.example.com.dkim.example.com"
+          },
+          {
+            "type": "TXT",
+            "recordName": "",
+            "values": ["v=spf1 include:spf.example.com ?all"]
+          }
+        ],
+        "subdomains": []
+      }
+    }
+  ]
+}

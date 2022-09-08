@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import Table from 'cli-table';
 
 // eslint-disable-next-line func-style
@@ -25,7 +26,7 @@ const defaultDecorator =
  */
 export function tabulate(recs: Array<any>, headers: Array<string>): string {
   const table = new Table({
-    head: headers,
+    head: headers.map((h) => chalk.cyan(chalk.bold(h))),
   });
   const rows = recs.map(defaultDecorator(headers));
 

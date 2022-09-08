@@ -22,8 +22,8 @@ export async function build(scope: Construct, props: CertificateBuilderProps): P
   // ----------------------------------------------------------------------
   // SSL certificate for apex and wildcard subdomains
   const domainCertificate = new certificatemanager.DnsValidatedCertificate(scope, 'DomainCertificate', {
-    domainName: props.siteStack.siteProps.rootDomain,
-    subjectAlternativeNames: [`*.${props.siteStack.siteProps.rootDomain}`],
+    domainName: props.siteStack.siteProps.dns.domainName,
+    subjectAlternativeNames: [`*.${props.siteStack.siteProps.dns.domainName}`],
     hostedZone: hostedZone,
     region: props.region,
   });
@@ -33,8 +33,8 @@ export async function build(scope: Construct, props: CertificateBuilderProps): P
 
   // ----------------------------------------------------------------------
   // SSL certificates for subdomains
-  if (props.siteStack.siteProps.subdomains && props.siteStack.siteProps.contextParams.deploySubdomainCerts) {
-    props.siteStack.siteProps.subdomains.forEach((subdomain) => {
+  if (props.siteStack.siteProps.dns.subdomains && props.siteStack.siteProps.contextParams.deploySubdomainCerts) {
+    props.siteStack.siteProps.dns.subdomains.forEach((subdomain) => {
       const subdomainCertificate = new certificatemanager.DnsValidatedCertificate(
         scope,
         `DomainCertificate-${subdomain.domainName}`,
@@ -63,15 +63,15 @@ export async function buildManualValidation(
   // ----------------------------------------------------------------------
   // SSL certificate for apex and wildcard subdomains
   const domainCertificate = new certificatemanager.Certificate(scope, 'DomainCertificate', {
-    domainName: props.siteStack.siteProps.rootDomain,
-    subjectAlternativeNames: [`*.${props.siteStack.siteProps.rootDomain}`],
+    domainName: props.siteStack.siteProps.dns.domainName,
+    subjectAlternativeNames: [`*.${props.siteStack.siteProps.dns.domainName}`],
   });
   _somMeta(domainCertificate, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   // ----------------------------------------------------------------------
   // SSL certificates for subdomains
-  if (props.siteStack.siteProps.subdomains && props.siteStack.siteProps.contextParams.deploySubdomainCerts) {
-    props.siteStack.siteProps.subdomains.forEach((subdomain) => {
+  if (props.siteStack.siteProps.dns.subdomains && props.siteStack.siteProps.contextParams.deploySubdomainCerts) {
+    props.siteStack.siteProps.dns.subdomains.forEach((subdomain) => {
       const subdomainCertificate = new certificatemanager.Certificate(
         scope,
         `DomainCertificate-${subdomain.domainName}`,

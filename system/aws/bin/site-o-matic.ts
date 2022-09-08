@@ -4,10 +4,9 @@ import 'source-map-support/register';
 import 'json5/lib/register';
 
 import * as cdk from 'aws-cdk-lib';
-import * as fs from 'fs';
-import * as YAML from 'yaml';
 
 import { formulateSomId } from '../../../lib';
+import { loadManifest } from '../../../lib/manifest';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import config from '../../../site-o-matic.config.json5';
@@ -26,11 +25,18 @@ async function main(): Promise<void> {
   );
 
   const username = contextParams.iamUsername as string;
-  const manifestPath = contextParams.pathToManifestFile as string;
+  const pathToManifestFile = contextParams.pathToManifestFile as string;
+  const manifest = await loadManifest(pathToManifestFile);
+  if (!manifest) {
+    console.log('Invalid manifest');
+    return;
+  }
+  /*
   const manifestYaml = await fs.promises.readFile(manifestPath);
   const manifest = YAML.parse(manifestYaml.toString());
+   */
 
-  const stack = new SiteStack(app, config, formulateSomId(manifest.rootDomain), {
+  const stack = new SiteStack(app, config, formulateSomId(manifest.dns.domainName), {
     ...manifest,
     username,
     contextParams,

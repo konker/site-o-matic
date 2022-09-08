@@ -50,9 +50,6 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
 
       state.spinner.stop();
 
-      /*[TODO]
-        - certificate clones
-       */
       vorpal.log(
         tabulate(
           [
@@ -66,8 +63,16 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
               Value: `${connectionStatus.statusCode}: ${connectionStatus.statusMessage} in ${connectionStatus.timing}ms`,
             },
             {
+              Param: chalk.bold(chalk.white('webHostingType')),
+              Value: state.manifest.webHosting?.type,
+            },
+            {
               Param: chalk.bold(chalk.white('pipelineType')),
-              Value: state.manifest.pipelineType,
+              Value: state.manifest.pipeline?.type,
+            },
+            {
+              Param: chalk.bold(chalk.white('contentProducerId')),
+              Value: state.manifest.content?.producerId,
             },
             {
               Param: chalk.bold(chalk.white('registrar')),

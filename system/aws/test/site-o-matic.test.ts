@@ -13,16 +13,18 @@ test('Empty Stack', () => {
   // WHEN
   const stack = new SiteStack(app, config, 'som-id-test', {
     username: 'som-example-user',
-    rootDomain: 'example.com',
-    webmasterEmail: 'webmaster@example.com',
-    contentProducerId: 'default',
-    pipelineType: 'codecommit-s3',
-    subdomains: [],
-    extraDnsConfig: [],
-    certificateClones: [],
-    crossAccountAccess: [],
-    protected: false,
     contextParams: {},
+    webmasterEmail: 'webmaster@example.com',
+    protected: false,
+    dns: {
+      domainName: 'example.com',
+      extraDnsConfig: [],
+      subdomains: [],
+    },
+    content: { producerId: 'default' },
+    pipeline: { type: 'codecommit-s3' },
+    certificate: { clones: [] },
+    crossAccountAccess: [],
   });
   const template = Template.fromStack(stack);
   // THEN

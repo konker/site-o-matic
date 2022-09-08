@@ -3,6 +3,7 @@ import type { IPrincipal } from 'aws-cdk-lib/aws-iam';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import type { Construct } from 'constructs';
+import cloneDeep from 'lodash.clonedeep';
 
 import { getSomSsmParam, toSsmParamName } from '../../../../../lib/aws/ssm';
 import type { SomConfig } from '../../../../../lib/consts';
@@ -37,7 +38,7 @@ export class SiteStack extends cdk.Stack {
   public domainRole?: iam.Role | undefined;
   public domainPolicy?: iam.Policy | undefined;
   public hostedZoneResources?: HostedZoneResources | undefined;
-  public crossAccountGrantRoles?: Array<iam.IRole> | undefined;
+  public crossAccountGrantRoles?: Array<iam.IRole>;
 
   public certificateResources?: CertificateResources | undefined;
   public hostingResources?: WebHostingResources | undefined;
@@ -46,21 +47,8 @@ export class SiteStack extends cdk.Stack {
   constructor(scope: Construct, config: SomConfig, somId: string, props: SiteStackProps) {
     super(scope, somId, Object.assign({}, DEFAULT_STACK_PROPS(somId, props), props));
 
-    this.config = Object.assign({}, config);
-    this.siteProps = {
-      rootDomain: props.rootDomain,
-      webmasterEmail: props.webmasterEmail,
-      username: props.username,
-      contentProducerId: props.contentProducerId,
-      pipelineType: props.pipelineType,
-      extraDnsConfig: props.extraDnsConfig ?? [],
-      subdomains: props.subdomains ?? [],
-      certificateClones: props.certificateClones ?? [],
-      crossAccountAccess: props.crossAccountAccess ?? [],
-      protected: props.protected,
-      contextParams: props.contextParams ?? {},
-      env: props.env ?? {},
-    };
+    this.config = cloneDeep(config);
+    this.siteProps = cloneDeep(props);
     this.somId = somId;
     console.log('Created SiteStack');
   }
@@ -69,7 +57,7 @@ export class SiteStack extends cdk.Stack {
     // ----------------------------------------------------------------------
     const res1 = new ssm.StringParameter(this, 'SsmRootDomain', {
       parameterName: toSsmParamName(this.somId, 'root-domain'),
-      stringValue: this.siteProps.rootDomain,
+      stringValue: this.siteProps.dns.domainName,
       type: ssm.ParameterType.STRING,
       tier: ssm.ParameterTier.STANDARD,
     });
@@ -112,7 +100,8 @@ export class SiteStack extends cdk.Stack {
 
     // ----------------------------------------------------------------------
     // Initialize cross account access grant roles, if any
-    this.crossAccountGrantRoles = this.siteProps.crossAccountAccess.map((spec: CrossAccountAccessGrantRoleSpec) =>
+    const crossAccountAccess = this.siteProps.crossAccountAccess ?? [];
+    this.crossAccountGrantRoles = crossAccountAccess.map((spec: CrossAccountAccessGrantRoleSpec) =>
       iam.Role.fromRoleArn(this, _id('CrossAccountGrantRole', spec.name, false), spec.arn, {
         mutable: true,
       })
@@ -124,7 +113,7 @@ export class SiteStack extends cdk.Stack {
     await dnsSubStack.build();
     _somTag(dnsSubStack, this.somId);
 
-    const verificationTxtRecordViaDns = await getSomTxtRecordViaDns(this.siteProps.rootDomain);
+    const verificationTxtRecordViaDns = await getSomTxtRecordViaDns(this.siteProps.dns.domainName);
     const verificationSsmParam = await getSomSsmParam(this.somId, this.region, SSM_PARAM_NAME_HOSTED_ZONE_ID);
 
     // Check to see if DNS has been configured correctly,
@@ -139,8 +128,9 @@ export class SiteStack extends cdk.Stack {
 
       // ----------------------------------------------------------------------
       // Certificate clones, if any
-      if (this.siteProps.certificateClones?.length > 0) {
-        for (const certificateClone of this.siteProps.certificateClones) {
+      const certificateClones = this.siteProps.certificate?.clones ?? [];
+      if (certificateClones.length > 0) {
+        for (const certificateClone of certificateClones) {
           console.log(`[site-o-matic] Cloning certificates to: ${certificateClone.account}/${certificateClone.region}`);
           const certificateCloneSubStack = new SiteCertificateCloneSubStack(this, {
             env: {
@@ -170,7 +160,7 @@ export class SiteStack extends cdk.Stack {
 
       // ----------------------------------------------------------------------
       // Allow cross account roles to assume domain role
-      if (this.siteProps.crossAccountAccess.length > 0) {
+      if (crossAccountAccess.length > 0) {
         this.domainRole = new iam.Role(this, 'DomainRole', {
           assumedBy: new iam.CompositePrincipal(...this.crossAccountGrantRoles) as IPrincipal,
         });
