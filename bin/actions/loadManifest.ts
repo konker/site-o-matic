@@ -10,15 +10,6 @@ export function actionLoadManifest(vorpal: Vorpal, config: SomConfig, state: Som
   return async (args: Vorpal.Args): Promise<void> => {
     state.pathToManifestFile = path.resolve(args.pathToManifestFile);
 
-    /*
-    const manifestJson = await fs.promises.readFile(state.pathToManifestFile as string);
-    const manifest = JSON.parse(manifestJson.toString());
-    const validManifest = validateManifest(manifest);
-    if (!validManifest) {
-      vorpal.log('Invalid manifest');
-      return;
-    }
-    */
     const manifest = await loadManifest(state.pathToManifestFile);
     if (!manifest) {
       vorpal.log('Invalid manifest');

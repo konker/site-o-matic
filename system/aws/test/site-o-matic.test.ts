@@ -5,13 +5,14 @@ import { Match, Template } from 'aws-cdk-lib/assertions';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import config from '../../../site-o-matic.config.json5';
+import config from '../../../site-o-matic.config.json';
 import { SiteStack } from '../defs/siteomatic/site/SiteStack';
 
 test('Empty Stack', () => {
   const app = new cdk.App();
   // WHEN
   const stack = new SiteStack(app, config, 'som-id-test', {
+    description: 'Site-o-matic test stack',
     username: 'som-example-user',
     contextParams: {},
     webmasterEmail: 'webmaster@example.com',

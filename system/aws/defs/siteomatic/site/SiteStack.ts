@@ -12,6 +12,8 @@ import {
   SSM_PARAM_NAME_DOMAIN_USER_NAME,
   SSM_PARAM_NAME_HOSTED_ZONE_ID,
   SSM_PARAM_NAME_PROTECTED_STATUS,
+  SSM_PARAM_NAME_SOM_VERSION,
+  VERSION,
 } from '../../../../../lib/consts';
 import { getSomTxtRecordViaDns } from '../../../../../lib/status';
 import type {
@@ -87,6 +89,14 @@ export class SiteStack extends cdk.Stack {
     });
     _somMeta(res4, this.somId, this.siteProps.protected);
 
+    const res5 = new ssm.StringParameter(this, 'SsmSomVersion', {
+      parameterName: toSsmParamName(this.somId, SSM_PARAM_NAME_SOM_VERSION),
+      stringValue: VERSION,
+      type: ssm.ParameterType.STRING,
+      tier: ssm.ParameterTier.STANDARD,
+    });
+    _somMeta(res5, this.somId, this.siteProps.protected);
+
     // ----------------------------------------------------------------------
     // User for all resources
     this.domainUser = iam.User.fromUserName(this, 'DomainUser', this.siteProps.username);
@@ -109,7 +119,9 @@ export class SiteStack extends cdk.Stack {
 
     // ----------------------------------------------------------------------
     // DNS / HostedZone
-    const dnsSubStack = new SiteDnsSubStack(this, {});
+    const dnsSubStack = new SiteDnsSubStack(this, {
+      description: `Site-o-Matic DNS sub-stack for ${this.siteProps.dns.domainName}`,
+    });
     await dnsSubStack.build();
     _somTag(dnsSubStack, this.somId);
 
@@ -121,7 +133,9 @@ export class SiteStack extends cdk.Stack {
     if (verificationTxtRecordViaDns && verificationTxtRecordViaDns === verificationSsmParam) {
       // ----------------------------------------------------------------------
       // SSL Certificates
-      const certificateSubStack = new SiteCertificateSubStack(this, {});
+      const certificateSubStack = new SiteCertificateSubStack(this, {
+        description: `Site-o-Matic certificate sub-stack for ${this.siteProps.dns.domainName}`,
+      });
       await certificateSubStack.build();
       certificateSubStack.addDependency(dnsSubStack);
       _somTag(certificateSubStack, this.somId);
@@ -133,6 +147,7 @@ export class SiteStack extends cdk.Stack {
         for (const certificateClone of certificateClones) {
           console.log(`[site-o-matic] Cloning certificates to: ${certificateClone.account}/${certificateClone.region}`);
           const certificateCloneSubStack = new SiteCertificateCloneSubStack(this, {
+            description: `Site-o-Matic certificate clone sub-stack for ${this.siteProps.dns.domainName}`,
             env: {
               account: certificateClone.account,
               region: certificateClone.region,
@@ -146,14 +161,18 @@ export class SiteStack extends cdk.Stack {
 
       // ----------------------------------------------------------------------
       // Web Hosting
-      const webHostingSubStack = new SiteWebHostingSubStack(this, {});
+      const webHostingSubStack = new SiteWebHostingSubStack(this, {
+        description: `Site-o-Matic web hosting sub-stack for ${this.siteProps.dns.domainName}`,
+      });
       await webHostingSubStack.build();
       webHostingSubStack.addDependency(certificateSubStack);
       _somTag(webHostingSubStack, this.somId);
 
       // ----------------------------------------------------------------------
       // Pipeline for the site
-      const pipelineSubStack = new SitePipelineSubStack(this, {});
+      const pipelineSubStack = new SitePipelineSubStack(this, {
+        description: `Site-o-Matic pipeline sub-stack for ${this.siteProps.dns.domainName}`,
+      });
       await pipelineSubStack.build();
       pipelineSubStack.addDependency(webHostingSubStack);
       _somTag(pipelineSubStack, this.somId);

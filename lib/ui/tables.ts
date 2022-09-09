@@ -21,12 +21,13 @@ const defaultDecorator =
  * Separate the given arguments with a tab character
  *
  * @param recs - records
- * @param headers - headers
+ * @param headers - headers matching data
+ * @param displayHeaders - headers to display
  * @returns {string} table
  */
-export function tabulate(recs: Array<any>, headers: Array<string>): string {
+export function tabulate(recs: Array<any>, headers: Array<string>, displayHeaders?: Array<string>): string {
   const table = new Table({
-    head: headers.map((h) => chalk.cyan(chalk.bold(h))),
+    head: (displayHeaders ?? headers).map((h) => chalk.cyan(chalk.bold(h))),
   });
   const rows = recs.map(defaultDecorator(headers));
 

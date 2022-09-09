@@ -6,13 +6,13 @@ import {
 } from '@aws-sdk/client-route-53';
 
 import type { SomConfig } from '../consts';
-import { AWS_REGION } from '../consts';
+import { DEFAULT_AWS_REGION } from '../consts';
 import { assumeSomRole } from './sts';
 
 export async function findHostedZoneId(config: SomConfig, domainName: string): Promise<string | undefined> {
-  const somRoleCredentials = await assumeSomRole(config, AWS_REGION);
+  const somRoleCredentials = await assumeSomRole(config, DEFAULT_AWS_REGION);
   const client = new Route53Client({
-    region: AWS_REGION,
+    region: DEFAULT_AWS_REGION,
     credentials: somRoleCredentials,
   });
   try {
@@ -32,9 +32,9 @@ export async function findHostedZoneId(config: SomConfig, domainName: string): P
 export async function removeVerificationCnameRecords(config: SomConfig, hostedZoneId: string): Promise<void> {
   if (!hostedZoneId) return;
 
-  const somRoleCredentials = await assumeSomRole(config, AWS_REGION);
+  const somRoleCredentials = await assumeSomRole(config, DEFAULT_AWS_REGION);
   const client = new Route53Client({
-    region: AWS_REGION,
+    region: DEFAULT_AWS_REGION,
     credentials: somRoleCredentials,
   });
   try {

@@ -129,12 +129,16 @@ export type SomManifest = {
 // ----------------------------------------------------------------------
 export type SiteStackProps = cdk.StackProps &
   SomManifest & {
+    readonly description: string;
     readonly username: string;
     readonly contextParams: Record<string, string>;
     readonly env?: Record<string, string>;
   };
 
-export type SiteNestedStackProps = cdk.StackProps;
+export type SiteNestedStackProps = cdk.StackProps & {
+  readonly description: string;
+  readonly env?: Record<string, string>;
+};
 
 // ----------------------------------------------------------------------
 export type CertificateBuilderProps = {
