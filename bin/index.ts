@@ -7,9 +7,10 @@ import ora from 'ora';
 import Vorpal from 'vorpal';
 
 import type { SomState } from '../lib/consts';
+import { VERSION } from '../lib/consts';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import config from '../site-o-matic.config.json5';
+import config from '../site-o-matic.config.json';
 import { actionAddPublicKey } from './actions/addPublicKey';
 import { actionAddSecret } from './actions/addSecret';
 import { actionAddUser } from './actions/addUser';
@@ -46,7 +47,7 @@ async function main() {
     env: 'node',
   });
 
-  vorpal.delimiter('site-o-matic$');
+  vorpal.delimiter(`site-o-matic ${VERSION}>`);
 
   vorpal.command('clear', 'Clear the screen').alias('cls').action(actionClearScreen(vorpal, config, state));
   vorpal.command('load <pathToManifestFile>', 'Load a manifest file').action(actionLoadManifest(vorpal, config, state));
@@ -87,7 +88,7 @@ async function main() {
     .action(actionCloneCertificatesManual(vorpal, config, state));
   vorpal.command('destroy', 'Destroy the site').action(actionDestroy(vorpal, config, state));
 
-  await vorpal.exec('help');
+  // await vorpal.exec('help');
   await vorpal.show();
 }
 

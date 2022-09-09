@@ -2,7 +2,8 @@ import type * as cdk from 'aws-cdk-lib';
 
 import type { SiteStackProps } from './types';
 
-export const AWS_REGION = 'us-east-1';
+export const VERSION = '0.0.1';
+export const DEFAULT_AWS_REGION = 'us-east-1';
 export const DEFAULT_CERTIFICATE_REGION = 'us-east-1';
 export const CLS = '\u001b[2J\u001b[0;0H';
 
@@ -13,6 +14,7 @@ export const MAX_SOM_ID_LEN = 48;
 export const SSM_PARAM_NAME_DOMAIN_USER_NAME = 'domain-user-name';
 export const SSM_PARAM_NAME_HOSTED_ZONE_ID = 'hosted-zone-id';
 export const SSM_PARAM_NAME_PROTECTED_STATUS = 'protected-status';
+export const SSM_PARAM_NAME_SOM_VERSION = 'som-version';
 
 export const SITE_PIPELINE_TYPE_CODECOMMIT_S3 = 'codecommit-s3';
 export const SITE_PIPELINE_TYPE_CODECOMMIT_NPM = 'codecommit-npm';

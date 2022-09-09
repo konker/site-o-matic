@@ -1,15 +1,12 @@
 #!/usr/bin/env node
 
 import 'source-map-support/register';
-import 'json5/lib/register';
 
 import * as cdk from 'aws-cdk-lib';
 
 import { formulateSomId } from '../../../lib';
 import { loadManifest } from '../../../lib/manifest';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import config from '../../../site-o-matic.config.json5';
+import config from '../../../site-o-matic.config.json';
 import { SiteStack } from '../defs/siteomatic/site/SiteStack';
 
 async function main(): Promise<void> {
@@ -31,15 +28,12 @@ async function main(): Promise<void> {
     console.log('Invalid manifest');
     return;
   }
-  /*
-  const manifestYaml = await fs.promises.readFile(manifestPath);
-  const manifest = YAML.parse(manifestYaml.toString());
-   */
 
   const stack = new SiteStack(app, config, formulateSomId(manifest.dns.domainName), {
     ...manifest,
     username,
     contextParams,
+    description: `Site-o-Matic Stack for ${manifest.dns.domainName}`,
   });
   await stack.build();
 }
