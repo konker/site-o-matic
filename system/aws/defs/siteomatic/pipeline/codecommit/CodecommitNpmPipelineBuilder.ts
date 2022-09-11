@@ -23,6 +23,7 @@ export async function build(
   // ----------------------------------------------------------------------
   const codePipeline = new codepipeline.Pipeline(scope, 'CodePipeline', {
     pipelineName: props.siteStack.somId,
+    crossAccountKeys: false,
   });
   _somMeta(codePipeline, props.siteStack.somId, props.siteStack.siteProps.protected);
 
