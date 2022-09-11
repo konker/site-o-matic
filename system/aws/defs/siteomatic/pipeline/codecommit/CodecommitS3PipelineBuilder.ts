@@ -4,7 +4,7 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 import type { Construct } from 'constructs';
 
 import { toSsmParamName } from '../../../../../../lib/aws/ssm';
-import { SITE_PIPELINE_TYPE_CODECOMMIT_S3 } from '../../../../../../lib/consts';
+import { SITE_PIPELINE_CODECOMMIT_BRANCH_NAME, SITE_PIPELINE_TYPE_CODECOMMIT_S3 } from '../../../../../../lib/consts';
 import type { CodecommitS3SitePipelineResources, PipelineBuilderProps } from '../../../../../../lib/types';
 import { _somMeta } from '../../../../../../lib/utils';
 import * as CodecommitSitePipelineStack from './BaseCodecommitPipelineBuilder';
@@ -29,7 +29,7 @@ export async function build(scope: Construct, props: PipelineBuilderProps): Prom
     actionName: 'CodeCommitAction',
     repository: parentResources.codeCommitRepo,
     output: sourceOutput,
-    branch: 'main',
+    branch: SITE_PIPELINE_CODECOMMIT_BRANCH_NAME,
   });
   const deployAction = new actions.S3DeployAction({
     actionName: 'S3DeployAction',

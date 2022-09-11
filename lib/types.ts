@@ -103,6 +103,7 @@ export type CrossAccountAccessGrantRoleSpec = {
 
 // ----------------------------------------------------------------------
 export type SomManifest = {
+  readonly title: string;
   readonly webmasterEmail: string;
   readonly protected: boolean;
   readonly registrar?: string | undefined;
@@ -139,7 +140,7 @@ export type SiteStackProps = cdk.StackProps &
     readonly description: string;
     readonly username: string;
     readonly contextParams: Record<string, string>;
-    readonly siteContentTmpZipFilePath?: string | undefined;
+    readonly siteContentTmpDirPath?: string | undefined;
     readonly env?: Record<string, string>;
   };
 

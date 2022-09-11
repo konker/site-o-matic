@@ -6,6 +6,9 @@ import * as cdk from 'aws-cdk-lib';
 import chalk from 'chalk';
 
 import { formulateSomId } from '../../../lib';
+import { getCodeCommitRepoForSite } from '../../../lib/aws/codecommit';
+import type { SomContentGenerator } from '../../../lib/content';
+import { getContentProducer } from '../../../lib/content';
 import { loadManifest } from '../../../lib/manifest';
 import config from '../../../site-o-matic.config.json';
 import { SiteStack } from '../defs/siteomatic/site/SiteStack';
@@ -30,10 +33,33 @@ async function main(): Promise<void> {
     return;
   }
 
-  const stack = new SiteStack(app, config, formulateSomId(manifest.dns.domainName), {
+  const somId = formulateSomId(manifest.dns.domainName);
+
+  // Only generate the initial content if needed, i.e.:
+  //  - A content producerId has been specified in the manifest
+  //  - The code commit repo does not yet exist
+  let siteContentTmpDirPath: string | undefined;
+  const contentProducerId = manifest.content?.producerId;
+  if (contentProducerId) {
+    const siteCodeCommitRepo = await getCodeCommitRepoForSite(somId);
+    if (!siteCodeCommitRepo) {
+      const contentGenerator: SomContentGenerator = getContentProducer(contentProducerId);
+      siteContentTmpDirPath = await contentGenerator(somId, manifest);
+      if (siteContentTmpDirPath) {
+        console.log(chalk.blue(chalk.bold(`Created content dir: ${siteContentTmpDirPath}`)));
+      } else {
+        console.log(chalk.yellow(chalk.bold('WARNING: Content generation failed')));
+      }
+    } else {
+      console.log(chalk.yellow(chalk.bold('CodeCommit repo exists, skip content generation')));
+    }
+  }
+
+  const stack = new SiteStack(app, config, somId, {
     ...manifest,
     username,
     contextParams,
+    siteContentTmpDirPath: siteContentTmpDirPath,
     description: `Site-o-Matic Stack for ${manifest.dns.domainName}`,
   });
   await stack.build();
