@@ -15,7 +15,6 @@ import { actionAddPublicKey } from './actions/addPublicKey';
 import { actionAddSecret } from './actions/addSecret';
 import { actionAddUser } from './actions/addUser';
 import { actionClearScreen } from './actions/clearScreen';
-import { actionCloneCertificatesManual } from './actions/cloneCertificates';
 import { actionDeletePublicKey } from './actions/deletePublicKey';
 import { actionDeleteSecret } from './actions/deleteSecret';
 import { actionDeploy } from './actions/deploy';
@@ -78,12 +77,6 @@ async function main() {
   vorpal
     .command('set nameservers', 'Set the nameservers automatically with the registrar, if configured')
     .action(actionSetNameServersWithRegistrar(vorpal, config, state));
-  vorpal
-    .command(
-      'cloneCertsManual <username>',
-      'Clone the SSL certificates, with manual verification, under the given user'
-    )
-    .action(actionCloneCertificatesManual(vorpal, config, state));
   vorpal.command('destroy', 'Destroy the site').action(actionDestroy(vorpal, config, state));
 
   await vorpal.delimiter(`site-o-matic ${VERSION}>`).show();
