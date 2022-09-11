@@ -75,6 +75,7 @@ export type SomState = {
   spinner: any;
   rootDomain?: string | undefined;
   subdomains?: Array<string> | undefined;
+  certificateCreate?: boolean;
   certificateCloneNames?: Array<string> | undefined;
   crossAccountAccessNames?: Array<string> | undefined;
   siteUrl?: string | undefined;

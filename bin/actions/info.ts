@@ -75,8 +75,14 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
               Value: state.subdomains?.join('\n'),
             },
             {
+              Param: chalk.bold(chalk.white('certificate?')),
+              Value: !!state.certificateCreate ? 'YES' : 'NO',
+            },
+            {
               Param: chalk.bold(chalk.white('certificate clones')),
-              Value: state.certificateCloneNames?.join('\n'),
+              Value: state.certificateCreate
+                ? state.certificateCloneNames?.join('\n')
+                : chalk.grey(state.certificateCloneNames?.join('\n')),
             },
             {
               Param: chalk.bold(chalk.white('cross account access')),

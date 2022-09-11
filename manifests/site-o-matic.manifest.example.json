@@ -1,0 +1,60 @@
+{
+  "webmasterEmail": "webmaster@example.com",
+  "registrar": "dynadot",
+  "protected": true,
+  "dns": {
+    "domainName": "example.com",
+    "extraDnsConfig": [
+      {
+        "type": "MX",
+        "hostName": "in1-smtp.example.com",
+        "priority": 10
+      },
+      {
+        "type": "CNAME",
+        "recordName": "fm1._domainkey.example.com",
+        "domainName": "fm1.example.com.dkim.example.com"
+      },
+      {
+        "type": "TXT",
+        "recordName": "",
+        "values": ["v=spf1 include:spf.example.com ?all"]
+      }
+    ],
+    "subdomains": [{ "domainName": "dev.example.com" }]
+  },
+  "webHosting": {
+    "type": "cloudfront-s3"
+  },
+  "content": {
+    "producerId": "default"
+  },
+  "pipeline": {
+    "type": "codecommit-npm"
+  },
+  "certificate": {
+    "create": true,
+    "clones": [
+      {
+        "name": "eg-development",
+        "account": "111111111111",
+        "region": "eu-north-1"
+      },
+      {
+        "name": "eg-production",
+        "account": "222222222222",
+        "region": "eu-north-1"
+      }
+    ]
+  },
+  "crossAccountAccess": [
+    {
+      "name": "mws-development",
+      "arn": "arn:aws:sts::111111111111:role/OrganizationAccountAccessRole"
+    },
+    {
+      "name": "mws-production",
+      "arn": "arn:aws:iam::222222222222:role/OrganizationAccountAccessRole"
+    }
+  ]
+}
