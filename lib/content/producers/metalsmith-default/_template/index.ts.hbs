@@ -1,0 +1,32 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import layouts from '@metalsmith/layouts';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import markdown from '@metalsmith/markdown';
+import Metalsmith from 'metalsmith';
+
+Metalsmith(__dirname)
+  .metadata({
+    siteTitle: '{{ manifest.title }}',
+    webmasterEmail: '{{ manifest.webmasterEmail }}',
+    domainName: '{{ manifest.dns.domainName }}',
+  })
+  .source('./src')
+  .destination('./www')
+  .clean(true)
+  .use(markdown())
+  .use(
+    layouts({
+      engineOptions: {
+        helpers: {
+          formattedDate: function (date: string) {
+            return new Date(date).toLocaleDateString();
+          },
+        },
+      },
+    })
+  )
+  .build(function (err) {
+    if (err) throw err;
+  });
