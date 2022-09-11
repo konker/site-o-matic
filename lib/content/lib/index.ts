@@ -2,8 +2,12 @@
 // @ts-ignore
 import MetalsmithInPlace from '@metalsmith/in-place';
 import fs from 'fs';
+import Handlebars from 'handlebars';
 import JSZip from 'jszip';
 import Metalsmith from 'metalsmith';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import MetalsmithRenamer from 'metalsmith-renamer';
 import os from 'os';
 import path from 'path';
 
@@ -92,6 +96,12 @@ export async function processContentDirectory(
   }
 
   try {
+    Handlebars.registerHelper('raw', function (options: any) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      return options.fn(this);
+    });
+
     Metalsmith(contentDirPath)
       .source('.')
       .destination(tmpDirPath)
@@ -99,6 +109,23 @@ export async function processContentDirectory(
       .use(
         MetalsmithInPlace({
           suppressNoFilesError: true,
+          engineOptions: {},
+        })
+      )
+      .use(
+        // If we want .hbs files in the output, we need to process them as ._hbs.hbs file
+        // to stop the in-place plugin recursively processing the file as a .hbs.hbs
+        // After in-place is done, we rename ._hbs to .hbs
+        MetalsmithRenamer({
+          HandlebarsFiles: {
+            pattern: '**/*._hbs',
+            rename: function (name: string) {
+              const ext = path.extname(name);
+              const base = path.basename(name, ext);
+              const newExt = ext.substring(2); // ext includes the '.'
+              return `${base}.${newExt}`;
+            },
+          },
         })
       )
       .build((error) => {
