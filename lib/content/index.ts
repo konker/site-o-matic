@@ -17,6 +17,7 @@ function createContentGenerator(contentProducer: SomContentProducer): SomContent
       console.log(`ERROR: Could not generate content: Could not get tmp dir path`);
       return undefined;
     }
+
     const result = await processContentDirectory(somId, manifest, contentProducer.TEMPLATE_DIR_PATH, tmpDirPath);
     if (!result) {
       console.log(`ERROR: Could not generate content`);
