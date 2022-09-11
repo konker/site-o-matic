@@ -8,7 +8,7 @@ import { DEFAULT_AWS_REGION, SSM_PARAM_NAME_HOSTED_ZONE_ID, SSM_PARAM_NAME_PROTE
 import { getSiteConnectionStatus } from '../../lib/http';
 import { getRegistrarConnector } from '../../lib/registrar';
 import * as status from '../../lib/status';
-import { formatStatus, getSomTxtRecordViaDns } from '../../lib/status';
+import { formatStatusBreadCrumbAndMessage, getSomTxtRecordViaDns } from '../../lib/status';
 import { tabulate } from '../../lib/ui/tables';
 import { getParam } from '../../lib/utils';
 
@@ -25,11 +25,10 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
 
     try {
       state.params = await ssm.getSsmParams(config, DEFAULT_AWS_REGION, state.somId);
-      state.status = await status.getStatus(state);
+      state.connectionStatus = await getSiteConnectionStatus(state.siteUrl);
       state.verificationTxtRecordViaDns = await getSomTxtRecordViaDns(state.rootDomain);
       state.protectedSsm = getParam(state, SSM_PARAM_NAME_PROTECTED_STATUS) ?? 'false';
 
-      const connectionStatus = await getSiteConnectionStatus(state.siteUrl);
       if (state.registrar) {
         const registrarConnector = getRegistrarConnector(state.registrar);
         const somSecrets = await secretsmanager.getSomSecrets(config, DEFAULT_AWS_REGION, registrarConnector.SECRETS);
@@ -38,15 +37,18 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
         } else {
           state.registrarNameservers = await registrarConnector.getNameServers(somSecrets, state.rootDomain as string);
         }
+
+        state.nameserversSet = !!(
+          state.registrarNameservers &&
+          state.registrarNameservers.join(',') === getParam(state, 'hosted-zone-name-servers')
+        );
+        state.hostedZoneVerified = !!(
+          state.verificationTxtRecordViaDns &&
+          state.verificationTxtRecordViaDns === getParam(state, SSM_PARAM_NAME_HOSTED_ZONE_ID)
+        );
       }
-      const nameserversSet = !!(
-        state.registrarNameservers &&
-        state.registrarNameservers.join(',') === getParam(state, 'hosted-zone-name-servers')
-      );
-      const hostedZoneVerified = !!(
-        state.verificationTxtRecordViaDns &&
-        state.verificationTxtRecordViaDns === getParam(state, SSM_PARAM_NAME_HOSTED_ZONE_ID)
-      );
+      state.status = status.getStatus(state);
+      state.statusMessage = status.getStatusMessage(state, state.status);
 
       state.spinner.stop();
 
@@ -90,7 +92,15 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
             },
             {
               Param: chalk.bold(chalk.white('protected')),
-              Value: `SSM: ${state.protectedSsm || '-'} / Manifest: ${state.protectedManifest || '-'}`,
+              Value: `SSM: ${
+                state.protectedSsm === state.protectedManifest
+                  ? chalk.green(state.protectedSsm)
+                  : chalk.red(state.protectedSsm)
+              } / Manifest: ${
+                state.protectedManifest === state.protectedSsm
+                  ? chalk.green(state.protectedManifest)
+                  : chalk.red(state.protectedManifest)
+              }`,
             },
           ],
           ['Param', 'Value'],
@@ -102,21 +112,23 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
           [
             {
               Param: chalk.bold(chalk.white('status')),
-              Value: formatStatus(state.status),
+              Value: formatStatusBreadCrumbAndMessage(state.status, state.statusMessage),
             },
             {
               Param: chalk.bold(chalk.white('connect')),
-              Value: `${connectionStatus.statusCode}: ${connectionStatus.statusMessage} in ${connectionStatus.timing}ms`,
+              Value: !!state.manifest.webHosting
+                ? `${state.connectionStatus?.statusCode}: ${state.connectionStatus?.statusMessage} in ${state.connectionStatus?.timing}ms`
+                : 'N/A',
             },
             {
               Param: 'verification TXT',
-              Value: hostedZoneVerified
+              Value: state.hostedZoneVerified
                 ? chalk.green(state.verificationTxtRecordViaDns)
                 : state.verificationTxtRecordViaDns,
             },
             {
               Param: chalk.bold(chalk.white('registrar nameservers')),
-              Value: nameserversSet ? chalk.green(state.registrarNameservers) : state.registrarNameservers,
+              Value: state.nameserversSet ? chalk.green(state.registrarNameservers) : state.registrarNameservers,
             },
             ...state.params,
             ...STATE_INFO_KEYS.reduce((acc, param) => {

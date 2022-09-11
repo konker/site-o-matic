@@ -1,6 +1,6 @@
 import type * as cdk from 'aws-cdk-lib';
 
-import type { SiteStackProps } from './types';
+import type { SiteStackProps, WwwConnectionStatus } from './types';
 
 export const VERSION = '0.0.1';
 export const DEFAULT_AWS_REGION = 'us-east-1';
@@ -18,6 +18,8 @@ export const SSM_PARAM_NAME_SOM_VERSION = 'som-version';
 
 export const SITE_PIPELINE_TYPE_CODECOMMIT_S3 = 'codecommit-s3';
 export const SITE_PIPELINE_TYPE_CODECOMMIT_NPM = 'codecommit-npm';
+
+export const SITE_PIPELINE_CODECOMMIT_BRANCH_NAME = 'main';
 
 export const DEFAULT_STACK_PROPS = (somId: string, siteProps?: SiteStackProps): cdk.StackProps => ({
   env: {
@@ -58,6 +60,13 @@ export const SOM_STATUS_PIPELINE_DEPLOYMENT_IN_PROGRESS = 'PipelineDeploymentInP
 export const SOM_STATUS_PIPELINE_DEPLOYED = 'PipelineDeployed';
 export const SOM_STATUS_SITE_FUNCTIONAL = 'SiteFunctional';
 
+export const SOM_STATUS_BREADCRUMB = [
+  SOM_STATUS_NOT_STARTED,
+  SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG,
+  SOM_STATUS_HOSTED_ZONE_OK,
+  SOM_STATUS_SITE_FUNCTIONAL,
+];
+
 export type SomStatus =
   | typeof SOM_STATUS_NOT_STARTED
   | typeof SOM_STATUS_HOSTED_ZONE_DEPLOYMENT_IN_PROGRESS
@@ -86,9 +95,13 @@ export type SomState = {
   manifest?: any | undefined;
   params?: Array<SomParam> | undefined;
   status?: SomStatus | undefined;
+  statusMessage?: string | undefined;
   verificationTxtRecordViaDns?: string | undefined;
   protectedManifest?: string | undefined;
   protectedSsm?: string | undefined;
+  connectionStatus?: WwwConnectionStatus | undefined;
+  nameserversSet?: boolean | undefined;
+  hostedZoneVerified?: boolean | undefined;
 };
 
 export type SomConfig = {
