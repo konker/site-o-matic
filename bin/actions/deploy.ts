@@ -11,7 +11,7 @@ export function actionDeploy(vorpal: Vorpal, _: SomConfig, state: SomState) {
       return;
     }
 
-    const response = await vorpal.activeCommand.prompt({
+    const response1 = await vorpal.activeCommand.prompt({
       type: 'input',
       name: 'confirm',
       message: chalk.green(
@@ -20,18 +20,36 @@ export function actionDeploy(vorpal: Vorpal, _: SomConfig, state: SomState) {
         )}? [y/n] `
       ),
     });
-    if (response.confirm === 'y') {
-      try {
-        await cdkExec.cdkDeploy(vorpal, state.somId, {
-          pathToManifestFile: state.pathToManifestFile,
-          iamUsername: args.username,
-          deploySubdomainCerts: 'true',
-        });
-      } catch (ex: any) {
-        vorpal.log(ex);
-      }
-    } else {
+    if (response1.confirm !== 'y') {
       vorpal.log('Aborted');
+      return;
+    }
+
+    if (state.certificateCloneNames?.length ?? 0 > 0) {
+      const response2 = await vorpal.activeCommand.prompt({
+        type: 'input',
+        name: 'confirm',
+        message: chalk.yellow(
+          `WARNING!: Manual action needed to clone certificates into ${state.certificateCloneNames?.join(
+            ','
+          )}. Proceed? [y/n] `
+        ),
+      });
+      if (response2.confirm !== 'y') {
+        vorpal.log('Aborted');
+        return;
+      }
+    }
+
+    // Engage
+    try {
+      await cdkExec.cdkDeploy(vorpal, state.somId, {
+        pathToManifestFile: state.pathToManifestFile,
+        iamUsername: args.username,
+        deploySubdomainCerts: 'true',
+      });
+    } catch (ex: any) {
+      vorpal.log(ex);
     }
   };
 }

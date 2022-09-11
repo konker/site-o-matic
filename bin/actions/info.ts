@@ -59,18 +59,6 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
               Value: state.registrar,
             },
             {
-              Param: chalk.bold(chalk.white('webHostingType')),
-              Value: state.manifest.webHosting?.type,
-            },
-            {
-              Param: chalk.bold(chalk.white('pipelineType')),
-              Value: state.manifest.pipeline?.type,
-            },
-            {
-              Param: chalk.bold(chalk.white('contentProducerId')),
-              Value: state.manifest.content?.producerId,
-            },
-            {
               Param: chalk.bold(chalk.white('subdomains')),
               Value: state.subdomains?.join('\n'),
             },
@@ -83,6 +71,18 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
               Value: state.certificateCreate
                 ? state.certificateCloneNames?.join('\n')
                 : chalk.grey(state.certificateCloneNames?.join('\n')),
+            },
+            {
+              Param: chalk.bold(chalk.white('webHostingType')),
+              Value: state.manifest.webHosting?.type,
+            },
+            {
+              Param: chalk.bold(chalk.white('pipelineType')),
+              Value: state.manifest.pipeline?.type,
+            },
+            {
+              Param: chalk.bold(chalk.white('contentProducerId')),
+              Value: state.manifest.content?.producerId,
             },
             {
               Param: chalk.bold(chalk.white('cross account access')),
