@@ -47,8 +47,6 @@ async function main() {
     env: 'node',
   });
 
-  vorpal.delimiter(`site-o-matic ${VERSION}>`);
-
   vorpal.command('clear', 'Clear the screen').alias('cls').action(actionClearScreen(vorpal, config, state));
   vorpal.command('load <pathToManifestFile>', 'Load a manifest file').action(actionLoadManifest(vorpal, config, state));
   vorpal.command('manifest', 'Show details of a loaded manifest').action(actionShowManifest(vorpal, config, state));
@@ -88,8 +86,7 @@ async function main() {
     .action(actionCloneCertificatesManual(vorpal, config, state));
   vorpal.command('destroy', 'Destroy the site').action(actionDestroy(vorpal, config, state));
 
-  // await vorpal.exec('help');
-  await vorpal.show();
+  await vorpal.delimiter(`site-o-matic ${VERSION}>`).show();
 }
 
 main().then(console.log).catch(console.error);

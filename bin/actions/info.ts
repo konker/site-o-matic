@@ -6,7 +6,7 @@ import * as ssm from '../../lib/aws/ssm';
 import type { SomConfig, SomState } from '../../lib/consts';
 import { DEFAULT_AWS_REGION, SSM_PARAM_NAME_HOSTED_ZONE_ID, SSM_PARAM_NAME_PROTECTED_STATUS } from '../../lib/consts';
 import { getSiteConnectionStatus } from '../../lib/http';
-import { getRegistrarConnector } from '../../lib/registrar/index';
+import { getRegistrarConnector } from '../../lib/registrar';
 import * as status from '../../lib/status';
 import { formatStatus, getSomTxtRecordViaDns } from '../../lib/status';
 import { tabulate } from '../../lib/ui/tables';
@@ -55,6 +55,10 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
           [
             { Param: chalk.bold(chalk.white('site')), Value: chalk.bold(chalk.blue(chalk.underline(state.siteUrl))) },
             {
+              Param: chalk.bold(chalk.white('registrar')),
+              Value: state.registrar,
+            },
+            {
               Param: chalk.bold(chalk.white('webHostingType')),
               Value: state.manifest.webHosting?.type,
             },
@@ -65,10 +69,6 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
             {
               Param: chalk.bold(chalk.white('contentProducerId')),
               Value: state.manifest.content?.producerId,
-            },
-            {
-              Param: chalk.bold(chalk.white('registrar')),
-              Value: state.registrar,
             },
             {
               Param: chalk.bold(chalk.white('subdomains')),

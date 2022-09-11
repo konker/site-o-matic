@@ -214,7 +214,7 @@
         "producerId": {
           "enum": [
             "default",
-            "metalsmith"
+            "metalsmith-default"
           ]
         }
       },
@@ -248,7 +248,7 @@
       "certificate": {
         "clones": []
       },
-      "webhosting": {
+      "webHosting": {
         "type": "cloudfront-s3"
       },
       "content": {
