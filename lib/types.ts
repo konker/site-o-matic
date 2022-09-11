@@ -10,6 +10,12 @@ import type * as s3 from 'aws-cdk-lib/aws-s3';
 import type { SiteStack } from '../system/aws/defs/siteomatic/site/SiteStack';
 import type { SITE_PIPELINE_TYPE_CODECOMMIT_NPM, SITE_PIPELINE_TYPE_CODECOMMIT_S3 } from './consts';
 
+export type WwwConnectionStatus = {
+  readonly statusCode: number;
+  readonly statusMessage: string;
+  readonly timing: number;
+};
+
 // ----------------------------------------------------------------------
 export type DnsConfigMx = {
   readonly type: 'MX';
@@ -133,6 +139,7 @@ export type SiteStackProps = cdk.StackProps &
     readonly description: string;
     readonly username: string;
     readonly contextParams: Record<string, string>;
+    readonly siteContentTmpZipFilePath?: string | undefined;
     readonly env?: Record<string, string>;
   };
 

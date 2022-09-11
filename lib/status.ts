@@ -3,6 +3,7 @@ import * as dns from 'dns';
 
 import type { SomState, SomStatus } from './consts';
 import {
+  SOM_STATUS_BREADCRUMB,
   SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG,
   SOM_STATUS_HOSTED_ZONE_DEPLOYMENT_IN_PROGRESS,
   SOM_STATUS_HOSTED_ZONE_OK,
@@ -21,7 +22,7 @@ export async function getSomTxtRecordViaDns(rootDomain?: string): Promise<string
 
   try {
     const records = await dns.promises.resolveTxt(`_som.${rootDomain}`);
-    if (records && records[0]) {
+    if (records?.[0]) {
       return records[0][0];
     }
     return undefined;
@@ -30,15 +31,61 @@ export async function getSomTxtRecordViaDns(rootDomain?: string): Promise<string
   }
 }
 
-export async function getStatus(state: SomState): Promise<SomStatus> {
-  const txtRecord = await getSomTxtRecordViaDns(state.rootDomain);
-  if (getParam(state, 'code-pipeline-arn')) return SOM_STATUS_SITE_FUNCTIONAL;
-  if (getParam(state, 'cloudfront-distribution-id')) return SOM_STATUS_HOSTING_DEPLOYED;
-  if (txtRecord && getParam(state, SSM_PARAM_NAME_HOSTED_ZONE_ID) === txtRecord) return SOM_STATUS_HOSTED_ZONE_OK;
-  if (txtRecord && getParam(state, SSM_PARAM_NAME_HOSTED_ZONE_ID) !== txtRecord)
-    return SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG;
-  if (!txtRecord && getParam(state, 'hosted-zone-name-servers')) return SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG;
+export function getStatus(state: SomState): SomStatus {
+  const hasHostedZoneNameServers = getParam(state, 'hosted-zone-name-servers');
+  const hostedZoneId = getParam(state, SSM_PARAM_NAME_HOSTED_ZONE_ID);
+  const hostedZoneConfigOk =
+    state.verificationTxtRecordViaDns && state.verificationTxtRecordViaDns === hostedZoneId && hasHostedZoneNameServers;
+  const needsCloudfrontDist = !!state.manifest.webHosting;
+  const hasCloudfrontDistId = !!getParam(state, 'cloudfront-distribution-id');
+  const needsCodePipeline = !!state.manifest.pipeline;
+  const hasCodePipelineArn = !!getParam(state, 'code-pipeline-arn');
+
+  if (!hostedZoneId) return SOM_STATUS_NOT_STARTED;
+  if (!hostedZoneConfigOk) return SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG;
+  if (!needsCloudfrontDist && !needsCodePipeline) return SOM_STATUS_SITE_FUNCTIONAL;
+  if (needsCodePipeline) {
+    if (hasCodePipelineArn && (state.connectionStatus?.statusCode ?? 0) > 0) {
+      return SOM_STATUS_SITE_FUNCTIONAL;
+    }
+    return SOM_STATUS_HOSTED_ZONE_OK;
+  }
+  if (needsCloudfrontDist) {
+    if (hasCloudfrontDistId && (state.connectionStatus?.statusCode ?? 0) > 0) {
+      return SOM_STATUS_SITE_FUNCTIONAL;
+    }
+    return SOM_STATUS_HOSTED_ZONE_OK;
+  }
+
   return SOM_STATUS_NOT_STARTED;
+}
+
+export function getStatusMessage(state: SomState, status: SomStatus): string {
+  if (status === SOM_STATUS_NOT_STARTED) {
+    return 'Deploy the site to setup the HostedZone.';
+  }
+  if (status === SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG) {
+    if (state.registrar) {
+      if (state.nameserversSet) {
+        return 'Waiting for nameserver propagation. Refresh the info periodically.';
+      }
+      return 'Set the nameservers with the registrar: `> set nameservers`.';
+    }
+    return 'You must manually set the nameservers with your registrar. This may take a while to take effect.';
+  }
+  if (status === SOM_STATUS_HOSTED_ZONE_OK) {
+    if (state.manifest.pipeline && state.connectionStatus?.statusCode !== 200) {
+      return 'Make sure that content has been pushed to the site git repo';
+    }
+    if (state.manifest.webHosting && state.connectionStatus?.statusCode !== 200) {
+      return 'Make sure that content has been pushed to your S3 bucket www folder';
+    }
+    return 'Deploy the site to create the resources which are still needed.';
+  }
+  if (state.protectedSsm !== state.protectedManifest) {
+    return 'The protected flag differs in the manifest. Deploy the site to make this take effect.';
+  }
+  return '';
 }
 
 export function formatStatus(status: SomStatus): string {
@@ -62,4 +109,14 @@ export function formatStatus(status: SomStatus): string {
     case SOM_STATUS_SITE_FUNCTIONAL:
       return chalk.bold(chalk.greenBright(status));
   }
+}
+
+export function formatStatusBreadCrumb(status: SomStatus): string {
+  return [...SOM_STATUS_BREADCRUMB].map((s) => (s === status ? formatStatus(s) : chalk.grey(s))).join(' > ');
+}
+
+export function formatStatusBreadCrumbAndMessage(status: SomStatus, statusMessage: string): string {
+  const breadCrumb = formatStatusBreadCrumb(status);
+
+  return `${breadCrumb}\n\n${chalk.blue(chalk.bold(statusMessage))}`;
 }

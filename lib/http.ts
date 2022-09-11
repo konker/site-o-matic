@@ -1,9 +1,11 @@
 import got from 'got';
 
-export async function getSiteConnectionStatus(siteUrl?: string) {
+import type { WwwConnectionStatus } from './types';
+
+export async function getSiteConnectionStatus(siteUrl?: string): Promise<WwwConnectionStatus> {
   if (!siteUrl) {
     return {
-      statusCode: 'ERROR',
+      statusCode: -1,
       statusMessage: 'NO URL',
       timing: -1,
     };
@@ -13,14 +15,14 @@ export async function getSiteConnectionStatus(siteUrl?: string) {
     const response = await got(siteUrl, { timeout: 1000 });
     return {
       statusCode: response.statusCode,
-      statusMessage: response.statusMessage,
-      timing: response.timings.phases.total,
+      statusMessage: response.statusMessage ?? 'UNKNOWN',
+      timing: response.timings.phases.total ?? -1,
     };
   } catch (ex: any) {
     return {
-      statusCode: 'ERROR',
-      statusMessage: ex?.code || 'UNKNOWN',
-      timing: ex.timings?.phases?.total || -1,
+      statusCode: -1,
+      statusMessage: ex?.code ?? 'UNKNOWN',
+      timing: ex.timings?.phases?.total ?? -1,
     };
   }
 }
