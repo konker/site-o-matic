@@ -74,10 +74,15 @@ export function getStatusMessage(state: SomState, status: SomStatus): string {
     return 'You must manually set the nameservers with your registrar. This may take a while to take effect.';
   }
   if (status === SOM_STATUS_HOSTED_ZONE_OK) {
-    if (state.manifest.pipeline && state.connectionStatus?.statusCode !== 200) {
-      return 'Make sure that content has been pushed to the site git repo';
+    const needsCloudfrontDist = !!state.manifest.webHosting;
+    const hasCloudfrontDistId = !!getParam(state, 'cloudfront-distribution-id');
+    const needsCodePipeline = !!state.manifest.pipeline;
+    const hasCodePipelineArn = !!getParam(state, 'code-pipeline-arn');
+
+    if (needsCodePipeline && hasCodePipelineArn && state.connectionStatus?.statusCode !== 200) {
+      return 'Make sure that content has been pushed to the site git repo. Consider triggering the pipeline with: `> trigger pipeline`';
     }
-    if (state.manifest.webHosting && state.connectionStatus?.statusCode !== 200) {
+    if (needsCloudfrontDist && hasCloudfrontDistId && state.connectionStatus?.statusCode !== 200) {
       return 'Make sure that content has been pushed to your S3 bucket www folder';
     }
     return 'Deploy the site to create the resources which are still needed.';
