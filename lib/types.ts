@@ -106,6 +106,7 @@ export type SomManifest = {
   readonly certificate?:
     | undefined
     | {
+        readonly create?: boolean;
         readonly clones?: Array<CertificateCloneSpec>;
       };
   readonly webHosting?:

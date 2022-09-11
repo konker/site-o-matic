@@ -3,6 +3,7 @@
 import 'source-map-support/register';
 
 import * as cdk from 'aws-cdk-lib';
+import chalk from 'chalk';
 
 import { formulateSomId } from '../../../lib';
 import { loadManifest } from '../../../lib/manifest';
@@ -25,7 +26,7 @@ async function main(): Promise<void> {
   const pathToManifestFile = contextParams.pathToManifestFile as string;
   const manifest = await loadManifest(pathToManifestFile);
   if (!manifest) {
-    console.log('Invalid manifest');
+    console.log(chalk.red(chalk.bold('Invalid manifest')));
     return;
   }
 

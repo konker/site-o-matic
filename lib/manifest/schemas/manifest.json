@@ -173,6 +173,10 @@
     "certificateClause": {
       "type": "object",
       "properties": {
+        "create": {
+          "description": "whether to create a ACM certificate",
+          "type": "boolean"
+        },
         "clones": {
           "description": "Accounts to clone the certificate into",
           "type": "array",
@@ -181,6 +185,7 @@
           }
         }
       },
+      "required": ["create"],
       "additionalProperties": false
     },
     "webHostingClause": {
@@ -246,6 +251,7 @@
       "protected": false,
       "registrar": "dynadot",
       "certificate": {
+        "create": true,
         "clones": []
       },
       "webHosting": {

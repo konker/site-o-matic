@@ -133,50 +133,52 @@ export class SiteStack extends cdk.Stack {
     if (verificationTxtRecordViaDns && verificationTxtRecordViaDns === verificationSsmParam) {
       // ----------------------------------------------------------------------
       // SSL Certificates
-      const certificateSubStack = new SiteCertificateSubStack(this, {
-        description: `Site-o-Matic certificate sub-stack for ${this.siteProps.dns.domainName}`,
-      });
-      await certificateSubStack.build();
-      certificateSubStack.addDependency(dnsSubStack);
-      _somTag(certificateSubStack, this.somId);
-
-      // ----------------------------------------------------------------------
-      // Certificate clones, if any
-      const certificateClones = this.siteProps.certificate?.clones ?? [];
-      if (certificateClones.length > 0) {
-        for (const certificateClone of certificateClones) {
-          const certificateCloneSubStack = new SiteCertificateCloneSubStack(this, {
-            description: `Site-o-Matic certificate clone sub-stack for ${this.siteProps.dns.domainName}`,
-            env: {
-              account: certificateClone.account,
-              region: certificateClone.region,
-            },
-          });
-          await certificateCloneSubStack.build();
-          certificateCloneSubStack.addDependency(certificateSubStack);
-          _somTag(certificateCloneSubStack, this.somId);
-        }
-      }
-
-      // ----------------------------------------------------------------------
-      // Web Hosting
-      if (this.siteProps.webHosting) {
-        const webHostingSubStack = new SiteWebHostingSubStack(this, {
-          description: `Site-o-Matic web hosting sub-stack for ${this.siteProps.dns.domainName}`,
+      if (!!this.siteProps?.certificate?.create) {
+        const certificateSubStack = new SiteCertificateSubStack(this, {
+          description: `Site-o-Matic certificate sub-stack for ${this.siteProps.dns.domainName}`,
         });
-        await webHostingSubStack.build();
-        webHostingSubStack.addDependency(certificateSubStack);
-        _somTag(webHostingSubStack, this.somId);
+        await certificateSubStack.build();
+        certificateSubStack.addDependency(dnsSubStack);
+        _somTag(certificateSubStack, this.somId);
 
         // ----------------------------------------------------------------------
-        // Pipeline for the site
-        if (this.siteProps.pipeline) {
-          const pipelineSubStack = new SitePipelineSubStack(this, {
-            description: `Site-o-Matic pipeline sub-stack for ${this.siteProps.dns.domainName}`,
+        // Certificate clones, if any
+        const certificateClones = this.siteProps.certificate?.clones ?? [];
+        if (certificateClones.length > 0) {
+          for (const certificateClone of certificateClones) {
+            const certificateCloneSubStack = new SiteCertificateCloneSubStack(this, {
+              description: `Site-o-Matic certificate clone sub-stack for ${this.siteProps.dns.domainName}`,
+              env: {
+                account: certificateClone.account,
+                region: certificateClone.region,
+              },
+            });
+            await certificateCloneSubStack.build();
+            certificateCloneSubStack.addDependency(certificateSubStack);
+            _somTag(certificateCloneSubStack, this.somId);
+          }
+        }
+
+        // ----------------------------------------------------------------------
+        // Web Hosting
+        if (this.siteProps.webHosting) {
+          const webHostingSubStack = new SiteWebHostingSubStack(this, {
+            description: `Site-o-Matic web hosting sub-stack for ${this.siteProps.dns.domainName}`,
           });
-          await pipelineSubStack.build();
-          pipelineSubStack.addDependency(webHostingSubStack);
-          _somTag(pipelineSubStack, this.somId);
+          await webHostingSubStack.build();
+          webHostingSubStack.addDependency(certificateSubStack);
+          _somTag(webHostingSubStack, this.somId);
+
+          // ----------------------------------------------------------------------
+          // Pipeline for the site
+          if (this.siteProps.pipeline) {
+            const pipelineSubStack = new SitePipelineSubStack(this, {
+              description: `Site-o-Matic pipeline sub-stack for ${this.siteProps.dns.domainName}`,
+            });
+            await pipelineSubStack.build();
+            pipelineSubStack.addDependency(webHostingSubStack);
+            _somTag(pipelineSubStack, this.somId);
+          }
         }
       }
 
