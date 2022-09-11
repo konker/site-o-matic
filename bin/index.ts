@@ -27,7 +27,6 @@ import { actionLoadManifest } from './actions/loadManifest';
 import { actionSetNameServersWithRegistrar } from './actions/setNameserversWithRegistrar';
 import { actionShowManifest } from './actions/showManifest';
 import { actionSynthesize } from './actions/synthesize';
-import { actionTriggerPipeline } from './actions/triggerPipeline';
 
 // ----------------------------------------------------------------------
 // MAIN
@@ -78,9 +77,6 @@ async function main() {
   vorpal
     .command('set nameservers', 'Set the nameservers automatically with the registrar, if configured')
     .action(actionSetNameServersWithRegistrar(vorpal, config, state));
-  vorpal
-    .command('trigger pipeline', 'Trigger the pipeline by pushing an empty commit')
-    .action(actionTriggerPipeline(vorpal, config, state));
   vorpal.command('destroy', 'Destroy the site').action(actionDestroy(vorpal, config, state));
 
   await vorpal.delimiter(`site-o-matic ${VERSION}>`).show();
