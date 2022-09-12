@@ -1,8 +1,8 @@
 import type Vorpal from 'vorpal';
 
 import * as iam from '../../lib/aws/iam';
-import type { SomConfig, SomState } from '../../lib/consts';
 import { DEFAULT_AWS_REGION } from '../../lib/consts';
+import type { SomConfig, SomState } from '../../lib/types';
 import { tabulate } from '../../lib/ui/tables';
 
 export function actionDeletePublicKey(vorpal: Vorpal, config: SomConfig, state: SomState) {

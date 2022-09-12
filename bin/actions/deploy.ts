@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import type Vorpal from 'vorpal';
 
 import * as cdkExec from '../../lib/aws/cdkExec';
-import type { SomConfig, SomState } from '../../lib/consts';
+import type { SomConfig, SomState } from '../../lib/types';
 
 export function actionDeploy(vorpal: Vorpal, _: SomConfig, state: SomState) {
   return async (args: Vorpal.Args): Promise<void> => {

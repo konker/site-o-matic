@@ -1,6 +1,6 @@
 import type Vorpal from 'vorpal';
 
-import type { SomState } from '../../lib/consts';
+import type { SomState } from '../../lib/types';
 
 export function actionDummy(vorpal: Vorpal, state: SomState) {
   return async (args: Vorpal.Args): Promise<void> => {

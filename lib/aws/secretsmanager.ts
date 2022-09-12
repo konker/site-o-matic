@@ -6,8 +6,8 @@ import {
   SecretsManagerClient,
 } from '@aws-sdk/client-secrets-manager';
 
-import type { SomConfig } from '../consts';
 import { SOM_TAG_NAME } from '../consts';
+import type { SomConfig } from '../types';
 import { assumeSomRole } from './sts';
 
 export async function getSomSecrets(

@@ -3,12 +3,12 @@ import type Vorpal from 'vorpal';
 
 import * as secretsmanager from '../../lib/aws/secretsmanager';
 import * as ssm from '../../lib/aws/ssm';
-import type { SomConfig, SomState } from '../../lib/consts';
 import { DEFAULT_AWS_REGION, SSM_PARAM_NAME_HOSTED_ZONE_ID, SSM_PARAM_NAME_PROTECTED_STATUS } from '../../lib/consts';
 import { getSiteConnectionStatus } from '../../lib/http';
 import { getRegistrarConnector } from '../../lib/registrar';
 import * as status from '../../lib/status';
 import { formatStatusBreadCrumbAndMessage, getSomTxtRecordViaDns } from '../../lib/status';
+import type { SomConfig, SomState } from '../../lib/types';
 import { tabulate } from '../../lib/ui/tables';
 import { getParam } from '../../lib/utils';
 

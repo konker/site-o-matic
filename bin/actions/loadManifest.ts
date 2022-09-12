@@ -2,9 +2,9 @@ import chalk from 'chalk';
 import path from 'path';
 import type Vorpal from 'vorpal';
 
-import type { SomConfig, SomState } from '../../lib/consts';
-import { formulateSomId } from '../../lib/index';
+import { formulateSomId } from '../../lib';
 import { loadManifest } from '../../lib/manifest';
+import type { SomConfig, SomState } from '../../lib/types';
 import { actionInfo } from './info';
 
 export function actionLoadManifest(vorpal: Vorpal, config: SomConfig, state: SomState) {

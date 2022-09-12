@@ -1,7 +1,7 @@
 import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
 import type { Credentials } from '@aws-sdk/types/dist-types/credentials';
 
-import type { SomConfig } from '../consts';
+import type { SomConfig } from '../types';
 
 export function stsAssumeRoleParams(config: SomConfig) {
   return {

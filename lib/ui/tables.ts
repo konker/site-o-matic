@@ -28,6 +28,7 @@ const defaultDecorator =
 export function tabulate(recs: Array<any>, headers: Array<string>, displayHeaders?: Array<string>): string {
   const table = new Table({
     head: (displayHeaders ?? headers).map((h) => chalk.cyan(chalk.bold(h))),
+    colWidths: [30, 90],
   });
   const rows = recs.map(defaultDecorator(headers));
 

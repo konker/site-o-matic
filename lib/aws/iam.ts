@@ -8,8 +8,8 @@ import {
   UploadSSHPublicKeyCommand,
 } from '@aws-sdk/client-iam';
 
-import type { SomConfig } from '../consts';
 import { SOM_TAG_NAME } from '../consts';
+import type { SomConfig } from '../types';
 import { assumeSomRole } from './sts';
 
 export async function listSomUsers(config: SomConfig, region: string): Promise<Array<Record<string, string>>> {
