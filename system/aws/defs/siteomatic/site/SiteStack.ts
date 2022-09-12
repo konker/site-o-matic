@@ -6,7 +6,6 @@ import type { Construct } from 'constructs';
 import cloneDeep from 'lodash.clonedeep';
 
 import { getSomSsmParam, toSsmParamName } from '../../../../../lib/aws/ssm';
-import type { SomConfig } from '../../../../../lib/consts';
 import {
   DEFAULT_STACK_PROPS,
   SSM_PARAM_NAME_DOMAIN_USER_NAME,
@@ -22,6 +21,7 @@ import type {
   HostedZoneResources,
   PipelineResources,
   SiteStackProps,
+  SomConfig,
   WebHostingResources,
 } from '../../../../../lib/types';
 import { _id, _somMeta, _somTag } from '../../../../../lib/utils';

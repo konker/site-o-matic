@@ -3,8 +3,8 @@ import type Vorpal from 'vorpal';
 
 import * as cdkExec from '../../lib/aws/cdkExec';
 import { removeVerificationCnameRecords } from '../../lib/aws/route53';
-import type { SomConfig, SomState } from '../../lib/consts';
 import { SSM_PARAM_NAME_DOMAIN_USER_NAME, SSM_PARAM_NAME_HOSTED_ZONE_ID } from '../../lib/consts';
+import type { SomConfig, SomState } from '../../lib/types';
 import { getParam } from '../../lib/utils';
 
 export function actionDestroy(vorpal: Vorpal, config: SomConfig, state: SomState) {

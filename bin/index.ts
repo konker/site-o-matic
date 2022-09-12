@@ -6,8 +6,8 @@ import * as cfonts from 'cfonts';
 import ora from 'ora';
 import Vorpal from 'vorpal';
 
-import type { SomState } from '../lib/consts';
 import { VERSION } from '../lib/consts';
+import type { SomState } from '../lib/types';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import config from '../site-o-matic.config.json';

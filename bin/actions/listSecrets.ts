@@ -1,8 +1,8 @@
 import type Vorpal from 'vorpal';
 
 import * as secretsmanager from '../../lib/aws/secretsmanager';
-import type { SomConfig, SomState } from '../../lib/consts';
 import { DEFAULT_AWS_REGION } from '../../lib/consts';
+import type { SomConfig, SomState } from '../../lib/types';
 import { tabulate } from '../../lib/ui/tables';
 
 export function actionListSecrets(vorpal: Vorpal, config: SomConfig, state: SomState) {

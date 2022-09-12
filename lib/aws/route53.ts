@@ -5,8 +5,8 @@ import {
   Route53Client,
 } from '@aws-sdk/client-route-53';
 
-import type { SomConfig } from '../consts';
 import { DEFAULT_AWS_REGION } from '../consts';
+import type { SomConfig } from '../types';
 import { assumeSomRole } from './sts';
 
 export async function findHostedZoneId(config: SomConfig, domainName: string): Promise<string | undefined> {

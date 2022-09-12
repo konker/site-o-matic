@@ -6,8 +6,8 @@ import {
 } from '@aws-sdk/client-acm';
 import type { Tag } from '@aws-sdk/client-acm/dist-types/models';
 
-import type { SomConfig } from '../consts';
 import { SOM_TAG_NAME } from '../consts';
+import type { SomConfig } from '../types';
 
 export async function listCertificateTags(_: SomConfig, region: string, certificateArn: string): Promise<Array<Tag>> {
   const client = new ACMClient({ region });

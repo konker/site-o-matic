@@ -8,7 +8,14 @@ import type * as route53 from 'aws-cdk-lib/aws-route53';
 import type * as s3 from 'aws-cdk-lib/aws-s3';
 
 import type { SiteStack } from '../system/aws/defs/siteomatic/site/SiteStack';
-import type { SITE_PIPELINE_TYPE_CODECOMMIT_NPM, SITE_PIPELINE_TYPE_CODECOMMIT_S3 } from './consts';
+import type {
+  SITE_PIPELINE_TYPE_CODECOMMIT_NPM,
+  SITE_PIPELINE_TYPE_CODECOMMIT_S3,
+  SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG,
+  SOM_STATUS_HOSTED_ZONE_OK,
+  SOM_STATUS_NOT_STARTED,
+  SOM_STATUS_SITE_FUNCTIONAL,
+} from './consts';
 
 export type WwwConnectionStatus = {
   readonly statusCode: number;
@@ -170,4 +177,43 @@ export type PipelineType = typeof SITE_PIPELINE_TYPE_CODECOMMIT_S3 | typeof SITE
 export type PipelineBuilderProps = {
   readonly siteStack: SiteStack;
   readonly pipelineType: PipelineType;
+};
+
+// ----------------------------------------------------------------------
+export type SomStatus =
+  | typeof SOM_STATUS_NOT_STARTED
+  | typeof SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG
+  | typeof SOM_STATUS_HOSTED_ZONE_OK
+  | typeof SOM_STATUS_SITE_FUNCTIONAL;
+
+export type SomParam = Record<string, string>;
+
+export type SomState = {
+  spinner: any;
+  rootDomain?: string | undefined;
+  subdomains?: Array<string> | undefined;
+  certificateCreate?: boolean;
+  certificateCloneNames?: Array<string> | undefined;
+  crossAccountAccessNames?: Array<string> | undefined;
+  siteUrl?: string | undefined;
+  somId?: string | undefined;
+  registrar?: string | undefined;
+  registrarNameservers?: Array<string> | undefined;
+  pathToManifestFile?: string | undefined;
+  manifest?: any | undefined;
+  params?: Array<SomParam> | undefined;
+  status?: SomStatus | undefined;
+  statusMessage?: string | undefined;
+  verificationTxtRecordViaDns?: string | undefined;
+  protectedManifest?: string | undefined;
+  protectedSsm?: string | undefined;
+  connectionStatus?: WwwConnectionStatus | undefined;
+  nameserversSet?: boolean | undefined;
+  hostedZoneVerified?: boolean | undefined;
+};
+
+export type SomConfig = {
+  readonly SOM_PREFIX: string;
+  readonly SOM_TAG_NAME: string;
+  readonly SOM_ROLE_ARN: string;
 };

@@ -1,8 +1,8 @@
 import type { Resource, Stack } from 'aws-cdk-lib';
 import { RemovalPolicy, Tags } from 'aws-cdk-lib';
 
-import type { SomState } from './consts';
 import { SOM_TAG_NAME } from './consts';
+import type { SomState } from './types';
 
 export function getParam(state: SomState, name: string): string | undefined {
   return state.params?.find((i: any) => i.Param === name)?.Value;

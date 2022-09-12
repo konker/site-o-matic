@@ -1,20 +1,15 @@
 import chalk from 'chalk';
 import * as dns from 'dns';
 
-import type { SomState, SomStatus } from './consts';
 import {
   SOM_STATUS_BREADCRUMB,
   SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG,
-  SOM_STATUS_HOSTED_ZONE_DEPLOYMENT_IN_PROGRESS,
   SOM_STATUS_HOSTED_ZONE_OK,
-  SOM_STATUS_HOSTING_DEPLOYED,
-  SOM_STATUS_HOSTING_DEPLOYMENT_IN_PROGRESS,
   SOM_STATUS_NOT_STARTED,
-  SOM_STATUS_PIPELINE_DEPLOYED,
-  SOM_STATUS_PIPELINE_DEPLOYMENT_IN_PROGRESS,
   SOM_STATUS_SITE_FUNCTIONAL,
   SSM_PARAM_NAME_HOSTED_ZONE_ID,
 } from './consts';
+import type { SomState, SomStatus } from './types';
 import { getParam } from './utils';
 
 export async function getSomTxtRecordViaDns(rootDomain?: string): Promise<string | undefined> {
@@ -97,20 +92,10 @@ export function formatStatus(status: SomStatus): string {
   switch (status) {
     case SOM_STATUS_NOT_STARTED:
       return chalk.red(status);
-    case SOM_STATUS_HOSTED_ZONE_DEPLOYMENT_IN_PROGRESS:
-      return chalk.yellow(status);
     case SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG:
-      return chalk.yellow(status);
+      return chalk.yellowBright(status);
     case SOM_STATUS_HOSTED_ZONE_OK:
-      return chalk.green(status);
-    case SOM_STATUS_HOSTING_DEPLOYMENT_IN_PROGRESS:
-      return chalk.yellow(status);
-    case SOM_STATUS_HOSTING_DEPLOYED:
-      return chalk.red(status);
-    case SOM_STATUS_PIPELINE_DEPLOYMENT_IN_PROGRESS:
-      return chalk.yellow(status);
-    case SOM_STATUS_PIPELINE_DEPLOYED:
-      return chalk.green(status);
+      return chalk.yellowBright(status);
     case SOM_STATUS_SITE_FUNCTIONAL:
       return chalk.bold(chalk.greenBright(status));
   }
@@ -123,5 +108,5 @@ export function formatStatusBreadCrumb(status: SomStatus): string {
 export function formatStatusBreadCrumbAndMessage(status: SomStatus, statusMessage: string): string {
   const breadCrumb = formatStatusBreadCrumb(status);
 
-  return `${breadCrumb}\n\n${chalk.blue(chalk.bold(statusMessage))}`;
+  return `${breadCrumb}\n\n${chalk.hex('#0075bd')(chalk.bold(statusMessage))}`;
 }

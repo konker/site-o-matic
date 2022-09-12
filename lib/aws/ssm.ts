@@ -1,6 +1,6 @@
 import { GetParameterCommand, GetParametersByPathCommand, SSMClient } from '@aws-sdk/client-ssm';
 
-import type { SomConfig, SomParam } from '../consts';
+import type { SomConfig, SomParam } from '../types';
 import { assumeSomRole } from './sts';
 
 export function toSsmParamName(somId: string, name: string) {
