@@ -1,7 +1,8 @@
-import * as manifestSchema from './schemas/manifest.json';
 import AJV from 'ajv';
 import fs from 'fs';
+
 import type { SomManifest } from '../types';
+import * as manifestSchema from './schemas/som-manifest.json';
 
 const ajv = new AJV({
   addUsedSchema: false,
