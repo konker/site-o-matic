@@ -7,11 +7,11 @@ import * as manifestSchema from './schemas/som-manifest.json';
 const ajv = new AJV({
   addUsedSchema: false,
   allErrors: true,
-  coerceTypes: true,
+  coerceTypes: false,
   inlineRefs: false,
   meta: true,
   multipleOfPrecision: 6,
-  removeAdditional: true,
+  removeAdditional: false,
   // useDefaults: true,
   validateSchema: false,
   verbose: true,
@@ -21,7 +21,7 @@ const ajv = new AJV({
 export function validateManifest(manifest: unknown): boolean {
   const valid = ajv.validate(manifestSchema, manifest);
   if (!valid) {
-    ajv.errors?.forEach(console.log);
+    ajv.errors?.forEach((e) => console.log(e));
   }
 
   return valid;

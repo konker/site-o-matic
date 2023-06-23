@@ -6,20 +6,25 @@ import * as cfonts from 'cfonts';
 import ora from 'ora';
 import Vorpal from 'vorpal';
 
+import { CODESTAR_CONNECTION_PROVIDER_TYPES } from '../lib/aws/codestar';
 import { VERSION } from '../lib/consts';
 import type { SomState } from '../lib/types';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import config from '../site-o-matic.config.json';
+import { actionAddCodeStarConnection } from './actions/addCodeStarConnection';
 import { actionAddPublicKey } from './actions/addPublicKey';
 import { actionAddSecret } from './actions/addSecret';
 import { actionAddUser } from './actions/addUser';
 import { actionClearScreen } from './actions/clearScreen';
+import { actionDeleteCodeStarConnection } from './actions/deleteCodeStarConnection';
 import { actionDeletePublicKey } from './actions/deletePublicKey';
 import { actionDeleteSecret } from './actions/deleteSecret';
 import { actionDeploy } from './actions/deploy';
+import { actionDeployCheck } from './actions/deployCheck';
 import { actionDestroy } from './actions/destroy';
 import { actionInfo } from './actions/info';
+import { actionListCodeStarConnections } from './actions/listCodeStarConnections';
 import { actionListPublicKeys } from './actions/listPublicKeys';
 import { actionListSecrets } from './actions/listSecrets';
 import { actionListUsers } from './actions/listUsers';
@@ -69,8 +74,22 @@ async function main() {
     .action(actionDeletePublicKey(vorpal, config, state));
 
   vorpal
+    .command('ls codestar', 'List CodeStar connections')
+    .action(actionListCodeStarConnections(vorpal, config, state));
+  vorpal
+    .command(
+      'add codestar <providerType> <connectionName>',
+      `Add a CodeStar connection, providerType: ${CODESTAR_CONNECTION_PROVIDER_TYPES}`
+    )
+    .action(actionAddCodeStarConnection(vorpal, config, state));
+  vorpal
+    .command('del codestar <connectionArn>', 'Delete a CodeStar connection')
+    .action(actionDeleteCodeStarConnection(vorpal, config, state));
+
+  vorpal
     .command('synth <username>', 'Synthesize the CDK stack under the given user')
     .action(actionSynthesize(vorpal, config, state));
+  vorpal.command('check <username>', 'Perform deployment checks').action(actionDeployCheck(vorpal, config, state));
   vorpal
     .command('deploy <username>', 'Deploy the site under the given user')
     .action(actionDeploy(vorpal, config, state));
@@ -79,7 +98,13 @@ async function main() {
     .action(actionSetNameServersWithRegistrar(vorpal, config, state));
   vorpal.command('destroy', 'Destroy the site').action(actionDestroy(vorpal, config, state));
 
-  await vorpal.delimiter(`site-o-matic ${VERSION}>`).show();
+  const app = vorpal.show().delimiter(`site-o-matic ${VERSION}>`);
+  if (process.argv.length > 2) {
+    vorpal.log(`Loading manifest file: ${process.argv[2]}`);
+    await app.exec(`load ${process.argv[2]}`);
+  } else {
+    await app.exec('help');
+  }
 }
 
 main().then(console.log).catch(console.error);

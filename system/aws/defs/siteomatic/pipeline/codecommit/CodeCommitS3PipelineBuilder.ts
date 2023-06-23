@@ -5,16 +5,16 @@ import type { Construct } from 'constructs';
 
 import { toSsmParamName } from '../../../../../../lib/aws/ssm';
 import { SITE_PIPELINE_CODECOMMIT_BRANCH_NAME, SITE_PIPELINE_TYPE_CODECOMMIT_S3 } from '../../../../../../lib/consts';
-import type { CodecommitS3SitePipelineResources, PipelineBuilderProps } from '../../../../../../lib/types';
+import type { CodeCommitS3SitePipelineResources, PipelineBuilderProps } from '../../../../../../lib/types';
 import { _somMeta } from '../../../../../../lib/utils';
-import * as CodecommitSitePipelineStack from './BaseCodecommitPipelineBuilder';
+import * as CodeCommitSitePipelineStack from './BaseCodeCommitPipelineBuilder';
 
-export async function build(scope: Construct, props: PipelineBuilderProps): Promise<CodecommitS3SitePipelineResources> {
+export async function build(scope: Construct, props: PipelineBuilderProps): Promise<CodeCommitS3SitePipelineResources> {
   if (!props.siteStack.hostingResources) {
     throw new Error(`[site-o-matic] Could not build pipeline sub-stack when hostingResources is missing`);
   }
 
-  const parentResources = await CodecommitSitePipelineStack.build(scope, props);
+  const parentResources = await CodeCommitSitePipelineStack.build(scope, props);
 
   // ----------------------------------------------------------------------
   // Code Pipeline
@@ -25,8 +25,8 @@ export async function build(scope: Construct, props: PipelineBuilderProps): Prom
   _somMeta(codePipeline, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   const sourceOutput = new codepipeline.Artifact();
-  const codeCommitAction = new actions.CodeCommitSourceAction({
-    actionName: 'CodeCommitAction',
+  const sourceAction = new actions.CodeCommitSourceAction({
+    actionName: 'SourceAction',
     repository: parentResources.codeCommitRepo,
     output: sourceOutput,
     branch: SITE_PIPELINE_CODECOMMIT_BRANCH_NAME,
@@ -44,7 +44,7 @@ export async function build(scope: Construct, props: PipelineBuilderProps): Prom
 
   codePipeline.addStage({
     stageName: 'Source',
-    actions: [codeCommitAction],
+    actions: [sourceAction],
   });
   codePipeline.addStage({
     stageName: 'Deploy',

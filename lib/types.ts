@@ -11,6 +11,8 @@ import type { SiteStack } from '../system/aws/defs/siteomatic/site/SiteStack';
 import type {
   SITE_PIPELINE_TYPE_CODECOMMIT_NPM,
   SITE_PIPELINE_TYPE_CODECOMMIT_S3,
+  SITE_PIPELINE_TYPE_CODESTAR_NPM,
+  SITE_PIPELINE_TYPE_CODESTAR_S3,
   SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG,
   SOM_STATUS_HOSTED_ZONE_OK,
   SOM_STATUS_NOT_STARTED,
@@ -66,27 +68,38 @@ export type WebHostingResources = {
 export type BaseSitePipelineResources = {
   readonly invalidateCloudfrontCodeBuildProject: codebuild.PipelineProject;
 };
-
-export type BaseCodecommitSitePipelineResources = {
-  readonly invalidateCloudfrontCodeBuildProject: codebuild.PipelineProject;
+export type BaseCodeCommitSitePipelineResources = BaseSitePipelineResources & {
   readonly codeCommitRepo: codecommit.Repository;
 };
-
-export type CodecommitS3SitePipelineResources = {
+export type CodeCommitS3SitePipelineResources = BaseCodeCommitSitePipelineResources & {
   readonly type: typeof SITE_PIPELINE_TYPE_CODECOMMIT_S3;
-  readonly invalidateCloudfrontCodeBuildProject: codebuild.PipelineProject;
-  readonly codeCommitRepo: codecommit.Repository;
   readonly codePipeline: codepipeline.Pipeline;
 };
-
-export type CodecommitNpmSitePipelineResources = {
+export type CodeCommitNpmSitePipelineResources = BaseCodeCommitSitePipelineResources & {
   readonly type: typeof SITE_PIPELINE_TYPE_CODECOMMIT_NPM;
-  readonly invalidateCloudfrontCodeBuildProject: codebuild.PipelineProject;
-  readonly codeCommitRepo: codecommit.Repository;
   readonly codePipeline: codepipeline.Pipeline;
 };
 
-export type PipelineResources = CodecommitS3SitePipelineResources | CodecommitNpmSitePipelineResources;
+export type CodeStarS3SitePipelineResources = BaseSitePipelineResources & {
+  readonly type: typeof SITE_PIPELINE_TYPE_CODESTAR_S3;
+  readonly codestarConnectionArn: string;
+  readonly owner: string;
+  readonly repo: string;
+  readonly codePipeline: codepipeline.Pipeline;
+};
+export type CodeStarNpmSitePipelineResources = BaseSitePipelineResources & {
+  readonly type: typeof SITE_PIPELINE_TYPE_CODESTAR_NPM;
+  readonly codestarConnectionArn: string;
+  readonly owner: string;
+  readonly repo: string;
+  readonly codePipeline: codepipeline.Pipeline;
+};
+
+export type PipelineResources =
+  | CodeCommitS3SitePipelineResources
+  | CodeCommitNpmSitePipelineResources
+  | CodeStarS3SitePipelineResources
+  | CodeStarNpmSitePipelineResources;
 
 // ----------------------------------------------------------------------
 export type HostedZoneBuilderProps = {
@@ -131,7 +144,13 @@ export type SomManifest = {
   readonly pipeline?:
     | undefined
     | {
-        readonly type: string;
+        readonly type: typeof SITE_PIPELINE_TYPE_CODECOMMIT_S3 | typeof SITE_PIPELINE_TYPE_CODECOMMIT_NPM;
+      }
+    | {
+        readonly type: typeof SITE_PIPELINE_TYPE_CODESTAR_S3 | typeof SITE_PIPELINE_TYPE_CODESTAR_NPM;
+        readonly codestarConnectionArn: string;
+        readonly owner: string;
+        readonly repo: string;
       };
   readonly content?:
     | undefined
@@ -172,11 +191,15 @@ export type WebHostingBuilderProps = {
 };
 
 // ----------------------------------------------------------------------
-export type PipelineType = typeof SITE_PIPELINE_TYPE_CODECOMMIT_S3 | typeof SITE_PIPELINE_TYPE_CODECOMMIT_NPM;
+export type PipelineType =
+  | typeof SITE_PIPELINE_TYPE_CODECOMMIT_S3
+  | typeof SITE_PIPELINE_TYPE_CODECOMMIT_NPM
+  | typeof SITE_PIPELINE_TYPE_CODESTAR_S3
+  | typeof SITE_PIPELINE_TYPE_CODESTAR_NPM;
 
 export type PipelineBuilderProps = {
-  readonly siteStack: SiteStack;
   readonly pipelineType: PipelineType;
+  readonly siteStack: SiteStack;
 };
 
 // ----------------------------------------------------------------------
@@ -197,6 +220,7 @@ export type SomState = {
   crossAccountAccessNames?: Array<string> | undefined;
   siteUrl?: string | undefined;
   somId?: string | undefined;
+  domainHash?: string | undefined;
   registrar?: string | undefined;
   registrarNameservers?: Array<string> | undefined;
   pathToManifestFile?: string | undefined;

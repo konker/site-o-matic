@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import path from 'path';
 import type Vorpal from 'vorpal';
 
-import { formulateSomId } from '../../lib';
+import { calculateDomainHash, formulateSomId } from '../../lib';
 import { loadManifest } from '../../lib/manifest';
 import type { SomConfig, SomState } from '../../lib/types';
 import { actionInfo } from './info';
@@ -19,6 +19,7 @@ export function actionLoadManifest(vorpal: Vorpal, config: SomConfig, state: Som
 
     state.manifest = manifest;
     state.somId = formulateSomId(state.manifest.dns.domainName);
+    state.domainHash = calculateDomainHash(state.manifest.dns.domainName);
     state.rootDomain = state.manifest.dns.domainName;
     state.subdomains = state.manifest.dns.subdomains?.map((i: any) => i.domainName) ?? [];
     state.certificateCreate = !!state.manifest.certificate?.create;

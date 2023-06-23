@@ -10,6 +10,8 @@ export type SomContentProducer = {
 
 export type SomContentGenerator = (somId: string, manifest: SomManifest) => Promise<string | undefined>;
 
+export const CONTENT_PRODUCER_IDS = [default_.ID, metalsmithDefault.ID] as const;
+
 function createContentGenerator(contentProducer: SomContentProducer): SomContentGenerator {
   return async function generateContent(somId: string, manifest: SomManifest): Promise<string | undefined> {
     const tmpDirPath = getTmpDirPath(somId, contentProducer.ID);

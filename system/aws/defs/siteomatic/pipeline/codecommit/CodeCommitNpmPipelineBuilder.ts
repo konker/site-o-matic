@@ -10,19 +10,19 @@ import {
   SITE_PIPELINE_CODECOMMIT_BRANCH_NAME,
   SITE_PIPELINE_TYPE_CODECOMMIT_NPM,
 } from '../../../../../../lib/consts';
-import type { CodecommitNpmSitePipelineResources, PipelineBuilderProps } from '../../../../../../lib/types';
+import type { CodeCommitNpmSitePipelineResources, PipelineBuilderProps } from '../../../../../../lib/types';
 import { _somMeta } from '../../../../../../lib/utils';
-import * as CodecommitSitePipelineStack from './BaseCodecommitPipelineBuilder';
+import * as CodeCommitSitePipelineStack from './BaseCodeCommitPipelineBuilder';
 
 export async function build(
   scope: Construct,
   props: PipelineBuilderProps
-): Promise<CodecommitNpmSitePipelineResources> {
+): Promise<CodeCommitNpmSitePipelineResources> {
   if (!props.siteStack.hostingResources) {
     throw new Error(`[site-o-matic] Could not build pipeline sub-stack when hostingResources is missing`);
   }
 
-  const parentResources = await CodecommitSitePipelineStack.build(scope, props);
+  const parentResources = await CodeCommitSitePipelineStack.build(scope, props);
 
   // ----------------------------------------------------------------------
   const codePipeline = new codepipeline.Pipeline(scope, 'CodePipeline', {
@@ -56,7 +56,7 @@ export async function build(
   const buildOutput = new codepipeline.Artifact('BuildOutput');
 
   const sourceAction = new actions.CodeCommitSourceAction({
-    actionName: 'CodeCommitAction',
+    actionName: 'SourceAction',
     repository: parentResources.codeCommitRepo,
     output: sourceOutput,
     branch: SITE_PIPELINE_CODECOMMIT_BRANCH_NAME,

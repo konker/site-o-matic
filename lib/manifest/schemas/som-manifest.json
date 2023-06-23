@@ -196,35 +196,57 @@
       "type": "object",
       "properties": {
         "type": {
-          "enum": [
-            "cloudfront-s3"
-          ]
+          "enum": ["cloudfront-s3"]
         }
       },
       "required": ["type"],
       "additionalProperties": false
     },
-    "pipelineClause": {
+    "pipelineClauseCodecommit": {
       "type": "object",
       "properties": {
         "type": {
-          "enum": [
-            "codecommit-s3",
-            "codecommit-npm"
-          ]
+          "type": "string",
+          "enum": ["codecommit-s3", "codecommit-npm"]
         }
       },
       "required": ["type"],
       "additionalProperties": false
+    },
+    "pipelineClauseCodestar": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["codestar-s3", "codestar-npm"]
+        },
+        "codestarConnectionArn": {
+          "type": "string",
+          "pattern": "^arn:aws:codestar-connections:.*"
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repo": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["type", "codestarConnectionArn", "owner", "repo"],
+      "additionalProperties": false
+    },
+    "pipelineClause": {
+      "oneOf": [
+        { "$ref": "#/definitions/pipelineClauseCodecommit" },
+        { "$ref": "#/definitions/pipelineClauseCodestar" }
+      ]
     },
     "contentClause": {
       "type": "object",
       "properties": {
         "producerId": {
-          "enum": [
-            "default",
-            "metalsmith-default"
-          ]
+          "enum": ["default", "metalsmith-default"]
         }
       },
       "required": ["producerId"],
@@ -265,7 +287,8 @@
         "producerId": "default"
       },
       "pipeline": {
-        "type": "codecommit-s3"
+        "type": "codestar-s3",
+        "codestarConnectionArn": "arn:aws:codestar-connections:eu-west-1:111111111111:connection/22222222-2222-2222-2222-222222222222"
       },
       "crossAccountAccess": [],
       "dns": {
