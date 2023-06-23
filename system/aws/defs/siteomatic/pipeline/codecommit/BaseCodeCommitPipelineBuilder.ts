@@ -5,13 +5,13 @@ import type { Construct } from 'constructs';
 
 import { toSsmParamName } from '../../../../../../lib/aws/ssm';
 import { SITE_PIPELINE_CODECOMMIT_BRANCH_NAME, SOM_TAG_NAME } from '../../../../../../lib/consts';
-import type { BaseCodecommitSitePipelineResources, PipelineBuilderProps } from '../../../../../../lib/types';
+import type { BaseCodeCommitSitePipelineResources, PipelineBuilderProps } from '../../../../../../lib/types';
 import * as SitePipelineStack from '../BasePipelineBuilder';
 
 export async function build(
   scope: Construct,
   props: PipelineBuilderProps
-): Promise<BaseCodecommitSitePipelineResources> {
+): Promise<BaseCodeCommitSitePipelineResources> {
   if (!props.siteStack.domainUser) {
     throw new Error(`[site-o-matic] Could not build pipeline sub-stack when domainUser is missing`);
   }

@@ -79,8 +79,12 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
               Value: state.manifest.webHosting?.type,
             },
             {
-              Param: chalk.bold(chalk.white('pipelineType')),
-              Value: state.manifest.pipeline?.type,
+              Param: chalk.bold(chalk.white('pipeline')),
+              Value:
+                `type:\n↪ ${state.manifest.pipeline?.type}` +
+                (state.manifest.pipeline?.codestarConnectionArn
+                  ? `\ncodestarConnectionArn:\n↪ ${state.manifest.pipeline?.codestarConnectionArn}`
+                  : ''),
             },
             {
               Param: chalk.bold(chalk.white('contentProducerId')),

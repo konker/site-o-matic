@@ -19,7 +19,18 @@ export const SSM_PARAM_NAME_SOM_VERSION = 'som-version';
 export const SITE_PIPELINE_TYPE_CODECOMMIT_S3 = 'codecommit-s3';
 export const SITE_PIPELINE_TYPE_CODECOMMIT_NPM = 'codecommit-npm';
 
+export const SITE_PIPELINE_TYPE_CODESTAR_S3 = 'codestar-s3';
+export const SITE_PIPELINE_TYPE_CODESTAR_NPM = 'codestar-npm';
+
 export const SITE_PIPELINE_CODECOMMIT_BRANCH_NAME = 'main';
+export const SITE_PIPELINE_CODESTAR_BRANCH_NAME = 'main';
+
+export const SITE_PIPELINE_TYPES = [
+  SITE_PIPELINE_TYPE_CODECOMMIT_S3,
+  SITE_PIPELINE_TYPE_CODECOMMIT_NPM,
+  SITE_PIPELINE_TYPE_CODESTAR_S3,
+  SITE_PIPELINE_TYPE_CODESTAR_NPM,
+];
 
 export const DEFAULT_STACK_PROPS = (somId: string, siteProps?: SiteStackProps): cdk.StackProps => ({
   env: {

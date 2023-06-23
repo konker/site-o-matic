@@ -3,7 +3,7 @@ import Table from 'cli-table';
 
 // eslint-disable-next-line func-style
 const defaultDecorator =
-  (headers: Array<string>) =>
+  (headers: Array<string>, truncate: boolean) =>
   (rec: any): Array<string> => {
     return headers.reduce((acc, f) => {
       if (Array.isArray(rec[f])) {
@@ -13,7 +13,7 @@ const defaultDecorator =
       } else if (!rec[f]) {
         return acc.concat('<null>');
       }
-      return acc.concat(rec[f]);
+      return acc.concat(rec[f].length > 50 && truncate ? rec[f].split('/').join('/\n') : rec[f]);
     }, [] as Array<string>);
   };
 
@@ -25,12 +25,17 @@ const defaultDecorator =
  * @param displayHeaders - headers to display
  * @returns {string} table
  */
-export function tabulate(recs: Array<any>, headers: Array<string>, displayHeaders?: Array<string>): string {
+export function tabulate(
+  recs: Array<any>,
+  headers: Array<string>,
+  displayHeaders: Array<string> | undefined = undefined,
+  truncate = false
+): string {
   const table = new Table({
     head: (displayHeaders ?? headers).map((h) => chalk.cyan(chalk.bold(h))),
-    colWidths: [30, 100],
+    colWidths: [30, 95, 15, 20, 20, 20, 20].slice(0, headers.length),
   });
-  const rows = recs.map(defaultDecorator(headers));
+  const rows = recs.map(defaultDecorator(headers, truncate));
 
   // eslint-disable-next-line prefer-spread
   table.push.apply(table, rows);
