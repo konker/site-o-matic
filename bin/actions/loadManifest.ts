@@ -3,8 +3,11 @@ import path from 'path';
 import type Vorpal from 'vorpal';
 
 import { calculateDomainHash, formulateSomId } from '../../lib';
+import * as ssm from '../../lib/aws/ssm';
+import { DEFAULT_AWS_REGION, SSM_PARAM_NAME_SOM_VERSION, UNKNOWN } from '../../lib/consts';
 import { loadManifest } from '../../lib/manifest';
 import type { SomConfig, SomState } from '../../lib/types';
+import { getParam } from '../../lib/utils';
 import { actionInfo } from './info';
 
 export function actionLoadManifest(vorpal: Vorpal, config: SomConfig, state: SomState) {
@@ -19,6 +22,8 @@ export function actionLoadManifest(vorpal: Vorpal, config: SomConfig, state: Som
 
     state.manifest = manifest;
     state.somId = formulateSomId(state.manifest.dns.domainName);
+    state.params = await ssm.getSsmParams(config, DEFAULT_AWS_REGION, state.somId);
+    state.somVersion = getParam(state, SSM_PARAM_NAME_SOM_VERSION) ?? UNKNOWN;
     state.domainHash = calculateDomainHash(state.manifest.dns.domainName);
     state.rootDomain = state.manifest.dns.domainName;
     state.subdomains = state.manifest.dns.subdomains?.map((i: any) => i.domainName) ?? [];

@@ -7,6 +7,7 @@ import {
   SITE_PIPELINE_TYPE_CODESTAR_S3,
   SITE_PIPELINE_TYPES,
   SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG,
+  VERSION,
 } from './consts';
 import { CONTENT_PRODUCER_IDS } from './content';
 import { getRegistrarConnector } from './registrar';
@@ -32,6 +33,17 @@ export async function preDeploymentCheck(
     checkItems.push(checkFailed('Manifest Loaded'));
   } else {
     checkItems.push(checkPassed('Manifest Loaded'));
+  }
+
+  if (state.somVersion !== VERSION) {
+    checkItems.push(
+      checkFailed(
+        'Site-O-Matic version',
+        `Currently running version ${VERSION}, does not match deployment version ${state.somVersion}`
+      )
+    );
+  } else {
+    checkItems.push(checkPassed('Site-O-Matic version'));
   }
 
   const somUsers = await iam.listSomUsers(config, DEFAULT_AWS_REGION);

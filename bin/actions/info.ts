@@ -3,7 +3,15 @@ import type Vorpal from 'vorpal';
 
 import * as secretsmanager from '../../lib/aws/secretsmanager';
 import * as ssm from '../../lib/aws/ssm';
-import { DEFAULT_AWS_REGION, SSM_PARAM_NAME_HOSTED_ZONE_ID, SSM_PARAM_NAME_PROTECTED_STATUS } from '../../lib/consts';
+import {
+  DEFAULT_AWS_REGION,
+  SITE_PIPELINE_TYPES_CODECOMMIT,
+  SSM_PARAM_NAME_HOSTED_ZONE_ID,
+  SSM_PARAM_NAME_PROTECTED_STATUS,
+  SSM_PARAM_NAME_SOM_VERSION,
+  UNKNOWN,
+  VERSION,
+} from '../../lib/consts';
 import { getSiteConnectionStatus } from '../../lib/http';
 import { getRegistrarConnector } from '../../lib/registrar';
 import * as status from '../../lib/status';
@@ -25,6 +33,7 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
 
     try {
       state.params = await ssm.getSsmParams(config, DEFAULT_AWS_REGION, state.somId);
+      state.somVersion = getParam(state, SSM_PARAM_NAME_SOM_VERSION) ?? UNKNOWN;
       state.connectionStatus = await getSiteConnectionStatus(state.siteUrl);
       state.verificationTxtRecordViaDns = await getSomTxtRecordViaDns(state.rootDomain);
       state.protectedSsm = getParam(state, SSM_PARAM_NAME_PROTECTED_STATUS) ?? 'false';
@@ -80,15 +89,24 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
             },
             {
               Param: chalk.bold(chalk.white('pipeline')),
-              Value:
-                `type:\n↪ ${state.manifest.pipeline?.type}` +
-                (state.manifest.pipeline?.codestarConnectionArn
-                  ? `\ncodestarConnectionArn:\n↪ ${state.manifest.pipeline?.codestarConnectionArn}`
-                  : ''),
+              Value: state.manifest.pipeline
+                ? `${chalk.bold(chalk.white('type'))}:\n↪ ${state.manifest.pipeline?.type}` +
+                  (state.manifest.pipeline?.codestarConnectionArn
+                    ? `\n${chalk.bold(chalk.white('codestarConnectionArn'))}:\n↪ ${
+                        state.manifest.pipeline?.codestarConnectionArn
+                      }`
+                    : '')
+                : undefined,
             },
             {
               Param: chalk.bold(chalk.white('contentProducerId')),
-              Value: state.manifest.content?.producerId,
+              Value: state.manifest.content?.producerId
+                ? SITE_PIPELINE_TYPES_CODECOMMIT.includes(state.manifest.pipeline?.type)
+                  ? state.manifest.content?.producerId
+                  : `${state.manifest.content?.producerId}\n${chalk.yellow(
+                      'WARNING: content is not automatically produced for non-CodeCommit pipelines'
+                    )}`
+                : undefined,
             },
             {
               Param: chalk.bold(chalk.white('cross account access')),
@@ -114,6 +132,15 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
       vorpal.log(
         tabulate(
           [
+            {
+              Param: chalk.bold(chalk.white('site-o-matic version')),
+              Value:
+                state.somVersion === UNKNOWN || state.somVersion === VERSION
+                  ? state.somVersion
+                  : `${chalk.red(
+                      state.somVersion
+                    )}\nCurrently running site-o-matic version is not compatible with this deployment`,
+            },
             {
               Param: chalk.bold(chalk.white('status')),
               Value: formatStatusBreadCrumbAndMessage(state.status, state.statusMessage),

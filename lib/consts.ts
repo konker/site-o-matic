@@ -2,6 +2,7 @@ import type * as cdk from 'aws-cdk-lib';
 
 import type { SiteStackProps } from './types';
 
+export const UNKNOWN = 'UNKNOWN';
 export const VERSION = '0.0.1';
 export const DEFAULT_AWS_REGION = 'us-east-1';
 export const DEFAULT_CERTIFICATE_REGION = 'us-east-1';
@@ -22,15 +23,12 @@ export const SITE_PIPELINE_TYPE_CODECOMMIT_NPM = 'codecommit-npm';
 export const SITE_PIPELINE_TYPE_CODESTAR_S3 = 'codestar-s3';
 export const SITE_PIPELINE_TYPE_CODESTAR_NPM = 'codestar-npm';
 
+export const SITE_PIPELINE_TYPES_CODECOMMIT = [SITE_PIPELINE_TYPE_CODECOMMIT_S3, SITE_PIPELINE_TYPE_CODECOMMIT_NPM];
+export const SITE_PIPELINE_TYPES_CODESTAR = [SITE_PIPELINE_TYPE_CODESTAR_S3, SITE_PIPELINE_TYPE_CODESTAR_NPM];
+export const SITE_PIPELINE_TYPES = [...SITE_PIPELINE_TYPES_CODECOMMIT, ...SITE_PIPELINE_TYPES_CODESTAR];
+
 export const SITE_PIPELINE_CODECOMMIT_BRANCH_NAME = 'main';
 export const SITE_PIPELINE_CODESTAR_BRANCH_NAME = 'main';
-
-export const SITE_PIPELINE_TYPES = [
-  SITE_PIPELINE_TYPE_CODECOMMIT_S3,
-  SITE_PIPELINE_TYPE_CODECOMMIT_NPM,
-  SITE_PIPELINE_TYPE_CODESTAR_S3,
-  SITE_PIPELINE_TYPE_CODESTAR_NPM,
-];
 
 export const DEFAULT_STACK_PROPS = (somId: string, siteProps?: SiteStackProps): cdk.StackProps => ({
   env: {
