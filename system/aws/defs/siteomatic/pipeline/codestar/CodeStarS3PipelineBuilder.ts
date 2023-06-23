@@ -76,7 +76,6 @@ export async function build(scope: Construct, props: PipelineBuilderProps): Prom
   const res1 = new ssm.StringParameter(scope, 'SsmCodePipelineArn', {
     parameterName: toSsmParamName(props.siteStack.somId, 'code-pipeline-arn'),
     stringValue: codePipeline.pipelineArn,
-    type: ssm.ParameterType.STRING,
     tier: ssm.ParameterTier.STANDARD,
   });
   _somMeta(res1, props.siteStack.somId, props.siteStack.siteProps.protected);

@@ -101,7 +101,6 @@ export async function build(
   const res1 = new ssm.StringParameter(scope, 'SsmCodePipelineArn', {
     parameterName: toSsmParamName(props.siteStack.somId, 'code-pipeline-arn'),
     stringValue: codePipeline.pipelineArn,
-    type: ssm.ParameterType.STRING,
     tier: ssm.ParameterTier.STANDARD,
   });
   _somMeta(res1, props.siteStack.somId, props.siteStack.siteProps.protected);
@@ -111,7 +110,6 @@ export async function build(
     stringValue: `https://${
       props.siteStack.siteProps.env?.region ?? DEFAULT_AWS_REGION
     }.console.aws.amazon.com/codesuite/codepipeline/pipelines/${codePipeline.pipelineName}/view`,
-    type: ssm.ParameterType.STRING,
     tier: ssm.ParameterTier.STANDARD,
   });
   _somMeta(res2, props.siteStack.somId, props.siteStack.siteProps.protected);

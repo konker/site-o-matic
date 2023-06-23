@@ -104,7 +104,6 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
   const res3 = new ssm.StringParameter(scope, 'SsmDomainBucketName', {
     parameterName: toSsmParamName(props.siteStack.somId, 'domain-bucket-name'),
     stringValue: domainBucket.bucketName,
-    type: ssm.ParameterType.STRING,
     tier: ssm.ParameterTier.STANDARD,
   });
   _somMeta(res3, props.siteStack.somId, props.siteStack.siteProps.protected);
@@ -112,7 +111,6 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
   const res4 = new ssm.StringParameter(scope, 'SsmCloudfrontDistributionId', {
     parameterName: toSsmParamName(props.siteStack.somId, 'cloudfront-distribution-id'),
     stringValue: cloudFrontDistribution.distributionId,
-    type: ssm.ParameterType.STRING,
     tier: ssm.ParameterTier.STANDARD,
   });
   _somMeta(res4, props.siteStack.somId, props.siteStack.siteProps.protected);
@@ -120,7 +118,6 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
   const res5 = new ssm.StringParameter(scope, 'SsmCloudfrontDomainName', {
     parameterName: toSsmParamName(props.siteStack.somId, 'cloudfront-domain-name'),
     stringValue: cloudFrontDistribution.distributionDomainName,
-    type: ssm.ParameterType.STRING,
     tier: ssm.ParameterTier.STANDARD,
   });
   _somMeta(res5, props.siteStack.somId, props.siteStack.siteProps.protected);

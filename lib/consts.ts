@@ -3,7 +3,7 @@ import type * as cdk from 'aws-cdk-lib';
 import type { SiteStackProps } from './types';
 
 export const UNKNOWN = 'UNKNOWN';
-export const VERSION = '0.0.1';
+export const VERSION = '0.0.2';
 export const DEFAULT_AWS_REGION = 'us-east-1';
 export const DEFAULT_CERTIFICATE_REGION = 'us-east-1';
 export const CLS = '\u001b[2J\u001b[0;0H';
