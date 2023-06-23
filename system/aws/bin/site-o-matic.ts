@@ -7,6 +7,7 @@ import chalk from 'chalk';
 
 import { formulateSomId } from '../../../lib';
 import { getCodeCommitRepoForSite } from '../../../lib/aws/codecommit';
+import { SITE_PIPELINE_TYPES_CODECOMMIT } from '../../../lib/consts';
 import type { SomContentGenerator } from '../../../lib/content';
 import { getContentProducer } from '../../../lib/content';
 import { loadManifest } from '../../../lib/manifest';
@@ -36,11 +37,13 @@ async function main(): Promise<void> {
   const somId = formulateSomId(manifest.dns.domainName);
 
   // Only generate the initial content if needed, i.e.:
+  //  - The pipeline is based on a codecommit repo
   //  - A content producerId has been specified in the manifest
-  //  - The code commit repo does not yet exist
+  //  - The codecommit repo does not yet exist
   let siteContentTmpDirPath: string | undefined;
   const contentProducerId = manifest.content?.producerId;
-  if (contentProducerId) {
+  const pipelineType = manifest.pipeline?.type;
+  if (contentProducerId && pipelineType && SITE_PIPELINE_TYPES_CODECOMMIT.includes(pipelineType)) {
     const siteCodeCommitRepo = await getCodeCommitRepoForSite(somId);
     if (!siteCodeCommitRepo) {
       const contentGenerator: SomContentGenerator = getContentProducer(contentProducerId);
