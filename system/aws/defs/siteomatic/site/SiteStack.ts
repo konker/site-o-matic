@@ -60,7 +60,6 @@ export class SiteStack extends cdk.Stack {
     const res1 = new ssm.StringParameter(this, 'SsmRootDomain', {
       parameterName: toSsmParamName(this.somId, 'root-domain'),
       stringValue: this.siteProps.dns.domainName,
-      type: ssm.ParameterType.STRING,
       tier: ssm.ParameterTier.STANDARD,
     });
     _somMeta(res1, this.somId, this.siteProps.protected);
@@ -68,7 +67,6 @@ export class SiteStack extends cdk.Stack {
     const res2 = new ssm.StringParameter(this, 'SsmWebmasterEmail', {
       parameterName: toSsmParamName(this.somId, 'webmaster-email'),
       stringValue: this.siteProps.webmasterEmail,
-      type: ssm.ParameterType.STRING,
       tier: ssm.ParameterTier.STANDARD,
     });
     _somMeta(res2, this.somId, this.siteProps.protected);
@@ -76,7 +74,6 @@ export class SiteStack extends cdk.Stack {
     const res3 = new ssm.StringParameter(this, 'SsmProtectedStatus', {
       parameterName: toSsmParamName(this.somId, SSM_PARAM_NAME_PROTECTED_STATUS),
       stringValue: this.siteProps.protected ? 'true' : 'false',
-      type: ssm.ParameterType.STRING,
       tier: ssm.ParameterTier.STANDARD,
     });
     _somMeta(res3, this.somId, this.siteProps.protected);
@@ -84,7 +81,6 @@ export class SiteStack extends cdk.Stack {
     const res4 = new ssm.StringParameter(this, 'SsmDomainUserName', {
       parameterName: toSsmParamName(this.somId, SSM_PARAM_NAME_DOMAIN_USER_NAME),
       stringValue: this.siteProps.username,
-      type: ssm.ParameterType.STRING,
       tier: ssm.ParameterTier.STANDARD,
     });
     _somMeta(res4, this.somId, this.siteProps.protected);
@@ -92,7 +88,6 @@ export class SiteStack extends cdk.Stack {
     const res5 = new ssm.StringParameter(this, 'SsmSomVersion', {
       parameterName: toSsmParamName(this.somId, SSM_PARAM_NAME_SOM_VERSION),
       stringValue: VERSION,
-      type: ssm.ParameterType.STRING,
       tier: ssm.ParameterTier.STANDARD,
     });
     _somMeta(res5, this.somId, this.siteProps.protected);

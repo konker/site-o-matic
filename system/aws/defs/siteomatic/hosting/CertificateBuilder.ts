@@ -21,11 +21,10 @@ export async function build(scope: Construct, props: CertificateBuilderProps): P
 
   // ----------------------------------------------------------------------
   // SSL certificate for apex and wildcard subdomains
-  const domainCertificate = new certificatemanager.DnsValidatedCertificate(scope, 'DomainCertificate', {
+  const domainCertificate = new certificatemanager.Certificate(scope, 'DomainCertificate', {
     domainName: props.siteStack.siteProps.dns.domainName,
     subjectAlternativeNames: [`*.${props.siteStack.siteProps.dns.domainName}`],
-    hostedZone: hostedZone,
-    region: props.region,
+    validation: certificatemanager.CertificateValidation.fromDns(hostedZone),
   });
   _somTag(domainCertificate, props.siteStack.somId);
   // Setting removalPolicy does not work: https://github.com/aws/aws-cdk/issues/20649
@@ -35,14 +34,13 @@ export async function build(scope: Construct, props: CertificateBuilderProps): P
   // SSL certificates for subdomains
   if (props.siteStack.siteProps.dns.subdomains && props.siteStack.siteProps.contextParams.deploySubdomainCerts) {
     props.siteStack.siteProps.dns.subdomains.forEach((subdomain) => {
-      const subdomainCertificate = new certificatemanager.DnsValidatedCertificate(
+      const subdomainCertificate = new certificatemanager.Certificate(
         scope,
         `DomainCertificate-${subdomain.domainName}`,
         {
           domainName: subdomain.domainName,
           subjectAlternativeNames: [`*.${subdomain.domainName}`],
-          hostedZone: hostedZone,
-          region: props.region,
+          validation: certificatemanager.CertificateValidation.fromDns(hostedZone),
         }
       );
       _somTag(subdomainCertificate, props.siteStack.somId);

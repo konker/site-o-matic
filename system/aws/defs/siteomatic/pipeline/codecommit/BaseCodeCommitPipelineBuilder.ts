@@ -42,7 +42,6 @@ export async function build(
   new ssm.StringParameter(scope, 'SsmCodeCommitCloneUrlSsh', {
     parameterName: toSsmParamName(props.siteStack.somId, 'code-commit-clone-url-ssh'),
     stringValue: codeCommitRepo.repositoryCloneUrlSsh,
-    type: ssm.ParameterType.STRING,
     tier: ssm.ParameterTier.STANDARD,
   });
 

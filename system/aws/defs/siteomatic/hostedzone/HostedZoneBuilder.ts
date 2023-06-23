@@ -118,7 +118,6 @@ export async function build(scope: Construct, props: HostedZoneBuilderProps): Pr
   const res1 = new ssm.StringParameter(scope, 'SsmHostedZoneId', {
     parameterName: toSsmParamName(props.siteStack.somId, SSM_PARAM_NAME_HOSTED_ZONE_ID),
     stringValue: hostedZone.hostedZoneId,
-    type: ssm.ParameterType.STRING,
     tier: ssm.ParameterTier.STANDARD,
   });
   _somMeta(res1, props.siteStack.somId, props.siteStack.siteProps.protected);
@@ -126,7 +125,6 @@ export async function build(scope: Construct, props: HostedZoneBuilderProps): Pr
   const res2 = new ssm.StringParameter(scope, 'SsmHostedZoneNameServers', {
     parameterName: toSsmParamName(props.siteStack.somId, 'hosted-zone-name-servers'),
     stringValue: cdk.Fn.join(',', hostedZone.hostedZoneNameServers || []),
-    type: ssm.ParameterType.STRING,
     tier: ssm.ParameterTier.STANDARD,
   });
   _somMeta(res2, props.siteStack.somId, props.siteStack.siteProps.protected);
