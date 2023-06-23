@@ -39,6 +39,7 @@ async function main() {
   const vorpal = new Vorpal();
   const state: SomState = {
     spinner: ora(),
+    somVersion: VERSION,
   };
 
   cfonts.say('Site-O-Matic', {

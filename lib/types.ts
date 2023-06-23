@@ -213,6 +213,7 @@ export type SomParam = Record<string, string>;
 
 export type SomState = {
   spinner: any;
+  somVersion: string;
   rootDomain?: string | undefined;
   subdomains?: Array<string> | undefined;
   certificateCreate?: boolean;
