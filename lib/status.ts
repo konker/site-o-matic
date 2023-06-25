@@ -102,7 +102,7 @@ export function formatStatus(status: SomStatus): string {
 }
 
 export function formatStatusBreadCrumb(status: SomStatus): string {
-  return [...SOM_STATUS_BREADCRUMB].map((s) => (s === status ? formatStatus(s) : chalk.grey(s))).join(' > ');
+  return [...SOM_STATUS_BREADCRUMB].map((s) => (s === status ? formatStatus(s) : chalk.grey(s))).join('\n > ');
 }
 
 export function formatStatusBreadCrumbAndMessage(status: SomStatus, statusMessage: string): string {

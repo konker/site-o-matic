@@ -4,27 +4,20 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 import type { Construct } from 'constructs';
 
 import { toSsmParamName } from '../../../../../../lib/aws/ssm';
-import {
-  SITE_PIPELINE_CODESTAR_BRANCH_NAME,
-  SITE_PIPELINE_TYPE_CODESTAR_NPM,
-  SITE_PIPELINE_TYPE_CODESTAR_S3,
-} from '../../../../../../lib/consts';
+import { SITE_PIPELINE_CODESTAR_BRANCH_NAME, SITE_PIPELINE_TYPE_CODESTAR_S3 } from '../../../../../../lib/consts';
 import type { CodeStarS3SitePipelineResources, PipelineBuilderProps } from '../../../../../../lib/types';
 import { _somMeta } from '../../../../../../lib/utils';
-import * as CodeStarSitePipelineStack from './BaseCodeStarPipelineBuilder';
+import * as SitePipelineStack from '../BasePipelineBuilder';
 
 export async function build(scope: Construct, props: PipelineBuilderProps): Promise<CodeStarS3SitePipelineResources> {
   if (!props.siteStack.hostingResources) {
     throw new Error(`[site-o-matic] Could not build pipeline sub-stack when hostingResources is missing`);
   }
-  if (
-    props.siteStack?.siteProps?.pipeline?.type !== SITE_PIPELINE_TYPE_CODESTAR_S3 &&
-    props.siteStack?.siteProps?.pipeline?.type !== SITE_PIPELINE_TYPE_CODESTAR_NPM
-  ) {
-    throw new Error(`[site-o-matic] Could not build pipeline sub-stack with non-codestar pipeline type`);
+  if (props.siteStack?.siteProps?.pipeline?.type !== SITE_PIPELINE_TYPE_CODESTAR_S3) {
+    throw new Error(`[site-o-matic] Could not build pipeline sub-stack with incorrect pipeline type`);
   }
 
-  const parentResources = await CodeStarSitePipelineStack.build(scope, props);
+  const parentResources = await SitePipelineStack.build(scope, props);
 
   const codestarConnectionArn = props.siteStack?.siteProps?.pipeline?.codestarConnectionArn;
   const owner = props.siteStack?.siteProps?.pipeline?.owner;

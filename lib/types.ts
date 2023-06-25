@@ -9,14 +9,15 @@ import type * as s3 from 'aws-cdk-lib/aws-s3';
 
 import type { SiteStack } from '../system/aws/defs/siteomatic/site/SiteStack';
 import type {
-  SITE_PIPELINE_TYPE_CODECOMMIT_NPM,
+  SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM,
   SITE_PIPELINE_TYPE_CODECOMMIT_S3,
-  SITE_PIPELINE_TYPE_CODESTAR_NPM,
+  SITE_PIPELINE_TYPE_CODESTAR_CUSTOM,
   SITE_PIPELINE_TYPE_CODESTAR_S3,
   SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG,
   SOM_STATUS_HOSTED_ZONE_OK,
   SOM_STATUS_NOT_STARTED,
   SOM_STATUS_SITE_FUNCTIONAL,
+  WEB_HOSTING_TYPE_CLOUDFRONT_S3,
 } from './consts';
 
 export type WwwConnectionStatus = {
@@ -65,6 +66,9 @@ export type WebHostingResources = {
   readonly cloudFrontDistribution: cloudfront.Distribution;
 };
 
+export type PipelineBuildPhase = {
+  readonly commands: Array<string>;
+};
 export type BaseSitePipelineResources = {
   readonly invalidateCloudfrontCodeBuildProject: codebuild.PipelineProject;
 };
@@ -75,8 +79,8 @@ export type CodeCommitS3SitePipelineResources = BaseCodeCommitSitePipelineResour
   readonly type: typeof SITE_PIPELINE_TYPE_CODECOMMIT_S3;
   readonly codePipeline: codepipeline.Pipeline;
 };
-export type CodeCommitNpmSitePipelineResources = BaseCodeCommitSitePipelineResources & {
-  readonly type: typeof SITE_PIPELINE_TYPE_CODECOMMIT_NPM;
+export type CodeCommitCustomSitePipelineResources = BaseCodeCommitSitePipelineResources & {
+  readonly type: typeof SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM;
   readonly codePipeline: codepipeline.Pipeline;
 };
 
@@ -87,8 +91,8 @@ export type CodeStarS3SitePipelineResources = BaseSitePipelineResources & {
   readonly repo: string;
   readonly codePipeline: codepipeline.Pipeline;
 };
-export type CodeStarNpmSitePipelineResources = BaseSitePipelineResources & {
-  readonly type: typeof SITE_PIPELINE_TYPE_CODESTAR_NPM;
+export type CodeStarCustomSitePipelineResources = BaseSitePipelineResources & {
+  readonly type: typeof SITE_PIPELINE_TYPE_CODESTAR_CUSTOM;
   readonly codestarConnectionArn: string;
   readonly owner: string;
   readonly repo: string;
@@ -97,9 +101,9 @@ export type CodeStarNpmSitePipelineResources = BaseSitePipelineResources & {
 
 export type PipelineResources =
   | CodeCommitS3SitePipelineResources
-  | CodeCommitNpmSitePipelineResources
+  | CodeCommitCustomSitePipelineResources
   | CodeStarS3SitePipelineResources
-  | CodeStarNpmSitePipelineResources;
+  | CodeStarCustomSitePipelineResources;
 
 // ----------------------------------------------------------------------
 export type HostedZoneBuilderProps = {
@@ -121,6 +125,11 @@ export type CrossAccountAccessGrantRoleSpec = {
   readonly arn: string;
 };
 
+export type WafAwsManagedRule = {
+  readonly name: string;
+  readonly priority: number;
+};
+
 // ----------------------------------------------------------------------
 export type SomManifest = {
   readonly title: string;
@@ -139,18 +148,33 @@ export type SomManifest = {
   readonly webHosting?:
     | undefined
     | {
-        readonly type: string;
+        readonly type: typeof WEB_HOSTING_TYPE_CLOUDFRONT_S3;
+        readonly waf: {
+          readonly enabled: boolean;
+          readonly AWSManagedRules?: Array<WafAwsManagedRule> | undefined;
+        };
       };
   readonly pipeline?:
     | undefined
     | {
-        readonly type: typeof SITE_PIPELINE_TYPE_CODECOMMIT_S3 | typeof SITE_PIPELINE_TYPE_CODECOMMIT_NPM;
+        readonly type: typeof SITE_PIPELINE_TYPE_CODECOMMIT_S3;
       }
     | {
-        readonly type: typeof SITE_PIPELINE_TYPE_CODESTAR_S3 | typeof SITE_PIPELINE_TYPE_CODESTAR_NPM;
+        readonly type: typeof SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM;
+        readonly buildPhases: Record<string, PipelineBuildPhase>;
+      }
+    | {
+        readonly type: typeof SITE_PIPELINE_TYPE_CODESTAR_S3;
         readonly codestarConnectionArn: string;
         readonly owner: string;
         readonly repo: string;
+      }
+    | {
+        readonly type: typeof SITE_PIPELINE_TYPE_CODESTAR_CUSTOM;
+        readonly codestarConnectionArn: string;
+        readonly owner: string;
+        readonly repo: string;
+        readonly buildPhases: Record<string, PipelineBuildPhase>;
       };
   readonly content?:
     | undefined
@@ -193,9 +217,9 @@ export type WebHostingBuilderProps = {
 // ----------------------------------------------------------------------
 export type PipelineType =
   | typeof SITE_PIPELINE_TYPE_CODECOMMIT_S3
-  | typeof SITE_PIPELINE_TYPE_CODECOMMIT_NPM
+  | typeof SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM
   | typeof SITE_PIPELINE_TYPE_CODESTAR_S3
-  | typeof SITE_PIPELINE_TYPE_CODESTAR_NPM;
+  | typeof SITE_PIPELINE_TYPE_CODESTAR_CUSTOM;
 
 export type PipelineBuilderProps = {
   readonly pipelineType: PipelineType;

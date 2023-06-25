@@ -24,13 +24,31 @@
     "subdomains": [{ "domainName": "dev.example.com" }]
   },
   "webHosting": {
-    "type": "cloudfront-s3"
+    "type": "cloudfront-s3",
+    "waf": {
+      "enabled": true,
+      "AWSManagedRules": [
+        { "name": "AWSManagedRulesCommonRuleSet", "priority":  10 },
+        { "name": "AWSManagedRulesBotControlRuleSet", "priority":  20 }
+      ]
+    }
   },
   "content": {
     "producerId": "default"
   },
   "pipeline": {
-    "type": "codecommit-npm"
+    "type": "codestar-custom",
+    "codestarConnectionArn": "arn:aws:codestar-connections:us-east-1:111111111111:connection/12345678-cafe-cafe-cafe-123456789012",
+    "owner": "example",
+    "repo": "example.com",
+    "buildPhases": {
+      "install": {
+        "commands": ["npm install"]
+      },
+      "build": {
+        "commands": ["npm run build"]
+      }
+    }
   },
   "certificate": {
     "create": true,

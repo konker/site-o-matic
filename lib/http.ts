@@ -3,8 +3,11 @@ import got from 'got';
 import { UNKNOWN } from './consts';
 import type { WwwConnectionStatus } from './types';
 
-export async function getSiteConnectionStatus(siteUrl?: string): Promise<WwwConnectionStatus> {
-  if (!siteUrl) {
+export async function getSiteConnectionStatus(
+  rootDomain: string | undefined,
+  siteUrl: string | undefined
+): Promise<WwwConnectionStatus> {
+  if (!rootDomain || !siteUrl) {
     return {
       statusCode: -1,
       statusMessage: 'NO URL',
@@ -13,7 +16,23 @@ export async function getSiteConnectionStatus(siteUrl?: string): Promise<WwwConn
   }
 
   try {
-    const response = await got(siteUrl, { timeout: 1000 });
+    const response = await got(siteUrl, {
+      timeout: 1000,
+      http2: false,
+      headers: {
+        Host: rootDomain,
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/114.0',
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate, br',
+        DNT: '1',
+        Connection: 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'cross-site',
+      },
+    });
     return {
       statusCode: response.statusCode,
       statusMessage: response.statusMessage ?? UNKNOWN,

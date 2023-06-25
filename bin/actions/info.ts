@@ -5,7 +5,6 @@ import * as secretsmanager from '../../lib/aws/secretsmanager';
 import * as ssm from '../../lib/aws/ssm';
 import {
   DEFAULT_AWS_REGION,
-  SITE_PIPELINE_TYPES_CODECOMMIT,
   SSM_PARAM_NAME_HOSTED_ZONE_ID,
   SSM_PARAM_NAME_PROTECTED_STATUS,
   SSM_PARAM_NAME_SOM_VERSION,
@@ -16,7 +15,7 @@ import { getSiteConnectionStatus } from '../../lib/http';
 import { getRegistrarConnector } from '../../lib/registrar';
 import * as status from '../../lib/status';
 import { formatStatusBreadCrumbAndMessage, getSomTxtRecordViaDns } from '../../lib/status';
-import type { SomConfig, SomState } from '../../lib/types';
+import type { SomConfig, SomState, WafAwsManagedRule } from '../../lib/types';
 import { tabulate } from '../../lib/ui/tables';
 import { getParam } from '../../lib/utils';
 
@@ -33,8 +32,8 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
 
     try {
       state.params = await ssm.getSsmParams(config, DEFAULT_AWS_REGION, state.somId);
-      state.somVersion = getParam(state, SSM_PARAM_NAME_SOM_VERSION) ?? UNKNOWN;
-      state.connectionStatus = await getSiteConnectionStatus(state.siteUrl);
+      state.somVersion = getParam(state, SSM_PARAM_NAME_SOM_VERSION) ?? VERSION;
+      state.connectionStatus = await getSiteConnectionStatus(state.rootDomain, state.siteUrl);
       state.verificationTxtRecordViaDns = await getSomTxtRecordViaDns(state.rootDomain);
       state.protectedSsm = getParam(state, SSM_PARAM_NAME_PROTECTED_STATUS) ?? 'false';
 
@@ -84,8 +83,17 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
                 : chalk.grey(state.certificateCloneNames?.join('\n')),
             },
             {
-              Param: chalk.bold(chalk.white('webHostingType')),
-              Value: state.manifest.webHosting?.type,
+              Param: chalk.bold(chalk.white('web hosting type')),
+              Value: state.manifest.webHosting
+                ? `${chalk.bold(chalk.white('type'))}:\n↪ ${state.manifest.webHosting?.type}` +
+                  (state.manifest.webHosting?.waf
+                    ? `\nWAF enabled: \n↪ ${
+                        state.manifest.webHosting.waf?.enabled
+                      }\nWAF managed rules: ${state.manifest.webHosting.waf?.AWSManagedRules?.map(
+                        (i: WafAwsManagedRule) => `\n↪ ${i.name}`
+                      )}\n`
+                    : '')
+                : undefined,
             },
             {
               Param: chalk.bold(chalk.white('pipeline')),
@@ -95,19 +103,27 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
                     ? `\n${chalk.bold(chalk.white('codestarConnectionArn'))}:\n↪ ${
                         state.manifest.pipeline?.codestarConnectionArn
                       }`
+                    : '') +
+                  (state.manifest.pipeline?.owner
+                    ? `\n${chalk.bold(chalk.white('owner'))}:\n↪ ${state.manifest.pipeline?.owner}`
+                    : '') +
+                  (state.manifest.pipeline?.repo
+                    ? `\n${chalk.bold(chalk.white('repo'))}:\n↪ ${state.manifest.pipeline?.repo}`
                     : '')
                 : undefined,
             },
+            /*[XXX: remove content producers?]
             {
-              Param: chalk.bold(chalk.white('contentProducerId')),
+              Param: chalk.bold(chalk.white('content producer ID')),
               Value: state.manifest.content?.producerId
                 ? SITE_PIPELINE_TYPES_CODECOMMIT.includes(state.manifest.pipeline?.type)
                   ? state.manifest.content?.producerId
                   : `${state.manifest.content?.producerId}\n${chalk.yellow(
-                      'WARNING: content is not automatically produced for non-CodeCommit pipelines'
+                      'WARNING: content is not automatically\nproduced for non-CodeCommit pipelines'
                     )}`
                 : undefined,
             },
+            */
             {
               Param: chalk.bold(chalk.white('cross account access')),
               Value: state.crossAccountAccessNames?.join('\n'),
@@ -129,6 +145,7 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
           ['', 'Manifest']
         )
       );
+      vorpal.log('\n');
       vorpal.log(
         tabulate(
           [
@@ -159,7 +176,9 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
             },
             {
               Param: chalk.bold(chalk.white('registrar nameservers')),
-              Value: state.nameserversSet ? chalk.green(state.registrarNameservers) : state.registrarNameservers,
+              Value: state.nameserversSet
+                ? chalk.green(state.registrarNameservers)
+                : state.registrarNameservers?.join('\n'),
             },
             ...state.params,
             ...STATE_INFO_KEYS.reduce((acc, param) => {

@@ -12,9 +12,10 @@ const ajv = new AJV({
   meta: true,
   multipleOfPrecision: 6,
   removeAdditional: false,
-  // useDefaults: true,
-  validateSchema: false,
+  useDefaults: false,
+  validateSchema: true,
   verbose: true,
+  strict: true,
   $data: true,
 });
 

@@ -6,18 +6,6 @@
   "bin": {
     "site-o-matic": "bin/site-o-matic.js"
   },
-  "scripts": {
-    "build": "tsc",
-    "watch": "tsc -w",
-    "test": "jest",
-    "lint": "npx eslint --ignore-path=.gitignore .",
-    "lint-updated": "pipe-git-updated --base=main --ext=js --ext=ts -- eslint --ignore-pattern '!*'",
-    "lint-fix-updated": "pipe-git-updated --base=main --ext=js --ext=ts -- eslint --fix --ignore-pattern '!*'",
-    "prettier-check-updated": "pipe-git-updated --base=main --ext=css --ext=html --ext=js --ext=ts --ext=json --ext=md --ext=yaml --ext=yml -- prettier -c",
-    "prettify": "npm run lint-fix-updated && npm run prettify-updated",
-    "prettify-updated": "pipe-git-updated --base=main --ext=css --ext=html --ext=js --ext=ts --ext=json --ext=md --ext=yaml --ext=yml -- prettier --write",
-    "check-updated": "npm run lint-updated && npm run prettier-check-updated"
-  },
   "types": "lib/index.d.ts",
   "main": "lib/index.js",
   "devDependencies": {
@@ -77,5 +65,18 @@
     "ora": "^5.4.1",
     "source-map-support": "^0.5.16",
     "vorpal": "^1.12.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest",
+    "lint": "npx eslint --ignore-path=.gitignore .",
+    "lint-updated": "pipe-git-updated --base=main --ext=js --ext=ts -- eslint --ignore-pattern '!*'",
+    "lint-fix-updated": "pipe-git-updated --base=main --ext=js --ext=ts -- eslint --fix --ignore-pattern '!*'",
+    "prettier-check-updated": "pipe-git-updated --base=main --ext=css --ext=html --ext=js --ext=ts --ext=json --ext=md --ext=yaml --ext=yml -- prettier -c",
+    "prettify": "npm run lint-fix-updated && npm run prettify-updated",
+    "prettify-updated": "pipe-git-updated --base=main --ext=css --ext=html --ext=js --ext=ts --ext=json --ext=md --ext=yaml --ext=yml -- prettier --write",
+    "check-updated": "npm run lint-updated && npm run prettier-check-updated",
+    "refresh-waf-rules": "aws wafv2 list-available-managed-rule-groups --scope CLOUDFRONT > docs/aws-managed-waf-rules.json"
   }
 }

@@ -3,7 +3,7 @@ import * as iam from './aws/iam';
 import * as secretsmanager from './aws/secretsmanager';
 import {
   DEFAULT_AWS_REGION,
-  SITE_PIPELINE_TYPE_CODESTAR_NPM,
+  SITE_PIPELINE_TYPE_CODESTAR_CUSTOM,
   SITE_PIPELINE_TYPE_CODESTAR_S3,
   SITE_PIPELINE_TYPES,
   SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG,
@@ -69,7 +69,7 @@ export async function preDeploymentCheck(
     // Check codestar pipeline
     if (
       state.manifest.pipeline?.type === SITE_PIPELINE_TYPE_CODESTAR_S3 ||
-      state.manifest.pipeline?.type === SITE_PIPELINE_TYPE_CODESTAR_NPM
+      state.manifest.pipeline?.type === SITE_PIPELINE_TYPE_CODESTAR_CUSTOM
     ) {
       const codestarConnections = await codestar.listCodeStarConnections(config, DEFAULT_AWS_REGION);
       const codestarConnection = codestarConnections.find(
@@ -95,6 +95,17 @@ export async function preDeploymentCheck(
       );
     } else {
       checkItems.push(checkPassed('Registrar secrets'));
+    }
+  }
+
+  if (state.manifest?.webHosting?.waf) {
+    if (
+      state.manifest?.webHosting?.waf?.enabled &&
+      (state.manifest?.webHosting?.waf?.AWSManagedRules?.length ?? 0) === 0
+    ) {
+      checkItems.push(checkFailed('WAF', 'WAF is enabled, but no AWS Managed Rules are configured'));
+    } else {
+      checkItems.push(checkPassed('WAF'));
     }
   }
 

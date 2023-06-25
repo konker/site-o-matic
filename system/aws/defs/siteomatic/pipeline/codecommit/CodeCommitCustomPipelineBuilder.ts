@@ -7,30 +7,26 @@ import type { Construct } from 'constructs';
 import { toSsmParamName } from '../../../../../../lib/aws/ssm';
 import {
   DEFAULT_AWS_REGION,
-  SITE_PIPELINE_CODESTAR_BRANCH_NAME,
-  SITE_PIPELINE_TYPE_CODESTAR_NPM,
-  SITE_PIPELINE_TYPE_CODESTAR_S3,
+  SITE_PIPELINE_CODECOMMIT_BRANCH_NAME,
+  SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM,
 } from '../../../../../../lib/consts';
-import type { CodeStarNpmSitePipelineResources, PipelineBuilderProps } from '../../../../../../lib/types';
+import type { CodeCommitCustomSitePipelineResources, PipelineBuilderProps } from '../../../../../../lib/types';
 import { _somMeta } from '../../../../../../lib/utils';
-import * as CodeStarSitePipelineStack from './BaseCodeStarPipelineBuilder';
+import * as CodeCommitSitePipelineStack from './BaseCodeCommitPipelineBuilder';
 
-export async function build(scope: Construct, props: PipelineBuilderProps): Promise<CodeStarNpmSitePipelineResources> {
+export async function build(
+  scope: Construct,
+  props: PipelineBuilderProps
+): Promise<CodeCommitCustomSitePipelineResources> {
   if (!props.siteStack.hostingResources) {
     throw new Error(`[site-o-matic] Could not build pipeline sub-stack when hostingResources is missing`);
   }
-  if (
-    props.siteStack?.siteProps?.pipeline?.type !== SITE_PIPELINE_TYPE_CODESTAR_S3 &&
-    props.siteStack?.siteProps?.pipeline?.type !== SITE_PIPELINE_TYPE_CODESTAR_NPM
-  ) {
-    throw new Error(`[site-o-matic] Could not build pipeline sub-stack with non-codestar pipeline type`);
+  if (props.siteStack?.siteProps?.pipeline?.type !== SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM) {
+    throw new Error(`[site-o-matic] Could not build pipeline sub-stack with incorrect pipeline type`);
   }
 
-  const parentResources = await CodeStarSitePipelineStack.build(scope, props);
-
-  const codestarConnectionArn = props.siteStack?.siteProps?.pipeline?.codestarConnectionArn;
-  const owner = props.siteStack?.siteProps?.pipeline?.owner;
-  const repo = props.siteStack?.siteProps?.pipeline?.repo;
+  const parentResources = await CodeCommitSitePipelineStack.build(scope, props);
+  const buildPhases = props.siteStack?.siteProps?.pipeline?.buildPhases;
 
   // ----------------------------------------------------------------------
   const codePipeline = new codepipeline.Pipeline(scope, 'CodePipeline', {
@@ -44,14 +40,7 @@ export async function build(scope: Construct, props: PipelineBuilderProps): Prom
     projectName: props.siteStack.somId,
     buildSpec: codebuild.BuildSpec.fromObject({
       version: '0.2',
-      phases: {
-        install: {
-          commands: ['npm install'],
-        },
-        build: {
-          commands: ['npm run build'],
-        },
-      },
+      phases: buildPhases,
       artifacts: {
         files: ['**/*'],
       },
@@ -63,13 +52,11 @@ export async function build(scope: Construct, props: PipelineBuilderProps): Prom
   const sourceOutput = new codepipeline.Artifact('SourceOutput');
   const buildOutput = new codepipeline.Artifact('BuildOutput');
 
-  const sourceAction = new actions.CodeStarConnectionsSourceAction({
+  const sourceAction = new actions.CodeCommitSourceAction({
     actionName: 'SourceAction',
-    connectionArn: codestarConnectionArn,
-    owner,
-    repo,
+    repository: parentResources.codeCommitRepo,
     output: sourceOutput,
-    branch: SITE_PIPELINE_CODESTAR_BRANCH_NAME,
+    branch: SITE_PIPELINE_CODECOMMIT_BRANCH_NAME,
   });
   const codeBuildAction = new actions.CodeBuildAction({
     actionName: 'CodeBuildAction',
@@ -125,11 +112,8 @@ export async function build(scope: Construct, props: PipelineBuilderProps): Prom
   _somMeta(res2, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   return {
-    type: SITE_PIPELINE_TYPE_CODESTAR_NPM,
+    type: SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM,
     ...parentResources,
-    codestarConnectionArn,
-    owner,
-    repo,
     codePipeline,
   };
 }

@@ -16,30 +16,30 @@
       "description": "Whether to preserve resources even if the Cloudformation stack is deleted",
       "type": "boolean"
     },
+    "dns": {
+      "description": "DNS specification",
+      "$ref": "#/definitions/dnsClause"
+    },
     "registrar": {
       "description": "ID of the registrar that the domain has been registered with",
       "type": "string",
       "minLength": 1
     },
-    "dns": {
-      "description": "DNS specification",
-      "$ref": "#/definitions/dnsClause"
+    "webHosting": {
+      "description": "Web hosting specification",
+      "$ref": "#/definitions/webHostingClause"
     },
     "certificate": {
       "description": "SSL certificate specification",
       "$ref": "#/definitions/certificateClause"
     },
-    "webHosting": {
-      "description": "Web hosting specification",
-      "$ref": "#/definitions/webHostingClause"
+    "pipeline": {
+      "description": "Pipeline specification",
+      "$ref": "#/definitions/pipelineClause"
     },
     "content": {
       "description": "Content generation specification",
       "$ref": "#/definitions/contentClause"
-    },
-    "pipeline": {
-      "description": "Pipeline specification",
-      "$ref": "#/definitions/pipelineClause"
     },
     "crossAccountAccess": {
       "description": "Cross account permissions specification",
@@ -192,37 +192,102 @@
       "required": ["create"],
       "additionalProperties": false
     },
+    "wafAWSManagedRule": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "priority": {
+          "type": "number",
+          "minimum": 1
+        }
+      },
+      "required": ["name", "priority"]
+    },
+    "webHostingClauseCloudfrontS3": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "cloudfront-s3"
+        },
+        "waf": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "AWSManagedRules": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/wafAWSManagedRule"
+              }
+            }
+          },
+          "required": ["enabled"]
+        }
+      },
+      "required": ["type"]
+    },
     "webHostingClause": {
+      "oneOf": [{ "$ref": "#/definitions/webHostingClauseCloudfrontS3" }]
+    },
+    "codestarConnectionArn": {
+      "type": "string",
+      "pattern": "^arn:aws:codestar-connections:.*"
+    },
+    "pipelineBuildPhases": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "commands": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          }
+        }
+      }
+    },
+    "pipelineClauseCodeCommitS3": {
       "type": "object",
       "properties": {
         "type": {
-          "enum": ["cloudfront-s3"]
+          "type": "string",
+          "const": "codecommit-s3"
         }
       },
       "required": ["type"],
       "additionalProperties": false
     },
-    "pipelineClauseCodecommit": {
+    "pipelineClauseCodeCommitCustom": {
       "type": "object",
       "properties": {
         "type": {
           "type": "string",
-          "enum": ["codecommit-s3", "codecommit-npm"]
+          "const": "codecommit-custom"
+        },
+        "buildPhases": {
+          "$ref": "#/definitions/pipelineBuildPhases"
         }
       },
-      "required": ["type"],
+      "required": ["type", "buildPhases"],
       "additionalProperties": false
     },
-    "pipelineClauseCodestar": {
+    "pipelineClauseCodeStarS3": {
       "type": "object",
       "properties": {
         "type": {
           "type": "string",
-          "enum": ["codestar-s3", "codestar-npm"]
+          "const": "codestar-s3"
         },
         "codestarConnectionArn": {
-          "type": "string",
-          "pattern": "^arn:aws:codestar-connections:.*"
+          "$ref": "#/definitions/codestarConnectionArn"
         },
         "owner": {
           "type": "string",
@@ -236,10 +301,37 @@
       "required": ["type", "codestarConnectionArn", "owner", "repo"],
       "additionalProperties": false
     },
+    "pipelineClauseCodeStarCustom": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "codestar-custom"
+        },
+        "codestarConnectionArn": {
+          "$ref": "#/definitions/codestarConnectionArn"
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repo": {
+          "type": "string",
+          "minLength": 1
+        },
+        "buildPhases": {
+          "$ref": "#/definitions/pipelineBuildPhases"
+        }
+      },
+      "required": ["type", "codestarConnectionArn", "owner", "repo", "buildPhases"],
+      "additionalProperties": false
+    },
     "pipelineClause": {
       "oneOf": [
-        { "$ref": "#/definitions/pipelineClauseCodecommit" },
-        { "$ref": "#/definitions/pipelineClauseCodestar" }
+        { "$ref": "#/definitions/pipelineClauseCodeCommitS3" },
+        { "$ref": "#/definitions/pipelineClauseCodeCommitCustom" },
+        { "$ref": "#/definitions/pipelineClauseCodeStarS3" },
+        { "$ref": "#/definitions/pipelineClauseCodeStarCustom" }
       ]
     },
     "contentClause": {
@@ -281,14 +373,31 @@
         "clones": []
       },
       "webHosting": {
-        "type": "cloudfront-s3"
+        "type": "cloudfront-s3",
+        "waf": {
+          "enabled": true,
+          "AWSManagedRules": [
+            { "name": "AWSManagedRulesCommonRuleSet", "priority":  10 },
+            { "name": "AWSManagedRulesBotControlRuleSet", "priority":  20 }
+          ]
+        }
       },
       "content": {
         "producerId": "default"
       },
       "pipeline": {
         "type": "codestar-s3",
-        "codestarConnectionArn": "arn:aws:codestar-connections:eu-west-1:111111111111:connection/22222222-2222-2222-2222-222222222222"
+        "codestarConnectionArn": "arn:aws:codestar-connections:eu-west-1:111111111111:connection/22222222-2222-2222-2222-222222222222",
+        "owner": "example",
+        "repo": "example.com",
+        "buildPhases": {
+          "install": {
+            "commands": ["npm install"]
+          },
+          "build": {
+            "commands": ["npm run build"]
+          }
+        }
       },
       "crossAccountAccess": [],
       "dns": {

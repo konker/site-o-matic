@@ -5,9 +5,11 @@ import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
+import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import type { Construct } from 'constructs';
 
 import { toSsmParamName } from '../../../../../lib/aws/ssm';
+import { SOM_TAG_NAME } from '../../../../../lib/consts';
 import type { WebHostingBuilderProps, WebHostingResources } from '../../../../../lib/types';
 import { _removalPolicyFromBoolean, _somMeta } from '../../../../../lib/utils';
 
@@ -34,6 +36,7 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
     versioned: false,
     removalPolicy: _removalPolicyFromBoolean(props.siteStack.siteProps.protected),
     autoDeleteObjects: !props.siteStack.siteProps.protected,
+    publicReadAccess: false,
   });
   _somMeta(domainBucket, props.siteStack.somId, props.siteStack.siteProps.protected);
 
@@ -54,35 +57,79 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
   domainBucket.grantRead(originAccessIdentity);
 
   // ----------------------------------------------------------------------
+  // WAF ACl
+  const wafEnabled =
+    !!props.siteStack.siteProps.webHosting?.waf?.enabled &&
+    props.siteStack.siteProps.webHosting?.waf?.AWSManagedRules &&
+    props.siteStack.siteProps.webHosting?.waf?.AWSManagedRules.length > 0;
+
+  const wafAcl = wafEnabled
+    ? new wafv2.CfnWebACL(scope, 'WafAcl', {
+        defaultAction: { allow: {} },
+        scope: 'CLOUDFRONT',
+        visibilityConfig: {
+          cloudWatchMetricsEnabled: false,
+          sampledRequestsEnabled: true,
+          metricName: `${props.siteStack.somId}-wafAcl`,
+        },
+        rules: props.siteStack.siteProps.webHosting.waf.AWSManagedRules.map((rule) => ({
+          name: rule.name,
+          priority: rule.priority,
+          statement: {
+            managedRuleGroupStatement: {
+              vendorName: 'AWS',
+              name: rule.name,
+            },
+          },
+          overrideAction: { none: {} },
+          visibilityConfig: {
+            metricName: `${props.siteStack.somId}-AWSManagedRules`,
+            cloudWatchMetricsEnabled: false,
+            sampledRequestsEnabled: true,
+          },
+        })),
+        tags: [{ key: SOM_TAG_NAME, value: props.siteStack.somId }],
+      })
+    : undefined;
+
+  // ----------------------------------------------------------------------
   // Cloudfront distribution
-  const cloudFrontDistribution = new cloudfront.Distribution(scope, 'CloudFrontDistribution', {
-    defaultBehavior: {
-      origin: new origins.S3Origin(domainBucket, {
-        originPath: '/www',
-        originAccessIdentity: originAccessIdentity,
-      }),
-      allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
-      viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      cachePolicy: new cloudfront.CachePolicy(scope, 'CloudFrontDistributionCachePolicy', {
-        queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
-        cookieBehavior: cloudfront.CacheCookieBehavior.none(),
-      }),
-      originRequestPolicy: new cloudfront.OriginRequestPolicy(scope, 'OriginRequestPolicy', {
-        queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.none(),
-        cookieBehavior: cloudfront.OriginRequestCookieBehavior.none(),
-      }),
-    },
-    domainNames: [props.siteStack.siteProps.dns.domainName],
-    certificate: props.domainCertificate,
-    priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
-    defaultRootObject: 'index.html',
-    errorResponses: [
+  const cloudFrontDistribution = new cloudfront.Distribution(
+    scope,
+    'CloudFrontDistribution',
+    Object.assign(
       {
-        httpStatus: 404,
-        responsePagePath: '/404.html',
+        defaultBehavior: {
+          origin: new origins.S3Origin(domainBucket, {
+            originPath: '/www',
+            originAccessIdentity: originAccessIdentity,
+          }),
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: new cloudfront.CachePolicy(scope, 'CloudFrontDistributionCachePolicy', {
+            queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
+            cookieBehavior: cloudfront.CacheCookieBehavior.none(),
+          }),
+          originRequestPolicy: new cloudfront.OriginRequestPolicy(scope, 'OriginRequestPolicy', {
+            queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.none(),
+            cookieBehavior: cloudfront.OriginRequestCookieBehavior.none(),
+          }),
+        },
+        domainNames: [props.siteStack.siteProps.dns.domainName],
+        certificate: props.domainCertificate,
+        priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
+        defaultRootObject: 'index.html',
+        enableIpv6: true,
+        errorResponses: [
+          {
+            httpStatus: 404,
+            responsePagePath: '/404.html',
+          },
+        ],
       },
-    ],
-  });
+      wafEnabled && wafAcl ? { webAclId: wafAcl.attrArn } : {}
+    )
+  );
   _somMeta(cloudFrontDistribution, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   // ----------------------------------------------------------------------
