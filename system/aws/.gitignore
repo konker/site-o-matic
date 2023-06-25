@@ -1,4 +1,5 @@
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+.cdk*.out
 cdk-outputs.json

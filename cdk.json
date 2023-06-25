@@ -4,7 +4,6 @@
   "json": true,
   "versionReporting": false,
   "output": "system/aws/cdk.out",
-  "outputsFile": "system/aws/cdk-outputs.json",
   "requireApproval": "never",
   "context": {}
 }

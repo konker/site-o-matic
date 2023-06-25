@@ -30,6 +30,7 @@ export async function cdkSynth(
     vorpal,
     'npx',
     ['cdk', 'synth', `${somId}*`]
+      .concat(['--output', `system/aws/.cdk-${somId}.out`])
       .concat(['--context', `paramsKeys=${JSON.stringify(Object.keys(params))}`])
       .concat(...Object.entries(params).map(([k, v]) => ['---context', `${k}=${v}`]))
   );
@@ -45,6 +46,7 @@ export async function cdkDeploy(
     vorpal,
     'npx',
     ['cdk', 'deploy', `${somId}*`]
+      .concat(['--output', `system/aws/.cdk-${somId}.out`])
       .concat(['--context', `paramsKeys=${JSON.stringify(Object.keys(params))}`])
       .concat(...Object.entries(params).map(([k, v]) => ['---context', `${k}=${v}`]))
   );
@@ -60,6 +62,7 @@ export async function cdkDestroy(
     vorpal,
     'npx',
     ['cdk', 'destroy', `${somId}*`, '--force']
+      .concat(['--output', `system/aws/.cdk-${somId}.out`])
       .concat(['--context', `paramsKeys=${JSON.stringify(Object.keys(params))}`])
       .concat(...Object.entries(params).map(([k, v]) => ['---context', `${k}=${v}`]))
   );
