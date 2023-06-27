@@ -1,6 +1,7 @@
 import type * as cdk from 'aws-cdk-lib';
 import type * as certificatemanager from 'aws-cdk-lib/aws-certificatemanager';
 import type * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
+import type { ErrorResponse } from 'aws-cdk-lib/aws-cloudfront';
 import type * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import type * as codecommit from 'aws-cdk-lib/aws-codecommit';
 import type * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
@@ -149,7 +150,10 @@ export type SomManifest = {
     | undefined
     | {
         readonly type: typeof WEB_HOSTING_TYPE_CLOUDFRONT_S3;
-        readonly waf: {
+        readonly originPath?: string;
+        readonly defaultRootObject?: string;
+        readonly errorResponses?: Array<ErrorResponse>;
+        readonly waf?: {
           readonly enabled: boolean;
           readonly AWSManagedRules?: Array<WafAwsManagedRule> | undefined;
         };

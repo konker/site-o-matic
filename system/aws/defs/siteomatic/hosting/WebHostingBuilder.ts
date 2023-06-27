@@ -9,7 +9,12 @@ import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import type { Construct } from 'constructs';
 
 import { toSsmParamName } from '../../../../../lib/aws/ssm';
-import { SOM_TAG_NAME } from '../../../../../lib/consts';
+import {
+  SOM_TAG_NAME,
+  WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT,
+  WEB_HOSTING_DEFAULT_ERROR_RESPONSES,
+  WEB_HOSTING_DEFAULT_ORIGIN_PATH,
+} from '../../../../../lib/consts';
 import type { WebHostingBuilderProps, WebHostingResources } from '../../../../../lib/types';
 import { _removalPolicyFromBoolean, _somMeta } from '../../../../../lib/utils';
 
@@ -101,7 +106,7 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
       {
         defaultBehavior: {
           origin: new origins.S3Origin(domainBucket, {
-            originPath: '/www',
+            originPath: props.siteStack.siteProps?.webHosting?.originPath ?? WEB_HOSTING_DEFAULT_ORIGIN_PATH,
             originAccessIdentity: originAccessIdentity,
           }),
           allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
@@ -118,14 +123,10 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
         domainNames: [props.siteStack.siteProps.dns.domainName],
         certificate: props.domainCertificate,
         priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
-        defaultRootObject: 'index.html',
+        defaultRootObject:
+          props.siteStack.siteProps?.webHosting?.defaultRootObject ?? WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT,
         enableIpv6: true,
-        errorResponses: [
-          {
-            httpStatus: 404,
-            responsePagePath: '/404.html',
-          },
-        ],
+        errorResponses: props.siteStack.siteProps?.webHosting?.errorResponses ?? WEB_HOSTING_DEFAULT_ERROR_RESPONSES,
       },
       wafEnabled && wafAcl ? { webAclId: wafAcl.attrArn } : {}
     )

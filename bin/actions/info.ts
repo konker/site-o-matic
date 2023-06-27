@@ -1,3 +1,4 @@
+import type { ErrorResponse } from 'aws-cdk-lib/aws-cloudfront';
 import chalk from 'chalk';
 import type Vorpal from 'vorpal';
 
@@ -10,6 +11,9 @@ import {
   SSM_PARAM_NAME_SOM_VERSION,
   UNKNOWN,
   VERSION,
+  WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT,
+  WEB_HOSTING_DEFAULT_ERROR_RESPONSES,
+  WEB_HOSTING_DEFAULT_ORIGIN_PATH,
 } from '../../lib/consts';
 import { getSiteConnectionStatus } from '../../lib/http';
 import { getRegistrarConnector } from '../../lib/registrar';
@@ -83,16 +87,40 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
                 : chalk.grey(state.certificateCloneNames?.join('\n')),
             },
             {
-              Param: chalk.bold(chalk.white('web hosting type')),
+              Param: chalk.bold(chalk.white('web hosting')),
               Value: state.manifest.webHosting
-                ? `${chalk.bold(chalk.white('type'))}:\n↪ ${state.manifest.webHosting?.type}` +
-                  (state.manifest.webHosting?.waf
-                    ? `\nWAF enabled: \n↪ ${
-                        state.manifest.webHosting.waf?.enabled
-                      }\nWAF managed rules: ${state.manifest.webHosting.waf?.AWSManagedRules?.map(
-                        (i: WafAwsManagedRule) => `\n↪ ${i.name}`
-                      )}\n`
-                    : '')
+                ? tabulate(
+                    [
+                      {
+                        Hosting:
+                          `${chalk.bold(chalk.white('type'))}:\n↪ ${state.manifest.webHosting?.type}` +
+                          `\n${chalk.bold(chalk.white('originPath'))}:\n↪ ${
+                            state.manifest.webHosting?.originPath ?? WEB_HOSTING_DEFAULT_ORIGIN_PATH
+                          }` +
+                          `\n${chalk.bold(chalk.white('defaultRootObject'))}:\n↪ ${
+                            state.manifest.webHosting?.originPath ?? WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT
+                          }`,
+                        ErrorResponses: (
+                          state.manifest.webHosting?.errorResponses ?? WEB_HOSTING_DEFAULT_ERROR_RESPONSES
+                        )
+                          .map((i: ErrorResponse) => `↪ ${i.httpStatus} -> ${i.responsePagePath}`)
+                          .join('\n'),
+                        WAF: state.manifest.webHosting?.waf
+                          ? `${chalk.bold(chalk.white('WAF enabled'))}:\n↪ ${
+                              state.manifest.webHosting.waf?.enabled
+                            }\n${chalk.bold(
+                              chalk.white('WAF managed rules')
+                            )}: ${state.manifest.webHosting.waf?.AWSManagedRules?.map(
+                              (i: WafAwsManagedRule) => `\n↪ ${i.name}`
+                            )}\n`
+                          : undefined,
+                      },
+                    ],
+                    ['Hosting', 'ErrorResponses', 'WAF'],
+                    undefined,
+                    false,
+                    [25, 25, 28]
+                  )
                 : undefined,
             },
             {

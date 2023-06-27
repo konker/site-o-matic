@@ -206,12 +206,54 @@
       },
       "required": ["name", "priority"]
     },
+    "webHostingErrorResponse": {
+      "type": "object",
+      "properties": {
+        "ttl": {
+          "type": "number",
+          "minimum": 1,
+          "description": "The minimum amount of time, in seconds, that you want CloudFront to cache the HTTP status code specified in ErrorCode."
+        },
+        "httpStatus": {
+          "type": "number",
+          "minimum": 100,
+          "maximum": 599
+        },
+        "responseHttpStatus": {
+          "type": "number",
+          "minimum": 100,
+          "maximum": 599
+        },
+        "responsePagePath": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["httpStatus", "responsePagePath"],
+      "additionalProperties": false
+    },
     "webHostingClauseCloudfrontS3": {
       "type": "object",
       "properties": {
         "type": {
           "type": "string",
           "const": "cloudfront-s3"
+        },
+        "originPath": {
+          "type": "string",
+          "minLength": 1,
+          "default": "/www"
+        },
+        "defaultRootObject": {
+          "type": "string",
+          "minLength": 1,
+          "default": "index.html"
+        },
+        "errorResponses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/webHostingErrorResponse"
+          }
         },
         "waf": {
           "type": "object",
@@ -229,7 +271,8 @@
           "required": ["enabled"]
         }
       },
-      "required": ["type"]
+      "required": ["type"],
+      "additionalProperties": false
     },
     "webHostingClause": {
       "oneOf": [{ "$ref": "#/definitions/webHostingClauseCloudfrontS3" }]
@@ -365,6 +408,7 @@
   },
   "examples": [
     {
+      "title": "example.com",
       "webmasterEmail": "webmaster@example.com",
       "protected": false,
       "registrar": "dynadot",
@@ -374,11 +418,17 @@
       },
       "webHosting": {
         "type": "cloudfront-s3",
+        "originPath": "/www",
+        "defaultRootObject": "index.html",
+        "errorResponses": [
+          { "httpStatus": 403, "responsePagePath": "/403.html" },
+          { "httpStatus": 404, "responsePagePath": "/404.html" }
+        ],
         "waf": {
           "enabled": true,
           "AWSManagedRules": [
-            { "name": "AWSManagedRulesCommonRuleSet", "priority":  10 },
-            { "name": "AWSManagedRulesBotControlRuleSet", "priority":  20 }
+            { "name": "AWSManagedRulesCommonRuleSet", "priority": 10 },
+            { "name": "AWSManagedRulesBotControlRuleSet", "priority": 20 }
           ]
         }
       },
@@ -386,7 +436,7 @@
         "producerId": "default"
       },
       "pipeline": {
-        "type": "codestar-s3",
+        "type": "codestar-custom",
         "codestarConnectionArn": "arn:aws:codestar-connections:eu-west-1:111111111111:connection/22222222-2222-2222-2222-222222222222",
         "owner": "example",
         "repo": "example.com",

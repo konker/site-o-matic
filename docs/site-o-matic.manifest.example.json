@@ -1,4 +1,5 @@
 {
+  "title": "example.com",
   "webmasterEmail": "webmaster@example.com",
   "registrar": "dynadot",
   "protected": true,
@@ -25,6 +26,12 @@
   },
   "webHosting": {
     "type": "cloudfront-s3",
+    "originPath": "/www",
+    "defaultRootObject": "index.html",
+    "errorResponses": [
+      { "httpStatus": 403, "responsePagePath": "/403.html" },
+      { "httpStatus": 404, "responsePagePath": "/404.html" }
+    ],
     "waf": {
       "enabled": true,
       "AWSManagedRules": [

@@ -1,4 +1,5 @@
 import type * as cdk from 'aws-cdk-lib';
+import type { ErrorResponse } from 'aws-cdk-lib/aws-cloudfront';
 
 import type { SiteStackProps } from './types';
 
@@ -50,4 +51,13 @@ export const SOM_STATUS_BREADCRUMB = [
   SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG,
   SOM_STATUS_HOSTED_ZONE_OK,
   SOM_STATUS_SITE_FUNCTIONAL,
+] as const;
+
+export const WEB_HOSTING_DEFAULT_ORIGIN_PATH = '/www' as const;
+export const WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT = 'index.html' as const;
+export const WEB_HOSTING_DEFAULT_ERROR_RESPONSES: Array<ErrorResponse> = [
+  {
+    httpStatus: 404,
+    responsePagePath: '/404.html',
+  },
 ];

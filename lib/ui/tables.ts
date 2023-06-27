@@ -29,11 +29,12 @@ export function tabulate(
   recs: Array<any>,
   headers: Array<string>,
   displayHeaders: Array<string> | undefined = undefined,
-  truncate = false
+  truncate = false,
+  colWidths: Array<number> = [30, 95, 15, 20, 20, 20, 20]
 ): string {
   const table = new Table({
     head: (displayHeaders ?? headers).map((h) => chalk.cyan(chalk.bold(h))),
-    colWidths: [30, 95, 15, 20, 20, 20, 20].slice(0, headers.length),
+    colWidths: colWidths.slice(0, headers.length),
   });
   const rows = recs.map(defaultDecorator(headers, truncate));
 
