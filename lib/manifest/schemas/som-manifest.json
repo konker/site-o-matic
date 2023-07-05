@@ -42,10 +42,6 @@
       "description": "Pipeline specification",
       "$ref": "#/definitions/pipelineClause"
     },
-    "content": {
-      "description": "Content generation specification",
-      "$ref": "#/definitions/contentClause"
-    },
     "crossAccountAccess": {
       "description": "Cross account permissions specification",
       "type": "array",
@@ -376,16 +372,6 @@
         { "$ref": "#/definitions/pipelineClauseCodeStarCustom" }
       ]
     },
-    "contentClause": {
-      "type": "object",
-      "properties": {
-        "producerId": {
-          "enum": ["default", "metalsmith-default"]
-        }
-      },
-      "required": ["producerId"],
-      "additionalProperties": false
-    },
     "crossAccountAccessSpec": {
       "type": "object",
       "properties": {
@@ -451,9 +437,6 @@
             { "name": "AWSManagedRulesBotControlRuleSet", "priority": 20 }
           ]
         }
-      },
-      "content": {
-        "producerId": "default"
       },
       "pipeline": {
         "type": "codestar-custom",

@@ -27,7 +27,6 @@ test('Empty Stack', () => {
     webHosting: {
       type: 'cloudfront-s3',
     },
-    content: { producerId: 'default' },
     pipeline: { type: 'codecommit-s3' },
     certificate: { clones: [] },
     crossAccountAccess: [],

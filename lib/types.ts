@@ -178,11 +178,6 @@ export type SomManifest = {
         readonly repo: string;
         readonly buildPhases: Record<string, PipelineBuildPhase>;
       };
-  readonly content?:
-    | undefined
-    | {
-        readonly producerId: string;
-      };
   readonly crossAccountAccess?: undefined | Array<CrossAccountAccessGrantRoleSpec>;
 };
 

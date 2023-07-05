@@ -11,7 +11,6 @@ import {
   SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG,
   VERSION,
 } from './consts';
-import { CONTENT_PRODUCER_IDS } from './content';
 import { getRegistrarConnector } from './registrar';
 import type { SomConfig, SomState } from './types';
 
@@ -53,12 +52,6 @@ export async function preDeploymentCheck(
     checkItems.push(checkFailed('User', `User ${somUser} does not exist`));
   } else {
     checkItems.push(checkPassed('User'));
-  }
-
-  if (state.manifest?.content?.producerId && !CONTENT_PRODUCER_IDS.includes(state.manifest?.content?.producerId)) {
-    checkItems.push(checkFailed('Content Producer', `Must be one of: ${CONTENT_PRODUCER_IDS.join(', ')}`));
-  } else {
-    checkItems.push(checkPassed('Content Producer'));
   }
 
   if (state.manifest?.pipeline && !SITE_PIPELINE_TYPES.includes(state.manifest.pipeline.type)) {

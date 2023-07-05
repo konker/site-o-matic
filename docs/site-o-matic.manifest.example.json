@@ -41,9 +41,6 @@
       ]
     }
   },
-  "content": {
-    "producerId": "default"
-  },
   "pipeline": {
     "type": "codestar-custom",
     "codestarConnectionArn": "arn:aws:codestar-connections:us-east-1:111111111111:connection/12345678-cafe-cafe-cafe-123456789012",
