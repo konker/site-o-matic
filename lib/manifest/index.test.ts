@@ -13,10 +13,12 @@ describe('manifest', () => {
   });
 
   describe('validateManifest', () => {
-    it('should validate a manifest', async () => {
-      const result = await unit.validateManifest(manifestSchema.examples[0]);
-      expect(result).toBe(true);
-    });
+    for (const example of manifestSchema.examples) {
+      it(`should validate a manifest ${example.title}`, async () => {
+        const result = await unit.validateManifest(example);
+        expect(result).toBe(true);
+      });
+    }
   });
 
   describe('loadManifest', () => {

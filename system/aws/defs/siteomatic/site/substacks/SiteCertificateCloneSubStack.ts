@@ -43,9 +43,9 @@ export class SiteCertificateCloneSubStack extends cdk.NestedStack {
     await CertificateBuilder.buildManualValidation(this, {
       siteStack: this.siteStack,
       region: this.props.env.region,
-      domainName: this.siteStack.siteProps.dns.domainName,
+      domainName: this.siteStack.siteProps.rootDomainName,
       hostedZoneId: hostedZoneId,
-      subdomains: this.siteStack.siteProps.dns.subdomains ?? [],
+      subdomains: this.siteStack.siteProps.dns?.subdomains ?? [],
     });
   }
 }

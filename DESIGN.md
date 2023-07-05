@@ -1,11 +1,129 @@
 # Site-o-Matic
 
+## Productize / Release
+- Finish any outstanding small features/polishing
+  - Minimal manifest example
+    - ```
+      { "rootDomainName": "example.com" }
+      ```
+    - No pipeline
+      - `$ aws s3 sync . s3://wwwbucket-som--markus-dot-lol--b7047a/`
+    - No extra DNS
+  - Redirects
+    - Edge func?
+    - CNAME?
+    - Do we need S3/etc? Certainly not pipeline.
+  - Sub-domain hosting?
+    a) Cf origin mapped to domain S3 bucket sub-folder?
+      - Cannot be a child of www (root domain folder)
+    b) Cf origin mapped to dedicated S3 bucket?
+      - Can create bucket/mapping
+      - But what are the implications for pipeline??
+        - Too theoretical/YAGNI at the moment, stick with a)
+  - What is the story with regions?
+    - Is it always us-east-1 for everything?
+    - Or should infra be deployed to a region of choice where possible?
+      - Specified in manifest (optionally)
+      - Pipeline?
+      - CodeCommit?
+      - CodeStar?
+      - Route53?
+      - User?
+  - ???
+
+- Remove content generation?
+  - Keep in a branch
+  - Rather have some template repos which can be used as boilerplate/examples/starters?
+- Remove system/system?
+- Create minimal manifest example
+
+### Tests
+- Unit:
+  - lib
+  - lib/aws
+  - lib/content
+  - lib/manifest
+  - lib/registrar
+  - lib/ui
+- CDK:
+  - system/aws/defs/siteomatic/hostedzone 
+  - system/aws/defs/siteomatic/hosting 
+  - system/aws/defs/siteomatic/pipeline 
+  - system/aws/defs/siteomatic/site
+  - system/aws/defs/siteomatic/site/substacks 
+  - system/aws/bin [?]
+
+
+### Docs
+- README
+
+- Overview / Purpose / Problem-Solution / General tech (CDK)
+  - Own AWS account
+  - S3
+  - Cf
+  - Route53 for DNS
+
+- Getting started
+  - Install
+  - Credentials
+  - Running
+  - Manifest
+
+- Concepts
+  - Manifest
+  - Hosting
+    - WAF
+  - Certificates
+    - Certificate clones
+  - DNS
+  - Protected
+  - Region
+  - Secrets
+  - Users
+  - Keys
+  - Registrars / Nameservers
+  - Status display
+  - Phases
+  - VCS
+    - CloudCommit
+    - CodeStar connections
+  - Pipeline
+  - Cross-account access
+
+- CLI reference
+  - Reference description for all CLI commands/params
+
+- HOWTOs
+  - Minimal website with:
+    - No certificate (?)
+    - No Pipeline
+      - Manual S3 deployment
+  - "Standard" S3/Cf web site
+    - Certificate
+    - DNS
+    - Nameservers
+    - CodeCommit Pipeline
+  - Node/Metalsmith S3/Cf site
+    - Certificate
+    - DNS
+    - Nameservers
+    - CodeStar connection
+    - Github
+  - Serverless API project with SOM site
+    - ???
+  - Subdomains
+    - Is sub-domains purely a DNS thing?
+      - Should we be able to specify:
+        - sub-domain maps to sub-folder of domain S3 bucket?
+        - sub-domain maps to own sub-domain S3 bucket?
+---
+
 ## IMPORTANT
 
 - Changing CDK version is very painful
   - Even minor versions which deprecate:
     - E.g. DnsValidatedCertificate -> Certificate
-  - Interdependencies and slow stuff like Cloudfront make it tricky/impossible to upgrade
+  - Inter-dependencies and slow stuff like Cloudfront make it tricky/impossible to upgrade
   - Only option is to destroy, then deploy
   - LESSON:
     - If such a change is needed, destroy first, then upgrade SOM/CDK, then re-deploy

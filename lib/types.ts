@@ -133,30 +133,28 @@ export type WafAwsManagedRule = {
 
 // ----------------------------------------------------------------------
 export type SomManifest = {
-  readonly title: string;
-  readonly webmasterEmail: string;
+  readonly rootDomainName: string;
   readonly protected: boolean;
-  readonly registrar?: string | undefined;
-  readonly dns: HostedZoneConfig & {
+  readonly webHosting: {
+    readonly type: typeof WEB_HOSTING_TYPE_CLOUDFRONT_S3;
+    readonly originPath?: string;
+    readonly defaultRootObject?: string;
+    readonly errorResponses?: Array<ErrorResponse>;
+    readonly waf?: {
+      readonly enabled: boolean;
+      readonly AWSManagedRules?: Array<WafAwsManagedRule> | undefined;
+    };
+  };
+  readonly title?: string;
+  readonly dns?: HostedZoneConfig & {
     readonly subdomains?: undefined | Array<HostedZoneConfig>;
   };
+  readonly webmasterEmail?: string;
+  readonly registrar?: string | undefined;
   readonly certificate?:
     | undefined
     | {
-        readonly create?: boolean;
         readonly clones?: Array<CertificateCloneSpec>;
-      };
-  readonly webHosting?:
-    | undefined
-    | {
-        readonly type: typeof WEB_HOSTING_TYPE_CLOUDFRONT_S3;
-        readonly originPath?: string;
-        readonly defaultRootObject?: string;
-        readonly errorResponses?: Array<ErrorResponse>;
-        readonly waf?: {
-          readonly enabled: boolean;
-          readonly AWSManagedRules?: Array<WafAwsManagedRule> | undefined;
-        };
       };
   readonly pipeline?:
     | undefined
@@ -244,7 +242,6 @@ export type SomState = {
   somVersion: string;
   rootDomain?: string | undefined;
   subdomains?: Array<string> | undefined;
-  certificateCreate?: boolean;
   certificateCloneNames?: Array<string> | undefined;
   crossAccountAccessNames?: Array<string> | undefined;
   siteUrl?: string | undefined;
@@ -253,7 +250,7 @@ export type SomState = {
   registrar?: string | undefined;
   registrarNameservers?: Array<string> | undefined;
   pathToManifestFile?: string | undefined;
-  manifest?: any | undefined;
+  manifest?: SomManifest | undefined;
   params?: Array<SomParam> | undefined;
   status?: SomStatus | undefined;
   statusMessage?: string | undefined;

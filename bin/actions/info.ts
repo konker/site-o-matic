@@ -77,14 +77,8 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
               Value: state.subdomains?.join('\n'),
             },
             {
-              Param: chalk.bold(chalk.white('certificate?')),
-              Value: !!state.certificateCreate ? 'YES' : 'NO',
-            },
-            {
               Param: chalk.bold(chalk.white('certificate clones')),
-              Value: state.certificateCreate
-                ? state.certificateCloneNames?.join('\n')
-                : chalk.grey(state.certificateCloneNames?.join('\n')),
+              Value: state.certificateCloneNames?.join('\n'),
             },
             {
               Param: chalk.bold(chalk.white('web hosting')),
@@ -127,15 +121,15 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
               Param: chalk.bold(chalk.white('pipeline')),
               Value: state.manifest.pipeline
                 ? `${chalk.bold(chalk.white('type'))}:\n↪ ${state.manifest.pipeline?.type}` +
-                  (state.manifest.pipeline?.codestarConnectionArn
+                  ('codestarConnectionArn' in state.manifest.pipeline
                     ? `\n${chalk.bold(chalk.white('codestarConnectionArn'))}:\n↪ ${
                         state.manifest.pipeline?.codestarConnectionArn
                       }`
                     : '') +
-                  (state.manifest.pipeline?.owner
+                  ('owner' in state.manifest.pipeline
                     ? `\n${chalk.bold(chalk.white('owner'))}:\n↪ ${state.manifest.pipeline?.owner}`
                     : '') +
-                  (state.manifest.pipeline?.repo
+                  ('repo' in state.manifest.pipeline
                     ? `\n${chalk.bold(chalk.white('repo'))}:\n↪ ${state.manifest.pipeline?.repo}`
                     : '')
                 : undefined,

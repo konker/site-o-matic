@@ -1,6 +1,7 @@
 import AJV from 'ajv';
 import fs from 'fs';
 
+import { WEB_HOSTING_TYPE_CLOUDFRONT_S3 } from '../consts';
 import type { SomManifest } from '../types';
 import * as manifestSchema from './schemas/som-manifest.json';
 
@@ -36,5 +37,12 @@ export async function loadManifest(pathToManifestFile: string): Promise<SomManif
     return undefined;
   }
 
-  return manifest as SomManifest;
+  // Apply defaults
+  return {
+    ...manifest,
+    protected: manifest.protected ?? false,
+    webHosting: manifest.webHosting ?? {
+      type: WEB_HOSTING_TYPE_CLOUDFRONT_S3,
+    },
+  };
 }

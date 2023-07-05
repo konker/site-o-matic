@@ -21,20 +21,19 @@ export function actionLoadManifest(vorpal: Vorpal, config: SomConfig, state: Som
     }
 
     state.manifest = manifest;
-    state.somId = formulateSomId(state.manifest.dns.domainName);
+    state.somId = formulateSomId(state.manifest.rootDomainName);
     state.params = await ssm.getSsmParams(config, DEFAULT_AWS_REGION, state.somId);
     state.somVersion = getParam(state, SSM_PARAM_NAME_SOM_VERSION) ?? UNKNOWN;
-    state.domainHash = calculateDomainHash(state.manifest.dns.domainName);
-    state.rootDomain = state.manifest.dns.domainName;
-    state.subdomains = state.manifest.dns.subdomains?.map((i: any) => i.domainName) ?? [];
-    state.certificateCreate = !!state.manifest.certificate?.create;
+    state.domainHash = calculateDomainHash(state.manifest.rootDomainName);
+    state.rootDomain = state.manifest.rootDomainName;
+    state.subdomains = state.manifest.dns?.subdomains?.map((i: any) => i.domainName) ?? [];
     state.certificateCloneNames = state.manifest.certificate?.clones?.map((i: any) => i.name) ?? [];
     state.crossAccountAccessNames = state.manifest.crossAccountAccess?.map((i: any) => i.name) ?? [];
-    state.siteUrl = `https://${state.manifest.dns.domainName}/`;
+    state.siteUrl = `https://${state.manifest.rootDomainName}/`;
     state.registrar = state.manifest.registrar;
     state.protectedManifest = state.manifest.protected ? 'true' : 'false';
 
-    vorpal.log(`Loaded manifest for: ${state.manifest.dns.domainName}`);
+    vorpal.log(`Loaded manifest for: ${state.manifest.rootDomainName}`);
 
     await actionInfo(vorpal, config, state)({ options: {} });
   };

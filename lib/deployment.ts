@@ -1,3 +1,5 @@
+import chalk from 'chalk';
+
 import * as codestar from '../lib/aws/codestar';
 import * as iam from './aws/iam';
 import * as secretsmanager from './aws/secretsmanager';
@@ -53,13 +55,13 @@ export async function preDeploymentCheck(
     checkItems.push(checkPassed('User'));
   }
 
-  if (state.manifest.content?.producerId && !CONTENT_PRODUCER_IDS.includes(state.manifest.content.producerId)) {
+  if (state.manifest?.content?.producerId && !CONTENT_PRODUCER_IDS.includes(state.manifest?.content?.producerId)) {
     checkItems.push(checkFailed('Content Producer', `Must be one of: ${CONTENT_PRODUCER_IDS.join(', ')}`));
   } else {
     checkItems.push(checkPassed('Content Producer'));
   }
 
-  if (state.manifest.pipeline && !SITE_PIPELINE_TYPES.includes(state.manifest.pipeline.type)) {
+  if (state.manifest?.pipeline && !SITE_PIPELINE_TYPES.includes(state.manifest.pipeline.type)) {
     checkItems.push(checkFailed('Pipeline Type', `Must be one of: ${SITE_PIPELINE_TYPES.join(', ')}`));
   } else {
     checkItems.push(checkPassed('Pipeline Type'));
@@ -72,8 +74,9 @@ export async function preDeploymentCheck(
       state.manifest.pipeline?.type === SITE_PIPELINE_TYPE_CODESTAR_CUSTOM
     ) {
       const codestarConnections = await codestar.listCodeStarConnections(config, DEFAULT_AWS_REGION);
+      const manifestCodestarConnection = state.manifest?.pipeline?.codestarConnectionArn;
       const codestarConnection = codestarConnections.find(
-        (i) => i.ConnectionArn === state.manifest.pipeline?.codestarConnectionArn
+        (i) => manifestCodestarConnection && i.ConnectionArn === manifestCodestarConnection
       );
       if (!codestarConnection || codestarConnection.ConnectionStatus !== 'AVAILABLE') {
         checkItems.push(checkFailed('Pipeline Arn', 'CodeStar connection does not exist, or is not AVAILABLE'));
@@ -119,7 +122,9 @@ export async function preDeploymentCheck(
     checkItems.push(
       checkFailed(
         'Nameservers',
-        'You must manually set the nameservers with your registrar. This may take a while to take effect.'
+        `You must manually set the nameservers with your registrar.\nSee ${chalk.white(
+          'hosted-zone-name-servers'
+        )} property above.`
       )
     );
   } else {

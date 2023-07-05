@@ -3,9 +3,18 @@
   "type": "object",
   "description": "A site-o-matic manifest",
   "properties": {
+    "rootDomainName": {
+      "description": "The root domain name for this site",
+      "type": "string",
+      "minLength": 4
+    },
     "title": {
       "description": "Human readable title for the site",
       "type": "string"
+    },
+    "dns": {
+      "description": "DNS specification",
+      "$ref": "#/definitions/dnsClause"
     },
     "webmasterEmail": {
       "description": "Email address for the site webmaster",
@@ -16,15 +25,6 @@
       "description": "Whether to preserve resources even if the Cloudformation stack is deleted",
       "type": "boolean"
     },
-    "dns": {
-      "description": "DNS specification",
-      "$ref": "#/definitions/dnsClause"
-    },
-    "registrar": {
-      "description": "ID of the registrar that the domain has been registered with",
-      "type": "string",
-      "minLength": 1
-    },
     "webHosting": {
       "description": "Web hosting specification",
       "$ref": "#/definitions/webHostingClause"
@@ -32,6 +32,11 @@
     "certificate": {
       "description": "SSL certificate specification",
       "$ref": "#/definitions/certificateClause"
+    },
+    "registrar": {
+      "description": "ID of the registrar that the domain has been registered with",
+      "type": "string",
+      "minLength": 1
     },
     "pipeline": {
       "description": "Pipeline specification",
@@ -49,7 +54,7 @@
       }
     }
   },
-  "required": ["title", "webmasterEmail", "protected", "dns"],
+  "required": ["rootDomainName"],
   "additionalProperties": false,
   "definitions": {
     "mxDnsRecordSpec": {
@@ -113,7 +118,7 @@
       "properties": {
         "domainName": {
           "type": "string",
-          "minLength": 1
+          "minLength": 4
         },
         "extraDnsConfig": {
           "type": "array",
@@ -129,7 +134,6 @@
       "type": "object",
       "properties": {
         "domainName": {
-          "description": "The root domain name for this site",
           "type": "string",
           "minLength": 4
         },
@@ -177,10 +181,6 @@
     "certificateClause": {
       "type": "object",
       "properties": {
-        "create": {
-          "description": "whether to create a ACM certificate",
-          "type": "boolean"
-        },
         "clones": {
           "description": "Accounts to clone the certificate into",
           "type": "array",
@@ -189,7 +189,6 @@
           }
         }
       },
-      "required": ["create"],
       "additionalProperties": false
     },
     "wafAWSManagedRule": {
@@ -408,13 +407,34 @@
   },
   "examples": [
     {
+      "rootDomainName": "example.org"
+    },
+    {
+      "rootDomainName": "example.com",
       "title": "example.com",
       "webmasterEmail": "webmaster@example.com",
-      "protected": false,
       "registrar": "dynadot",
-      "certificate": {
-        "create": true,
-        "clones": []
+      "protected": true,
+      "dns": {
+        "domainName": "example.com",
+        "extraDnsConfig": [
+          {
+            "type": "MX",
+            "hostName": "in1-smtp.example.com",
+            "priority": 10
+          },
+          {
+            "type": "CNAME",
+            "recordName": "fm1._domainkey.example.com",
+            "domainName": "fm1.example.com.dkim.example.com"
+          },
+          {
+            "type": "TXT",
+            "recordName": "",
+            "values": ["v=spf1 include:spf.example.com ?all"]
+          }
+        ],
+        "subdomains": [{ "domainName": "dev.example.com" }]
       },
       "webHosting": {
         "type": "cloudfront-s3",
@@ -437,7 +457,7 @@
       },
       "pipeline": {
         "type": "codestar-custom",
-        "codestarConnectionArn": "arn:aws:codestar-connections:eu-west-1:111111111111:connection/22222222-2222-2222-2222-222222222222",
+        "codestarConnectionArn": "arn:aws:codestar-connections:us-east-1:111111111111:connection/12345678-cafe-cafe-cafe-123456789012",
         "owner": "example",
         "repo": "example.com",
         "buildPhases": {
@@ -449,33 +469,30 @@
           }
         }
       },
-      "crossAccountAccess": [],
-      "dns": {
-        "domainName": "example.com",
-        "extraDnsConfig": [
+      "certificate": {
+        "clones": [
           {
-            "type": "MX",
-            "hostName": "in1-smtp.foo.com",
-            "priority": 10
+            "name": "eg-development",
+            "account": "111111111111",
+            "region": "eu-north-1"
           },
           {
-            "type": "MX",
-            "hostName": "in2-smtp.foo.com",
-            "priority": 20
-          },
-          {
-            "type": "CNAME",
-            "recordName": "fm1._domainkey.example.com",
-            "domainName": "fm1.example.com.dkim.example.com"
-          },
-          {
-            "type": "TXT",
-            "recordName": "",
-            "values": ["v=spf1 include:spf.example.com ?all"]
+            "name": "eg-production",
+            "account": "222222222222",
+            "region": "eu-north-1"
           }
-        ],
-        "subdomains": []
-      }
+        ]
+      },
+      "crossAccountAccess": [
+        {
+          "name": "eg-development",
+          "arn": "arn:aws:sts::111111111111:role/OrganizationAccountAccessRole"
+        },
+        {
+          "name": "eg-production",
+          "arn": "arn:aws:iam::222222222222:role/OrganizationAccountAccessRole"
+        }
+      ]
     }
   ]
 }

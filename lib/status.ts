@@ -31,9 +31,9 @@ export function getStatus(state: SomState): SomStatus {
   const hostedZoneId = getParam(state, SSM_PARAM_NAME_HOSTED_ZONE_ID);
   const hostedZoneConfigOk =
     state.verificationTxtRecordViaDns && state.verificationTxtRecordViaDns === hostedZoneId && hasHostedZoneNameServers;
-  const needsCloudfrontDist = !!state.manifest.webHosting;
+  const needsCloudfrontDist = !!state.manifest?.webHosting;
   const hasCloudfrontDistId = !!getParam(state, 'cloudfront-distribution-id');
-  const needsCodePipeline = !!state.manifest.pipeline;
+  const needsCodePipeline = !!state.manifest?.pipeline;
   const hasCodePipelineArn = !!getParam(state, 'code-pipeline-arn');
 
   if (!hostedZoneId) return SOM_STATUS_NOT_STARTED;
@@ -66,12 +66,14 @@ export function getStatusMessage(state: SomState, status: SomStatus): string {
       }
       return 'Set the nameservers with the registrar: `> set nameservers`.';
     }
-    return 'You must manually set the nameservers with your registrar. This may take a while to take effect.';
+    return `You must manually set the nameservers with your registrar.\nSee ${chalk.white(
+      'hosted-zone-name-servers'
+    )} property below.`;
   }
   if (status === SOM_STATUS_HOSTED_ZONE_OK) {
-    const needsCloudfrontDist = !!state.manifest.webHosting;
+    const needsCloudfrontDist = !!state.manifest?.webHosting;
     const hasCloudfrontDistId = !!getParam(state, 'cloudfront-distribution-id');
-    const needsCodePipeline = !!state.manifest.pipeline;
+    const needsCodePipeline = !!state.manifest?.pipeline;
     const hasCodePipelineArn = !!getParam(state, 'code-pipeline-arn');
 
     if (needsCodePipeline && hasCodePipelineArn && state.connectionStatus?.statusCode !== 200) {

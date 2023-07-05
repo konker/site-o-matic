@@ -58,18 +58,20 @@ export class SiteStack extends cdk.Stack {
   async build() {
     // ----------------------------------------------------------------------
     const res1 = new ssm.StringParameter(this, 'SsmRootDomain', {
-      parameterName: toSsmParamName(this.somId, 'root-domain'),
-      stringValue: this.siteProps.dns.domainName,
+      parameterName: toSsmParamName(this.somId, 'root-domain-name'),
+      stringValue: this.siteProps.rootDomainName,
       tier: ssm.ParameterTier.STANDARD,
     });
     _somMeta(res1, this.somId, this.siteProps.protected);
 
-    const res2 = new ssm.StringParameter(this, 'SsmWebmasterEmail', {
-      parameterName: toSsmParamName(this.somId, 'webmaster-email'),
-      stringValue: this.siteProps.webmasterEmail,
-      tier: ssm.ParameterTier.STANDARD,
-    });
-    _somMeta(res2, this.somId, this.siteProps.protected);
+    if (this.siteProps.webmasterEmail) {
+      const res2 = new ssm.StringParameter(this, 'SsmWebmasterEmail', {
+        parameterName: toSsmParamName(this.somId, 'webmaster-email'),
+        stringValue: this.siteProps.webmasterEmail,
+        tier: ssm.ParameterTier.STANDARD,
+      });
+      _somMeta(res2, this.somId, this.siteProps.protected);
+    }
 
     const res3 = new ssm.StringParameter(this, 'SsmProtectedStatus', {
       parameterName: toSsmParamName(this.somId, SSM_PARAM_NAME_PROTECTED_STATUS),
@@ -115,12 +117,12 @@ export class SiteStack extends cdk.Stack {
     // ----------------------------------------------------------------------
     // DNS / HostedZone
     const dnsSubStack = new SiteDnsSubStack(this, {
-      description: `Site-o-Matic DNS sub-stack for ${this.siteProps.dns.domainName}`,
+      description: `Site-o-Matic DNS sub-stack for ${this.siteProps.rootDomainName}`,
     });
     await dnsSubStack.build();
     _somTag(dnsSubStack, this.somId);
 
-    const verificationTxtRecordViaDns = await getSomTxtRecordViaDns(this.siteProps.dns.domainName);
+    const verificationTxtRecordViaDns = await getSomTxtRecordViaDns(this.siteProps.rootDomainName);
     const verificationSsmParam = await getSomSsmParam(this.somId, this.region, SSM_PARAM_NAME_HOSTED_ZONE_ID);
 
     // Check to see if DNS has been configured correctly,
@@ -128,53 +130,49 @@ export class SiteStack extends cdk.Stack {
     if (verificationTxtRecordViaDns && verificationTxtRecordViaDns === verificationSsmParam) {
       // ----------------------------------------------------------------------
       // SSL Certificates
-      if (!!this.siteProps?.certificate?.create) {
-        const certificateSubStack = new SiteCertificateSubStack(this, {
-          description: `Site-o-Matic certificate sub-stack for ${this.siteProps.dns.domainName}`,
-        });
-        await certificateSubStack.build();
-        certificateSubStack.addDependency(dnsSubStack);
-        _somTag(certificateSubStack, this.somId);
+      const certificateSubStack = new SiteCertificateSubStack(this, {
+        description: `Site-o-Matic certificate sub-stack for ${this.siteProps.rootDomainName}`,
+      });
+      await certificateSubStack.build();
+      certificateSubStack.addDependency(dnsSubStack);
+      _somTag(certificateSubStack, this.somId);
 
-        // ----------------------------------------------------------------------
-        // Certificate clones, if any
-        const certificateClones = this.siteProps.certificate?.clones ?? [];
-        if (certificateClones.length > 0) {
-          for (const certificateClone of certificateClones) {
-            const certificateCloneSubStack = new SiteCertificateCloneSubStack(this, {
-              description: `Site-o-Matic certificate clone sub-stack for ${this.siteProps.dns.domainName}`,
-              env: {
-                account: certificateClone.account,
-                region: certificateClone.region,
-              },
-            });
-            await certificateCloneSubStack.build();
-            certificateCloneSubStack.addDependency(certificateSubStack);
-            _somTag(certificateCloneSubStack, this.somId);
-          }
-        }
-
-        // ----------------------------------------------------------------------
-        // Web Hosting
-        if (this.siteProps.webHosting) {
-          const webHostingSubStack = new SiteWebHostingSubStack(this, {
-            description: `Site-o-Matic web hosting sub-stack for ${this.siteProps.dns.domainName}`,
+      // ----------------------------------------------------------------------
+      // Certificate clones, if any
+      const certificateClones = this.siteProps.certificate?.clones ?? [];
+      if (certificateClones.length > 0) {
+        for (const certificateClone of certificateClones) {
+          const certificateCloneSubStack = new SiteCertificateCloneSubStack(this, {
+            description: `Site-o-Matic certificate clone sub-stack for ${this.siteProps.rootDomainName}`,
+            env: {
+              account: certificateClone.account,
+              region: certificateClone.region,
+            },
           });
-          await webHostingSubStack.build();
-          webHostingSubStack.addDependency(certificateSubStack);
-          _somTag(webHostingSubStack, this.somId);
-
-          // ----------------------------------------------------------------------
-          // Pipeline for the site
-          if (this.siteProps.pipeline) {
-            const pipelineSubStack = new SitePipelineSubStack(this, {
-              description: `Site-o-Matic pipeline sub-stack for ${this.siteProps.dns.domainName}`,
-            });
-            await pipelineSubStack.build();
-            pipelineSubStack.addDependency(webHostingSubStack);
-            _somTag(pipelineSubStack, this.somId);
-          }
+          await certificateCloneSubStack.build();
+          certificateCloneSubStack.addDependency(certificateSubStack);
+          _somTag(certificateCloneSubStack, this.somId);
         }
+      }
+
+      // ----------------------------------------------------------------------
+      // Web Hosting
+      const webHostingSubStack = new SiteWebHostingSubStack(this, {
+        description: `Site-o-Matic web hosting sub-stack for ${this.siteProps.rootDomainName}`,
+      });
+      await webHostingSubStack.build();
+      webHostingSubStack.addDependency(certificateSubStack);
+      _somTag(webHostingSubStack, this.somId);
+
+      // ----------------------------------------------------------------------
+      // Pipeline for the site
+      if (this.siteProps.pipeline) {
+        const pipelineSubStack = new SitePipelineSubStack(this, {
+          description: `Site-o-Matic pipeline sub-stack for ${this.siteProps.rootDomainName}`,
+        });
+        await pipelineSubStack.build();
+        pipelineSubStack.addDependency(webHostingSubStack);
+        _somTag(pipelineSubStack, this.somId);
       }
 
       // ----------------------------------------------------------------------
@@ -185,6 +183,13 @@ export class SiteStack extends cdk.Stack {
         });
         _somMeta(this.domainRole, this.somId, this.siteProps.protected);
         this.domainRole.attachInlinePolicy(this.domainPolicy);
+
+        const res6 = new ssm.StringParameter(this, 'DomainRoleArn', {
+          parameterName: toSsmParamName(this.somId, 'domain-role-arn'),
+          stringValue: this.domainRole.roleArn,
+          tier: ssm.ParameterTier.STANDARD,
+        });
+        _somMeta(res6, this.somId, this.siteProps.protected);
       }
     }
   }

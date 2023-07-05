@@ -34,7 +34,7 @@ async function main(): Promise<void> {
     return;
   }
 
-  const somId = formulateSomId(manifest.dns.domainName);
+  const somId = formulateSomId(manifest.rootDomainName);
 
   // Only generate the initial content if needed, i.e.:
   //  - The pipeline is based on a codecommit repo
@@ -63,7 +63,7 @@ async function main(): Promise<void> {
     username,
     contextParams,
     siteContentTmpDirPath: siteContentTmpDirPath,
-    description: `Site-o-Matic Stack for ${manifest.dns.domainName}`,
+    description: `Site-o-Matic Stack for ${manifest.rootDomainName}`,
   });
   await stack.build();
 }

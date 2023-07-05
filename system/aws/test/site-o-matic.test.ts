@@ -12,6 +12,7 @@ test('Empty Stack', () => {
   const app = new cdk.App();
   // WHEN
   const stack = new SiteStack(app, config, 'som-id-test', {
+    rootDomainName: 'example.com',
     title: 'Test Title',
     description: 'Site-o-matic test stack',
     username: 'som-example-user',
@@ -22,6 +23,9 @@ test('Empty Stack', () => {
       domainName: 'example.com',
       extraDnsConfig: [],
       subdomains: [],
+    },
+    webHosting: {
+      type: 'cloudfront-s3',
     },
     content: { producerId: 'default' },
     pipeline: { type: 'codecommit-s3' },
