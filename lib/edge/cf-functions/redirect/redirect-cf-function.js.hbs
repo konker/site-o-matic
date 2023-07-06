@@ -1,0 +1,18 @@
+var SOURCE_URI = '{{ manifest.redirect.source }}';
+var SOURCE_URI_RE = new RegExp(SOURCE_URI);
+var TARGET_URI = '{{ manifest.redirect.target }}';
+
+function handler(event) {
+  var request = event.request;
+
+  if (request.uri.match(SOURCE_URI_RE)) {
+    return {
+      statusCode: 301,
+      statusDescription: 'Moved Permanently',
+      headers: {
+        location: { value: TARGET_URI },
+      },
+    };
+  }
+  return request;
+}

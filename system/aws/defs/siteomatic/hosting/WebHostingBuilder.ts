@@ -1,3 +1,4 @@
+import { Duration } from 'aws-cdk-lib';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -98,34 +99,97 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
     : undefined;
 
   // ----------------------------------------------------------------------
+  // Response headers policy
+  const responseHeadersPolicy = new cloudfront.ResponseHeadersPolicy(scope, 'SecurityHeadersResponseHeaderPolicy', {
+    securityHeadersBehavior: {
+      contentSecurityPolicy: {
+        override: true,
+        contentSecurityPolicy: "default-src 'self'",
+      },
+      strictTransportSecurity: {
+        override: true,
+        accessControlMaxAge: Duration.days(2 * 365),
+        includeSubdomains: true,
+        preload: true,
+      },
+      contentTypeOptions: {
+        override: true,
+      },
+      referrerPolicy: {
+        override: true,
+        referrerPolicy: cloudfront.HeadersReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN,
+      },
+      xssProtection: {
+        override: true,
+        protection: true,
+        modeBlock: true,
+      },
+      frameOptions: {
+        override: true,
+        frameOption: cloudfront.HeadersFrameOption.DENY,
+      },
+    },
+  });
+  _somMeta(responseHeadersPolicy, props.siteStack.somId, props.siteStack.siteProps.protected);
+
+  // ----------------------------------------------------------------------
+  // Cloudfront function, if any
+  const cfFunction = (() => {
+    if (props.cfFunctionTmpFilePath) {
+      const ret = new cloudfront.Function(scope, 'CloudFrontFunction', {
+        comment: `Redirect function for ${props.siteStack.somId}`,
+        code: cloudfront.FunctionCode.fromFile({
+          filePath: props.cfFunctionTmpFilePath,
+        }),
+      });
+      _somMeta(ret, props.siteStack.somId, props.siteStack.siteProps.protected);
+      return ret;
+    }
+    return undefined;
+  })();
+
+  // ----------------------------------------------------------------------
   // Cloudfront distribution
   const cloudFrontDistribution = new cloudfront.Distribution(
     scope,
     'CloudFrontDistribution',
     Object.assign(
       {
-        defaultBehavior: {
-          origin: new origins.S3Origin(domainBucket, {
-            originPath: props.siteStack.siteProps?.webHosting?.originPath ?? WEB_HOSTING_DEFAULT_ORIGIN_PATH,
-            originAccessIdentity: originAccessIdentity,
-          }),
-          allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
-          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-          cachePolicy: new cloudfront.CachePolicy(scope, 'CloudFrontDistributionCachePolicy', {
-            queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
-            cookieBehavior: cloudfront.CacheCookieBehavior.none(),
-          }),
-          originRequestPolicy: new cloudfront.OriginRequestPolicy(scope, 'OriginRequestPolicy', {
-            queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.none(),
-            cookieBehavior: cloudfront.OriginRequestCookieBehavior.none(),
-          }),
-        },
+        defaultBehavior: Object.assign(
+          {
+            origin: new origins.S3Origin(domainBucket, {
+              originPath: props.siteStack.siteProps?.webHosting?.originPath ?? WEB_HOSTING_DEFAULT_ORIGIN_PATH,
+              originAccessIdentity: originAccessIdentity,
+            }),
+            allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
+            viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+            cachePolicy: new cloudfront.CachePolicy(scope, 'CloudFrontDistributionCachePolicy', {
+              queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
+              cookieBehavior: cloudfront.CacheCookieBehavior.none(),
+            }),
+            originRequestPolicy: new cloudfront.OriginRequestPolicy(scope, 'OriginRequestPolicy', {
+              queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.none(),
+              cookieBehavior: cloudfront.OriginRequestCookieBehavior.none(),
+            }),
+          },
+          cfFunction
+            ? {
+                functionAssociations: [
+                  {
+                    function: cfFunction,
+                    eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+                  },
+                ],
+              }
+            : {}
+        ),
         domainNames: [props.siteStack.siteProps.rootDomainName],
         certificate: props.domainCertificate,
         priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
         defaultRootObject:
           props.siteStack.siteProps?.webHosting?.defaultRootObject ?? WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT,
         enableIpv6: true,
+        responseHeadersPolicy,
         errorResponses: props.siteStack.siteProps?.webHosting?.errorResponses ?? WEB_HOSTING_DEFAULT_ERROR_RESPONSES,
       },
       wafEnabled && wafAcl ? { webAclId: wafAcl.attrArn } : {}

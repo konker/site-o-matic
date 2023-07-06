@@ -7,6 +7,7 @@ import chalk from 'chalk';
 
 import { formulateSomId } from '../../../lib';
 import { loadManifest } from '../../../lib/manifest';
+import { getRedirectTmpFilePathFromRedirect } from '../../../lib/redirect';
 import config from '../../../site-o-matic.config.json';
 import { SiteStack } from '../defs/siteomatic/site/SiteStack';
 
@@ -32,10 +33,18 @@ async function main(): Promise<void> {
 
   const somId = formulateSomId(manifest.rootDomainName);
 
+  const cfFunctionTmpFilePath = await (async () => {
+    if (manifest.redirect) {
+      return getRedirectTmpFilePathFromRedirect(somId, manifest);
+    }
+    return undefined;
+  })();
+
   const stack = new SiteStack(app, config, somId, {
     ...manifest,
     username,
     contextParams,
+    cfFunctionTmpFilePath,
     description: `Site-o-Matic Stack for ${manifest.rootDomainName}`,
   });
   await stack.build();

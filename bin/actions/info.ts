@@ -134,18 +134,14 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
                     : '')
                 : undefined,
             },
-            /*[XXX: remove content producers?]
             {
-              Param: chalk.bold(chalk.white('content producer ID')),
-              Value: state.manifest.content?.producerId
-                ? SITE_PIPELINE_TYPES_CODECOMMIT.includes(state.manifest.pipeline?.type)
-                  ? state.manifest.content?.producerId
-                  : `${state.manifest.content?.producerId}\n${chalk.yellow(
-                      'WARNING: content is not automatically\nproduced for non-CodeCommit pipelines'
-                    )}`
+              Param: chalk.bold(chalk.white('redirect')),
+              Value: state.manifest.redirect?.type
+                ? `${chalk.bold(chalk.white('type'))}:\n↪ ${state.manifest.redirect?.type}` +
+                  `\n${chalk.bold(chalk.white('action'))}:\n ${state.manifest.redirect?.source}` +
+                  ` ⟶ ${state.manifest.redirect?.target}`
                 : undefined,
             },
-            */
             {
               Param: chalk.bold(chalk.white('cross account access')),
               Value: state.crossAccountAccessNames?.join('\n'),

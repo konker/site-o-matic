@@ -20,6 +20,7 @@ import type {
   SOM_STATUS_SITE_FUNCTIONAL,
   WEB_HOSTING_TYPE_CLOUDFRONT_S3,
 } from './consts';
+import type { REDIRECT_TYPE_EDGE_CF_FUNCTION } from './redirect';
 
 export type WwwConnectionStatus = {
   readonly statusCode: number;
@@ -145,6 +146,13 @@ export type SomManifest = {
       readonly AWSManagedRules?: Array<WafAwsManagedRule> | undefined;
     };
   };
+  readonly redirect?:
+    | undefined
+    | {
+        readonly type: typeof REDIRECT_TYPE_EDGE_CF_FUNCTION;
+        readonly source: string;
+        readonly target: string;
+      };
   readonly title?: string;
   readonly dns?: HostedZoneConfig & {
     readonly subdomains?: undefined | Array<HostedZoneConfig>;
@@ -187,7 +195,7 @@ export type SiteStackProps = cdk.StackProps &
     readonly description: string;
     readonly username: string;
     readonly contextParams: Record<string, string>;
-    readonly siteContentTmpDirPath?: string | undefined;
+    readonly cfFunctionTmpFilePath?: string | undefined;
     readonly env?: Record<string, string>;
   };
 
@@ -209,6 +217,7 @@ export type CertificateBuilderProps = {
 export type WebHostingBuilderProps = {
   readonly siteStack: SiteStack;
   readonly domainCertificate: certificatemanager.ICertificate;
+  readonly cfFunctionTmpFilePath?: string | undefined;
 };
 
 // ----------------------------------------------------------------------

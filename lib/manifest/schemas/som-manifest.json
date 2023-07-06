@@ -29,6 +29,10 @@
       "description": "Web hosting specification",
       "$ref": "#/definitions/webHostingClause"
     },
+    "redirect": {
+      "description": "Domain redirect",
+      "$ref": "#/definitions/redirectClause"
+    },
     "certificate": {
       "description": "SSL certificate specification",
       "$ref": "#/definitions/certificateClause"
@@ -148,6 +152,29 @@
       },
       "required": ["domainName"],
       "additionalProperties": false
+    },
+    "redirectClauseEdgeCfFunction": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "edge-cf-function"
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "description": "A regex to match to trigger the redirect",
+          "examples": [".", "^https://www.example.com", "^https://example.com/jump/?$"]
+        },
+        "target": {
+          "type": "string",
+          "minLength": 4,
+          "description": "The target URL to redirect to",
+          "examples": ["https://www.example.org/", "https://jump.example.org/yay.html"]
+        }
+      }
+    },
+    "redirectClause": {
+      "oneOf": [{ "$ref": "#/definitions/redirectClauseEdgeCfFunction" }]
     },
     "certificateCloneSpec": {
       "type": "object",
@@ -437,6 +464,11 @@
             { "name": "AWSManagedRulesBotControlRuleSet", "priority": 20 }
           ]
         }
+      },
+      "redirect": {
+        "type": "edge-cf-function",
+        "source": ".",
+        "target": "https://www.example.org/"
       },
       "pipeline": {
         "type": "codestar-custom",
