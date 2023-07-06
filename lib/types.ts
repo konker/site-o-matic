@@ -14,6 +14,7 @@ import type {
   SITE_PIPELINE_TYPE_CODECOMMIT_S3,
   SITE_PIPELINE_TYPE_CODESTAR_CUSTOM,
   SITE_PIPELINE_TYPE_CODESTAR_S3,
+  SOM_STATUS_BREADCRUMB,
   SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG,
   SOM_STATUS_HOSTED_ZONE_OK,
   SOM_STATUS_NOT_STARTED,
@@ -143,7 +144,7 @@ export type SomManifest = {
     readonly errorResponses?: Array<ErrorResponse>;
     readonly waf?: {
       readonly enabled: boolean;
-      readonly AWSManagedRules?: Array<WafAwsManagedRule> | undefined;
+      readonly AWSManagedRules: Array<WafAwsManagedRule> | undefined;
     };
   };
   readonly redirect?:
@@ -239,16 +240,22 @@ export type SomStatus =
   | typeof SOM_STATUS_HOSTED_ZONE_OK
   | typeof SOM_STATUS_SITE_FUNCTIONAL;
 
-export type SomParam = Record<string, string>;
+// export type SomParam = Record<string, string>;
+export type SomParam = {
+  readonly Param: string;
+  readonly Value: string;
+};
 
 export type SomState = {
   spinner: any;
+  plumbing: boolean;
+  yes: boolean;
   somVersion: string;
-  rootDomain?: string | undefined;
+  rootDomainName?: string | undefined;
+  siteUrl?: string;
   subdomains?: Array<string> | undefined;
   certificateCloneNames?: Array<string> | undefined;
   crossAccountAccessNames?: Array<string> | undefined;
-  siteUrl?: string | undefined;
   somId?: string | undefined;
   domainHash?: string | undefined;
   registrar?: string | undefined;
@@ -270,4 +277,60 @@ export type SomConfig = {
   readonly SOM_PREFIX: string;
   readonly SOM_TAG_NAME: string;
   readonly SOM_ROLE_ARN: string;
+};
+
+export type SomInfoSpec = {
+  readonly siteUrl: string;
+  readonly registrar: string | undefined;
+  readonly subdomains: Array<string> | undefined;
+  readonly certificateCloneNames: Array<string> | undefined;
+  readonly webHosting:
+    | (Required<Omit<SomManifest['webHosting'], 'errorResponses' | 'waf'>> & {
+        errorResponses: Array<string>;
+        waf:
+          | {
+              enabled: boolean;
+              AWSManagedRules: Array<string>;
+            }
+          | undefined;
+      })
+    | undefined;
+  readonly pipeline: Required<SomManifest['pipeline']> | undefined;
+  readonly redirect:
+    | {
+        readonly type: string;
+        readonly action: string;
+      }
+    | undefined;
+  readonly crossAccountAccessNames: Array<string> | undefined;
+  readonly protected: {
+    readonly protectedManifest: boolean;
+    readonly protectedSsm: boolean;
+  };
+};
+
+export type SomInfoStatus = {
+  readonly somVersion: {
+    somVersionSystem: string;
+    somVersionSite: string;
+  };
+  readonly status: {
+    readonly status: SomStatus;
+    readonly statusMessage: string;
+    readonly breadcrumb: typeof SOM_STATUS_BREADCRUMB;
+  };
+  readonly connectionStatus:
+    | {
+        readonly statusCode: number;
+        readonly statusMessage: string;
+        readonly timing: number;
+      }
+    | undefined;
+  readonly hostedZoneVerified: boolean;
+  readonly verificationTxtRecordViaDns: string | undefined;
+  readonly nameserversSet: boolean;
+  readonly registrarNameservers: Array<string> | undefined;
+  readonly params: Array<SomParam>;
+  readonly pathToManifestFile: SomParam;
+  readonly somId: SomParam;
 };

@@ -1,11 +1,11 @@
 import type { ErrorResponse } from 'aws-cdk-lib/aws-cloudfront';
-import chalk from 'chalk';
 import type Vorpal from 'vorpal';
 
 import * as secretsmanager from '../../lib/aws/secretsmanager';
 import * as ssm from '../../lib/aws/ssm';
 import {
   DEFAULT_AWS_REGION,
+  SOM_STATUS_BREADCRUMB,
   SSM_PARAM_NAME_HOSTED_ZONE_ID,
   SSM_PARAM_NAME_PROTECTED_STATUS,
   SSM_PARAM_NAME_SOM_VERSION,
@@ -18,17 +18,17 @@ import {
 import { getSiteConnectionStatus } from '../../lib/http';
 import { getRegistrarConnector } from '../../lib/registrar';
 import * as status from '../../lib/status';
-import { formatStatusBreadCrumbAndMessage, getSomTxtRecordViaDns } from '../../lib/status';
-import type { SomConfig, SomState, WafAwsManagedRule } from '../../lib/types';
-import { tabulate } from '../../lib/ui/tables';
+import { getSomTxtRecordViaDns } from '../../lib/status';
+import type { SomConfig, SomInfoSpec, SomInfoStatus, SomState, WafAwsManagedRule } from '../../lib/types';
+import { renderInfoSpec, renderInfoStatus } from '../../lib/ui/info';
+import { verror } from '../../lib/ui/logging';
 import { getParam } from '../../lib/utils';
 
 export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
   return async (_: Vorpal.Args): Promise<void> => {
-    const STATE_INFO_KEYS: Array<keyof SomState> = ['pathToManifestFile', 'somId'];
-
     if (!state.manifest) {
-      vorpal.log(`ERROR: no manifest loaded`);
+      const errorMessage = `ERROR: no manifest loaded`;
+      verror(vorpal, state, errorMessage);
       return;
     }
 
@@ -37,8 +37,8 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
     try {
       state.params = await ssm.getSsmParams(config, DEFAULT_AWS_REGION, state.somId);
       state.somVersion = getParam(state, SSM_PARAM_NAME_SOM_VERSION) ?? VERSION;
-      state.connectionStatus = await getSiteConnectionStatus(state.rootDomain, state.siteUrl);
-      state.verificationTxtRecordViaDns = await getSomTxtRecordViaDns(state.rootDomain);
+      state.connectionStatus = await getSiteConnectionStatus(state.rootDomainName, state.siteUrl);
+      state.verificationTxtRecordViaDns = await getSomTxtRecordViaDns(state.rootDomainName);
       state.protectedSsm = getParam(state, SSM_PARAM_NAME_PROTECTED_STATUS) ?? 'false';
 
       if (state.registrar) {
@@ -47,7 +47,10 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
         if (!registrarConnector.SECRETS.every((secretName) => somSecrets[secretName])) {
           vorpal.log(`WARNING: secrets required by registrar connector missing: ${registrarConnector.SECRETS}`);
         } else {
-          state.registrarNameservers = await registrarConnector.getNameServers(somSecrets, state.rootDomain as string);
+          state.registrarNameservers = await registrarConnector.getNameServers(
+            somSecrets,
+            state.rootDomainName as string
+          );
         }
 
         state.nameserversSet = !!(
@@ -64,152 +67,81 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
 
       state.spinner.stop();
 
-      vorpal.log(
-        tabulate(
-          [
-            { Param: chalk.bold(chalk.white('site')), Value: chalk.bold(chalk.blue(chalk.underline(state.siteUrl))) },
-            {
-              Param: chalk.bold(chalk.white('registrar')),
-              Value: state.registrar,
-            },
-            {
-              Param: chalk.bold(chalk.white('subdomains')),
-              Value: state.subdomains?.join('\n'),
-            },
-            {
-              Param: chalk.bold(chalk.white('certificate clones')),
-              Value: state.certificateCloneNames?.join('\n'),
-            },
-            {
-              Param: chalk.bold(chalk.white('web hosting')),
-              Value: state.manifest.webHosting
-                ? tabulate(
-                    [
-                      {
-                        Hosting:
-                          `${chalk.bold(chalk.white('type'))}:\n↪ ${state.manifest.webHosting?.type}` +
-                          `\n${chalk.bold(chalk.white('originPath'))}:\n↪ ${
-                            state.manifest.webHosting?.originPath ?? WEB_HOSTING_DEFAULT_ORIGIN_PATH
-                          }` +
-                          `\n${chalk.bold(chalk.white('defaultRootObject'))}:\n↪ ${
-                            state.manifest.webHosting?.originPath ?? WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT
-                          }`,
-                        ErrorResponses: (
-                          state.manifest.webHosting?.errorResponses ?? WEB_HOSTING_DEFAULT_ERROR_RESPONSES
-                        )
-                          .map((i: ErrorResponse) => `↪ ${i.httpStatus} -> ${i.responsePagePath}`)
-                          .join('\n'),
-                        WAF: state.manifest.webHosting?.waf
-                          ? `${chalk.bold(chalk.white('WAF enabled'))}:\n↪ ${
-                              state.manifest.webHosting.waf?.enabled
-                            }\n${chalk.bold(
-                              chalk.white('WAF managed rules')
-                            )}: ${state.manifest.webHosting.waf?.AWSManagedRules?.map(
-                              (i: WafAwsManagedRule) => `\n↪ ${i.name}`
-                            )}\n`
-                          : undefined,
-                      },
-                    ],
-                    ['Hosting', 'ErrorResponses', 'WAF'],
-                    undefined,
-                    false,
-                    [25, 25, 28]
-                  )
-                : undefined,
-            },
-            {
-              Param: chalk.bold(chalk.white('pipeline')),
-              Value: state.manifest.pipeline
-                ? `${chalk.bold(chalk.white('type'))}:\n↪ ${state.manifest.pipeline?.type}` +
-                  ('codestarConnectionArn' in state.manifest.pipeline
-                    ? `\n${chalk.bold(chalk.white('codestarConnectionArn'))}:\n↪ ${
-                        state.manifest.pipeline?.codestarConnectionArn
-                      }`
-                    : '') +
-                  ('owner' in state.manifest.pipeline
-                    ? `\n${chalk.bold(chalk.white('owner'))}:\n↪ ${state.manifest.pipeline?.owner}`
-                    : '') +
-                  ('repo' in state.manifest.pipeline
-                    ? `\n${chalk.bold(chalk.white('repo'))}:\n↪ ${state.manifest.pipeline?.repo}`
-                    : '')
-                : undefined,
-            },
-            {
-              Param: chalk.bold(chalk.white('redirect')),
-              Value: state.manifest.redirect?.type
-                ? `${chalk.bold(chalk.white('type'))}:\n↪ ${state.manifest.redirect?.type}` +
-                  `\n${chalk.bold(chalk.white('action'))}:\n ${state.manifest.redirect?.source}` +
-                  ` ⟶ ${state.manifest.redirect?.target}`
-                : undefined,
-            },
-            {
-              Param: chalk.bold(chalk.white('cross account access')),
-              Value: state.crossAccountAccessNames?.join('\n'),
-            },
-            {
-              Param: chalk.bold(chalk.white('protected')),
-              Value: `SSM: ${
-                state.protectedSsm === state.protectedManifest
-                  ? chalk.green(state.protectedSsm)
-                  : chalk.red(state.protectedSsm)
-              } / Manifest: ${
-                state.protectedManifest === state.protectedSsm
-                  ? chalk.green(state.protectedManifest)
-                  : chalk.red(state.protectedManifest)
-              }`,
-            },
-          ],
-          ['Param', 'Value'],
-          ['', 'Manifest']
-        )
-      );
-      vorpal.log('\n');
-      vorpal.log(
-        tabulate(
-          [
-            {
-              Param: chalk.bold(chalk.white('site-o-matic version')),
-              Value:
-                state.somVersion === UNKNOWN || state.somVersion === VERSION
-                  ? state.somVersion
-                  : `${chalk.red(
-                      state.somVersion
-                    )}\nCurrently running site-o-matic version is not compatible with this deployment`,
-            },
-            {
-              Param: chalk.bold(chalk.white('status')),
-              Value: formatStatusBreadCrumbAndMessage(state.status, state.statusMessage),
-            },
-            {
-              Param: chalk.bold(chalk.white('connect')),
-              Value: !!state.manifest.webHosting
-                ? `${state.connectionStatus?.statusCode}: ${state.connectionStatus?.statusMessage} in ${state.connectionStatus?.timing}ms`
-                : 'N/A',
-            },
-            {
-              Param: 'verification TXT',
-              Value: state.hostedZoneVerified
-                ? chalk.green(state.verificationTxtRecordViaDns)
-                : state.verificationTxtRecordViaDns,
-            },
-            {
-              Param: chalk.bold(chalk.white('registrar nameservers')),
-              Value: state.nameserversSet
-                ? chalk.green(state.registrarNameservers)
-                : state.registrarNameservers?.join('\n'),
-            },
-            ...state.params,
-            ...STATE_INFO_KEYS.reduce((acc, param) => {
-              return acc.concat({ Param: param, Value: state[param] });
-            }, [] as any),
-          ],
-          ['Param', 'Value'],
-          ['', 'System Status']
-        )
-      );
+      const infoSpec: SomInfoSpec = {
+        siteUrl: state.siteUrl ?? UNKNOWN,
+        registrar: state.registrar,
+        subdomains: state.subdomains,
+        certificateCloneNames: state.certificateCloneNames,
+        webHosting: {
+          type: state.manifest.webHosting?.type,
+          originPath: state.manifest.webHosting?.originPath ?? WEB_HOSTING_DEFAULT_ORIGIN_PATH,
+          defaultRootObject: state.manifest.webHosting?.defaultRootObject ?? WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT,
+          errorResponses: (state.manifest.webHosting?.errorResponses ?? WEB_HOSTING_DEFAULT_ERROR_RESPONSES).map(
+            (i: ErrorResponse) => `↪ ${i.httpStatus} -> ${i.responsePagePath}`
+          ),
+          waf: state.manifest.webHosting?.waf
+            ? {
+                enabled: state.manifest.webHosting.waf.enabled,
+                AWSManagedRules:
+                  state.manifest.webHosting.waf.AWSManagedRules?.map((i: WafAwsManagedRule) => i.name) ?? [],
+              }
+            : undefined,
+        },
+        pipeline: state.manifest.pipeline,
+        redirect: state.manifest.redirect
+          ? {
+              type: state.manifest.redirect.type,
+              action: `${state.manifest.redirect.source} ⟶ ${state.manifest.redirect.target}`,
+            }
+          : undefined,
+        crossAccountAccessNames: state.crossAccountAccessNames,
+        protected: {
+          protectedManifest: Boolean(state.protectedManifest) ?? false,
+          protectedSsm: Boolean(state.protectedSsm) ?? false,
+        },
+      };
+
+      const infoStatus: SomInfoStatus = {
+        somVersion: {
+          somVersionSystem: VERSION,
+          somVersionSite: state.somVersion,
+        },
+        status: {
+          status: state.status,
+          statusMessage: state.statusMessage,
+          breadcrumb: SOM_STATUS_BREADCRUMB,
+        },
+        connectionStatus: state.connectionStatus
+          ? {
+              statusCode: state.connectionStatus.statusCode,
+              statusMessage: state.connectionStatus.statusMessage,
+              timing: state.connectionStatus.timing,
+            }
+          : undefined,
+        hostedZoneVerified: state.hostedZoneVerified ?? false,
+        verificationTxtRecordViaDns: state.verificationTxtRecordViaDns,
+        nameserversSet: state.nameserversSet ?? false,
+        registrarNameservers: state.registrarNameservers,
+        params: state.params,
+        pathToManifestFile: { Param: 'pathToManifestFile', Value: state.pathToManifestFile ?? UNKNOWN },
+        somId: { Param: 'somId', Value: state.somId ?? UNKNOWN },
+      };
+
+      if (state.plumbing) {
+        const out = {
+          state,
+          infoSpec,
+          infoStatus,
+        };
+        vorpal.log(JSON.stringify(out, undefined, 2));
+      } else {
+        vorpal.log(renderInfoSpec(infoSpec));
+        vorpal.log('\n');
+        vorpal.log(renderInfoStatus(infoSpec, infoStatus));
+      }
     } catch (ex) {
       state.spinner.stop();
-      vorpal.log(`ERROR: ${ex}`);
+      verror(vorpal, state, ex);
     }
   };
 }

@@ -2,24 +2,9 @@
 
 ## Productize / Release
 - Finish any outstanding small features/polishing
-  - Minimal manifest example
-    - ```
-      { "rootDomainName": "example.com" }
-      ```
-    - No pipeline
-      - `$ aws s3 sync . s3://wwwbucket-som--markus-dot-lol--b7047a/`
-    - No extra DNS
-  - Redirects
-    - Edge func?
-    - CNAME?
-    - Do we need S3/etc? Certainly not pipeline.
   - Sub-domain hosting?
     a) Cf origin mapped to domain S3 bucket sub-folder?
       - Cannot be a child of www (root domain folder)
-    b) Cf origin mapped to dedicated S3 bucket?
-      - Can create bucket/mapping
-      - But what are the implications for pipeline??
-        - Too theoretical/YAGNI at the moment, stick with a)
   - What is the story with regions?
     - Is it always us-east-1 for everything?
     - Or should infra be deployed to a region of choice where possible?
@@ -28,14 +13,7 @@
       - CodeCommit?
       - CodeStar?
       - Route53?
-      - User?
   - ???
-
-- Remove content generation?
-  - Keep in a branch
-  - Rather have some template repos which can be used as boilerplate/examples/starters?
-- Remove system/system?
-- Create minimal manifest example
 
 ### Tests
 - Unit:

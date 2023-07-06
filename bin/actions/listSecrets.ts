@@ -3,7 +3,7 @@ import type Vorpal from 'vorpal';
 import * as secretsmanager from '../../lib/aws/secretsmanager';
 import { DEFAULT_AWS_REGION } from '../../lib/consts';
 import type { SomConfig, SomState } from '../../lib/types';
-import { tabulate } from '../../lib/ui/tables';
+import { vtabulate } from '../../lib/ui/logging';
 
 export function actionListSecrets(vorpal: Vorpal, config: SomConfig, state: SomState) {
   return async (_: Vorpal.Args): Promise<void> => {
@@ -11,6 +11,6 @@ export function actionListSecrets(vorpal: Vorpal, config: SomConfig, state: SomS
     const data = await secretsmanager.listSomSecrets(config, DEFAULT_AWS_REGION);
     state.spinner.stop();
 
-    vorpal.log(tabulate(data, ['Name']));
+    vtabulate(vorpal, state, data, ['Name']);
   };
 }

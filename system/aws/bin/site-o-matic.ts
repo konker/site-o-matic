@@ -50,4 +50,4 @@ async function main(): Promise<void> {
   await stack.build();
 }
 
-main().then(console.log).catch(console.error);
+main().catch(console.error);

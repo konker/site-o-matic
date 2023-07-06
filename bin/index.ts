@@ -4,13 +4,13 @@ import 'json5/lib/register';
 // @ts-ignore
 import * as cfonts from 'cfonts';
 import ora from 'ora';
+import type { ParseArgsConfig } from 'util';
+import { parseArgs } from 'util';
 import Vorpal from 'vorpal';
 
 import { CODESTAR_CONNECTION_PROVIDER_TYPES } from '../lib/aws/codestar';
 import { VERSION } from '../lib/consts';
 import type { SomState } from '../lib/types';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 import config from '../site-o-matic.config.json';
 import { actionAddCodeStarConnection } from './actions/addCodeStarConnection';
 import { actionAddPublicKey } from './actions/addPublicKey';
@@ -33,24 +33,53 @@ import { actionSetNameServersWithRegistrar } from './actions/setNameserversWithR
 import { actionShowManifest } from './actions/showManifest';
 import { actionSynthesize } from './actions/synthesize';
 
+const ARG_PARSE_CONFIG: ParseArgsConfig = {
+  strict: true,
+  options: {
+    manifest: { type: 'string', short: 'm' },
+    yes: { type: 'boolean' },
+    plumbing: { type: 'boolean' },
+  },
+  tokens: true,
+  allowPositionals: true,
+};
+
+const spinner = (plumbing: boolean) =>
+  plumbing
+    ? {
+        start: () => {
+          return;
+        },
+        stop: () => {
+          return;
+        },
+      }
+    : ora();
+
 // ----------------------------------------------------------------------
 // MAIN
 async function main() {
+  const { values, positionals } = parseArgs(ARG_PARSE_CONFIG);
+
   const vorpal = new Vorpal();
   const state: SomState = {
-    spinner: ora(),
+    spinner: spinner(Boolean(values.plumbing) ?? false),
+    plumbing: Boolean(values.plumbing) ?? false,
+    yes: Boolean(values.yes) ?? false,
     somVersion: VERSION,
   };
 
-  cfonts.say('Site-O-Matic', {
-    font: 'block',
-    align: 'left',
-    colors: ['#0075bd', '#fff', '#0075bd'],
-    background: 'transparent',
-    letterSpacing: 1,
-    lineHeight: 1,
-    env: 'node',
-  });
+  if (!state.plumbing) {
+    cfonts.say('Site-O-Matic', {
+      font: 'block',
+      align: 'left',
+      colors: ['#0075bd', '#fff', '#0075bd'],
+      background: 'transparent',
+      letterSpacing: 1,
+      lineHeight: 1,
+      env: 'node',
+    });
+  }
 
   vorpal.command('clear', 'Clear the screen').alias('cls').action(actionClearScreen(vorpal, config, state));
   vorpal.command('load <pathToManifestFile>', 'Load a manifest file').action(actionLoadManifest(vorpal, config, state));
@@ -99,13 +128,19 @@ async function main() {
     .action(actionSetNameServersWithRegistrar(vorpal, config, state));
   vorpal.command('destroy', 'Destroy the site').action(actionDestroy(vorpal, config, state));
 
-  const app = vorpal.show().delimiter(`site-o-matic ${VERSION}>`);
-  if (process.argv.length > 2) {
-    vorpal.log(`Loading manifest file: ${process.argv[2]}`);
-    await app.exec(`load ${process.argv[2]}`);
-  } else {
-    await app.exec('help');
+  const app = vorpal.delimiter(state.plumbing ? '' : `site-o-matic ${VERSION}>`);
+  if (!state.plumbing) {
+    app.show();
   }
+
+  if (values.manifest) {
+    await app.exec(`load ${values.manifest}`);
+  }
+  if (positionals.length > 0) {
+    await app.exec(positionals.join(' '));
+  }
+
+  if (state.plumbing) vorpal.execSync('exit');
 }
 
-main().then(console.log).catch(console.error);
+main().catch(console.error);

@@ -5,23 +5,30 @@ import type Vorpal from 'vorpal';
 import * as cdkExec from '../../lib/aws/cdkExec';
 import { preDeploymentCheck } from '../../lib/deployment';
 import type { SomConfig, SomState } from '../../lib/types';
+import { verror } from '../../lib/ui/logging';
 
 export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomState) {
   return async (args: Vorpal.Args): Promise<void> => {
-    vorpal.log('Pre-flight checks...');
+    if (!state.plumbing) {
+      vorpal.log('Pre-flight checks...');
+    }
     const checkItems = await preDeploymentCheck(config, state, args.username);
     const checksPassed = checkItems.every((checkItem) => checkItem.passed);
-    for (const checkItem of checkItems) {
-      vorpal.log(
-        checkItem.passed
-          ? chalk.green(`✔ ${checkItem.name}: ${checkItem.message ?? 'OK'}`)
-          : chalk.red(`✘ ${checkItem.name}: ${checkItem.message ?? 'FAILED'}`)
-      );
+
+    if (!state.plumbing) {
+      for (const checkItem of checkItems) {
+        vorpal.log(
+          checkItem.passed
+            ? chalk.green(`✔ ${checkItem.name}: ${checkItem.message ?? 'OK'}`)
+            : chalk.red(`✘ ${checkItem.name}: ${checkItem.message ?? 'FAILED'}`)
+        );
+      }
+      vorpal.log('\n');
     }
-    vorpal.log('\n');
 
     if (!checksPassed) {
-      vorpal.log(chalk.red('Deployment aborted due to failed checks'));
+      const errorMessage = 'Deployment aborted due to failed checks';
+      verror(vorpal, state, errorMessage);
       return;
     }
 
@@ -29,45 +36,58 @@ export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomState)
     assert(state.manifest, 'absurd');
     assert(state.pathToManifestFile, 'absurd');
 
-    const response1 = await vorpal.activeCommand.prompt({
-      type: 'input',
-      name: 'confirm',
-      message: chalk.green(
-        `Are you sure you want to deploy site: ${chalk.bold(state.somId)} under user ${chalk.bold(
-          args.username
-        )}? [y/n] `
-      ),
-    });
+    const response1 = state.yes
+      ? { confirm: 'y' }
+      : await vorpal.activeCommand.prompt({
+          type: 'input',
+          name: 'confirm',
+          message: chalk.green(
+            `Are you sure you want to deploy site: ${chalk.bold(state.somId)} under user ${chalk.bold(
+              args.username
+            )}? [y/n] `
+          ),
+        });
     if (response1.confirm !== 'y') {
-      vorpal.log('Aborted');
+      verror(vorpal, state, 'Aborted');
       return;
     }
 
     if (state.certificateCloneNames?.length ?? 0 > 0) {
-      const response2 = await vorpal.activeCommand.prompt({
-        type: 'input',
-        name: 'confirm',
-        message: chalk.yellow(
-          `WARNING!: Manual action needed to clone certificates into ${state.certificateCloneNames?.join(
-            ','
-          )}. Proceed? [y/n] `
-        ),
-      });
+      const response2 = state.yes
+        ? { confirm: 'y' }
+        : await vorpal.activeCommand.prompt({
+            type: 'input',
+            name: 'confirm',
+            message: chalk.yellow(
+              `WARNING!: Manual action needed to clone certificates into ${state.certificateCloneNames?.join(
+                ','
+              )}. Proceed? [y/n] `
+            ),
+          });
       if (response2.confirm !== 'y') {
-        vorpal.log('Aborted');
+        verror(vorpal, state, 'Aborted');
         return;
       }
     }
 
     // Engage
     try {
-      await cdkExec.cdkDeploy(vorpal, state.somId, {
-        pathToManifestFile: state.pathToManifestFile,
-        iamUsername: args.username,
-        deploySubdomainCerts: 'true',
-      });
+      const [code, log] = await cdkExec.cdkDeploy(
+        vorpal,
+        state.somId,
+        {
+          pathToManifestFile: state.pathToManifestFile,
+          iamUsername: args.username,
+          deploySubdomainCerts: 'true',
+        },
+        state.plumbing
+      );
+
+      if (state.plumbing) {
+        vorpal.log(JSON.stringify({ state, code, log }, undefined, 2));
+      }
     } catch (ex: any) {
-      vorpal.log(ex);
+      verror(vorpal, state, ex);
     }
   };
 }
