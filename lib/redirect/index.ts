@@ -11,14 +11,13 @@ export const REDIRECT_TYPE_TO_FUNCTION_PRODUCER_ID = {
 export async function getRedirectTmpFilePathFromRedirect(
   somId: string,
   manifest: SomManifest
-): Promise<string | undefined> {
+): Promise<[string, string | undefined]> {
   switch (manifest.redirect?.type) {
     case REDIRECT_TYPE_EDGE_CF_FUNCTION: {
-      const functionProducer = getFunctionProducer(
-        REDIRECT_TYPE_TO_FUNCTION_PRODUCER_ID[REDIRECT_TYPE_EDGE_CF_FUNCTION]
-      );
-      if (!functionProducer) return undefined;
-      return functionProducer(somId, manifest);
+      const functionProducerId = REDIRECT_TYPE_TO_FUNCTION_PRODUCER_ID[REDIRECT_TYPE_EDGE_CF_FUNCTION];
+      const functionProducer = getFunctionProducer(functionProducerId);
+      if (!functionProducer) return [functionProducerId, undefined];
+      return [functionProducerId, await functionProducer(somId, manifest)];
     }
     default:
       throw new Error(`Could not get tmpFilePath for redirect type ${manifest.redirect?.type}`);

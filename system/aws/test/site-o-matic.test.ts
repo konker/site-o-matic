@@ -30,6 +30,7 @@ test('Empty Stack', () => {
     pipeline: { type: 'codecommit-s3' },
     certificate: { clones: [] },
     crossAccountAccess: [],
+    cfFunctionTmpFilePaths: [],
   });
   const template = Template.fromStack(stack);
   // THEN

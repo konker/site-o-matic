@@ -61,3 +61,5 @@ export const WEB_HOSTING_DEFAULT_ERROR_RESPONSES: Array<ErrorResponse> = [
     responsePagePath: '/404.html',
   },
 ];
+
+export const WEB_HOSTING_DIR_DEFAULT_FUNCTION_PRODUCER_ID = 'cf-functions-dir-default';

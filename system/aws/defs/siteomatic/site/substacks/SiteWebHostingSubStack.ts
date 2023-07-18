@@ -26,7 +26,7 @@ export class SiteWebHostingSubStack extends cdk.NestedStack {
     this.siteStack.hostingResources = await SiteWebHostingBuilder.build(this, {
       siteStack: this.siteStack,
       domainCertificate: this.siteStack.certificateResources.domainCertificate,
-      cfFunctionTmpFilePath: this.siteStack.siteProps.cfFunctionTmpFilePath,
+      cfFunctionTmpFilePaths: this.siteStack.siteProps.cfFunctionTmpFilePaths,
     });
   }
 }

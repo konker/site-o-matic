@@ -196,7 +196,7 @@ export type SiteStackProps = cdk.StackProps &
     readonly description: string;
     readonly username: string;
     readonly contextParams: Record<string, string>;
-    readonly cfFunctionTmpFilePath?: string | undefined;
+    readonly cfFunctionTmpFilePaths: Array<[string, string | undefined]>;
     readonly env?: Record<string, string>;
   };
 
@@ -218,7 +218,7 @@ export type CertificateBuilderProps = {
 export type WebHostingBuilderProps = {
   readonly siteStack: SiteStack;
   readonly domainCertificate: certificatemanager.ICertificate;
-  readonly cfFunctionTmpFilePath?: string | undefined;
+  readonly cfFunctionTmpFilePaths: Array<[string, string | undefined]>;
 };
 
 // ----------------------------------------------------------------------

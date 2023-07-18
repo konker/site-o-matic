@@ -2,6 +2,7 @@ import fs from 'fs';
 import Handlebars from 'handlebars';
 
 import type { SomManifest } from '../types';
+import * as cfFunctionsDirDefault from './cf-functions/dir-default';
 import * as cfFunctionsRedirect from './cf-functions/redirect';
 import { getTmpFilePath } from './lib';
 
@@ -37,6 +38,8 @@ export function getFunctionProducer(id: string): SomFunctionGenerator {
   switch (id) {
     case cfFunctionsRedirect.ID:
       return createFunctionGenerator(cfFunctionsRedirect);
+    case cfFunctionsDirDefault.ID:
+      return createFunctionGenerator(cfFunctionsDirDefault);
     default:
       throw new Error(`Could not get FunctionProducer for ${id}`);
   }

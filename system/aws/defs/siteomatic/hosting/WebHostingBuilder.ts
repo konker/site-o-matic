@@ -133,20 +133,23 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
   _somMeta(responseHeadersPolicy, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   // ----------------------------------------------------------------------
-  // Cloudfront function, if any
-  const cfFunction = (() => {
-    if (props.cfFunctionTmpFilePath) {
-      const ret = new cloudfront.Function(scope, 'CloudFrontFunction', {
-        comment: `Redirect function for ${props.siteStack.somId}`,
+  // Cloudfront functions
+  const cfFunctions = props.cfFunctionTmpFilePaths.reduce((acc, [cfFunctionId, cfFunctionTmpFilePath]) => {
+    if (cfFunctionTmpFilePath) {
+      const func = new cloudfront.Function(scope, `CloudFrontFunction-${cfFunctionId}`, {
+        comment: `${cfFunctionId} function for ${props.siteStack.somId}`,
         code: cloudfront.FunctionCode.fromFile({
-          filePath: props.cfFunctionTmpFilePath,
+          filePath: cfFunctionTmpFilePath,
         }),
       });
-      _somMeta(ret, props.siteStack.somId, props.siteStack.siteProps.protected);
-      return ret;
+      return [...acc, func];
     }
-    return undefined;
-  })();
+    return acc;
+  }, [] as Array<cloudfront.Function>);
+
+  cfFunctions.forEach((cfFunction) => {
+    _somMeta(cfFunction, props.siteStack.somId, props.siteStack.siteProps.protected);
+  });
 
   // ----------------------------------------------------------------------
   // Cloudfront distribution
@@ -172,14 +175,12 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
               cookieBehavior: cloudfront.OriginRequestCookieBehavior.none(),
             }),
           },
-          cfFunction
+          cfFunctions.length > 0
             ? {
-                functionAssociations: [
-                  {
-                    function: cfFunction,
-                    eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
-                  },
-                ],
+                functionAssociations: cfFunctions.map((cfFunction) => ({
+                  function: cfFunction,
+                  eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+                })),
               }
             : {}
         ),
