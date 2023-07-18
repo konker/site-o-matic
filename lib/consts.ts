@@ -17,6 +17,8 @@ export const SSM_PARAM_NAME_DOMAIN_USER_NAME = 'domain-user-name';
 export const SSM_PARAM_NAME_HOSTED_ZONE_ID = 'hosted-zone-id';
 export const SSM_PARAM_NAME_PROTECTED_STATUS = 'protected-status';
 export const SSM_PARAM_NAME_SOM_VERSION = 'som-version';
+export const SSM_PARAM_NAME_EVENT_BUS_ARN = 'event-bus-arn';
+export const SSM_PARAM_NAME_SNS_TOPIC_NAME = 'sns-topic-name';
 
 export const WEB_HOSTING_TYPE_CLOUDFRONT_S3 = 'cloudfront-s3';
 

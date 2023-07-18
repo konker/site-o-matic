@@ -1,6 +1,8 @@
 import * as cdk from 'aws-cdk-lib';
+import * as events from 'aws-cdk-lib/aws-events';
 import type { IPrincipal } from 'aws-cdk-lib/aws-iam';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as sns from 'aws-cdk-lib/aws-sns';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import type { Construct } from 'constructs';
 import cloneDeep from 'lodash.clonedeep';
@@ -9,8 +11,10 @@ import { getSomSsmParam, toSsmParamName } from '../../../../../lib/aws/ssm';
 import {
   DEFAULT_STACK_PROPS,
   SSM_PARAM_NAME_DOMAIN_USER_NAME,
+  SSM_PARAM_NAME_EVENT_BUS_ARN,
   SSM_PARAM_NAME_HOSTED_ZONE_ID,
   SSM_PARAM_NAME_PROTECTED_STATUS,
+  SSM_PARAM_NAME_SNS_TOPIC_NAME,
   SSM_PARAM_NAME_SOM_VERSION,
   VERSION,
 } from '../../../../../lib/consts';
@@ -39,9 +43,11 @@ export class SiteStack extends cdk.Stack {
   public domainUser?: iam.IUser | undefined;
   public domainRole?: iam.Role | undefined;
   public domainPolicy?: iam.Policy | undefined;
-  public hostedZoneResources?: HostedZoneResources | undefined;
   public crossAccountGrantRoles?: Array<iam.IRole>;
+  public eventBus?: events.EventBus | undefined;
+  public snsTopic?: sns.Topic | undefined;
 
+  public hostedZoneResources?: HostedZoneResources | undefined;
   public certificateResources?: CertificateResources | undefined;
   public hostingResources?: WebHostingResources | undefined;
   public sitePipelineResources?: PipelineResources | undefined;
@@ -113,6 +119,32 @@ export class SiteStack extends cdk.Stack {
         mutable: true,
       })
     );
+
+    // ----------------------------------------------------------------------
+    // EventBridge bus and SNS topic
+    this.eventBus = new events.EventBus(this, 'EventBus', {
+      eventBusName: `EventBus-${this.somId}`,
+    });
+    _somMeta(this.eventBus, this.somId, this.siteProps.protected);
+
+    const res6 = new ssm.StringParameter(this, 'EventBusArn', {
+      parameterName: toSsmParamName(this.somId, SSM_PARAM_NAME_EVENT_BUS_ARN),
+      stringValue: this.eventBus.eventBusArn,
+      tier: ssm.ParameterTier.STANDARD,
+    });
+    _somMeta(res6, this.somId, this.siteProps.protected);
+
+    this.snsTopic = new sns.Topic(this, 'SnsTopic', {
+      displayName: `SnsTopic-${this.somId}`,
+    });
+    _somMeta(this.snsTopic, this.somId, this.siteProps.protected);
+
+    const res7 = new ssm.StringParameter(this, 'SnsTopicName', {
+      parameterName: toSsmParamName(this.somId, SSM_PARAM_NAME_SNS_TOPIC_NAME),
+      stringValue: this.snsTopic.topicName,
+      tier: ssm.ParameterTier.STANDARD,
+    });
+    _somMeta(res7, this.somId, this.siteProps.protected);
 
     // ----------------------------------------------------------------------
     // DNS / HostedZone
