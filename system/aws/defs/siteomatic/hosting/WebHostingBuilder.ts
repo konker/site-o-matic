@@ -164,16 +164,19 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
               originPath: props.siteStack.siteProps?.webHosting?.originPath ?? WEB_HOSTING_DEFAULT_ORIGIN_PATH,
               originAccessIdentity: originAccessIdentity,
             }),
-            allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
+            allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
             viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
             cachePolicy: new cloudfront.CachePolicy(scope, 'CloudFrontDistributionCachePolicy', {
               queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
               cookieBehavior: cloudfront.CacheCookieBehavior.none(),
+              enableAcceptEncodingBrotli: true,
+              enableAcceptEncodingGzip: true,
             }),
             originRequestPolicy: new cloudfront.OriginRequestPolicy(scope, 'OriginRequestPolicy', {
               queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.none(),
               cookieBehavior: cloudfront.OriginRequestCookieBehavior.none(),
             }),
+            compress: true,
           },
           cfFunctions.length > 0
             ? {
