@@ -1,4 +1,6 @@
+import assert from 'assert';
 import * as cdk from 'aws-cdk-lib';
+import * as notifications from 'aws-cdk-lib/aws-codestarnotifications';
 
 import {
   DEFAULT_STACK_PROPS,
@@ -8,6 +10,7 @@ import {
   SITE_PIPELINE_TYPE_CODESTAR_S3,
 } from '../../../../../../lib/consts';
 import type { SiteNestedStackProps } from '../../../../../../lib/types';
+import { _somMeta, _somTag } from '../../../../../../lib/utils';
 import * as CodeCommitCustomSitePipelineBuilder from '../../pipeline/codecommit/CodeCommitCustomPipelineBuilder';
 import * as CodeCommitS3SitePipelineBuilder from '../../pipeline/codecommit/CodeCommitS3PipelineBuilder';
 import * as CodeStarCustomSitePipelineBuilder from '../../pipeline/codestar/CodeStarCustomPipelineBuilder';
@@ -61,5 +64,16 @@ export class SitePipelineSubStack extends cdk.NestedStack {
       default:
         throw new Error(`Could not create pipeline of type: ${pipelineType}`);
     }
+
+    // ----------------------------------------------------------------------
+    // Send CodePipeline events to SNS
+    assert(this.siteStack.snsTopic, '[SitePipelineSiteStack] No SNS Topic');
+
+    const rule = new notifications.NotificationRule(this, 'PipelineNotificationRule', {
+      source: this.siteStack.sitePipelineResources.codePipeline,
+      targets: [this.siteStack.snsTopic],
+      events: ['codepipeline-pipeline-pipeline-execution-failed', 'codepipeline-pipeline-pipeline-execution-succeeded'],
+    });
+    _somMeta(rule, this.siteStack.somId, this.siteStack.siteProps.protected);
   }
 }
