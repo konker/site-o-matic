@@ -419,9 +419,7 @@
     }
   },
   "examples": [
-    {
-      "rootDomainName": "example.org"
-    },
+    { "rootDomainName": "example.org" },
     {
       "rootDomainName": "example.com",
       "title": "example.com",

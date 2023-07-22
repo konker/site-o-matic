@@ -14,7 +14,7 @@ describe('manifest', () => {
 
   describe('validateManifest', () => {
     for (const example of manifestSchema.examples) {
-      it(`should validate a manifest ${example.title}`, async () => {
+      it(`should validate a manifest ${example.rootDomainName}`, async () => {
         const result = await unit.validateManifest(example);
         expect(result).toBe(true);
       });
