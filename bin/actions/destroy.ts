@@ -43,7 +43,7 @@ export function actionDestroy(vorpal: Vorpal, config: SomConfig, state: SomState
           state.plumbing
         );
         if (state.plumbing) {
-          vorpal.log(JSON.stringify({ state, code, log }, undefined, 2));
+          vorpal.log(JSON.stringify({ state, code, log }));
         }
       } else {
         const errorMessage =

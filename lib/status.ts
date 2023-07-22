@@ -77,7 +77,7 @@ export function getStatusMessage(state: SomState, status: SomStatus): string {
     const hasCodePipelineArn = !!getParam(state, 'code-pipeline-arn');
 
     if (needsCodePipeline && hasCodePipelineArn && state.connectionStatus?.statusCode !== 200) {
-      return 'Make sure that content has been pushed to the site git repo. Consider triggering the pipeline with: `> trigger pipeline`';
+      return 'Make sure that content has been pushed to the site git repo';
     }
     if (needsCloudfrontDist && hasCloudfrontDistId && state.connectionStatus?.statusCode !== 200) {
       return 'Make sure that content has been pushed to your S3 bucket www folder';

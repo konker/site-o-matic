@@ -12,7 +12,7 @@ export function actionShowManifest(vorpal: Vorpal, _: SomConfig, state: SomState
     }
 
     if (state.plumbing) {
-      vorpal.log(JSON.stringify({ state, data: state.manifest }, undefined, 2));
+      vorpal.log(JSON.stringify({ state, data: state.manifest }));
     } else {
       vorpal.log(JSON.stringify(state.manifest, undefined, 2));
     }

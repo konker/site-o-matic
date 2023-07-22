@@ -133,7 +133,7 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
           infoSpec,
           infoStatus,
         };
-        vorpal.log(JSON.stringify(out, undefined, 2));
+        vorpal.log(JSON.stringify(out));
       } else {
         vorpal.log(renderInfoSpec(infoSpec));
         vorpal.log('\n');

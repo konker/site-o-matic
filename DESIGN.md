@@ -2,17 +2,41 @@
 
 ## Productize / Release
 - Finish any outstanding small features/polishing
-  - Sub-domain hosting?
+  - Have separate build dir, as opposed to src and build in same tree?
+    - Issues of invoking CDK?
+    
+  - Subdomain hosting?
     a) Cf origin mapped to domain S3 bucket sub-folder?
       - Cannot be a child of www (root domain folder)
+  
   - What is the story with regions?
     - Is it always us-east-1 for everything?
     - Or should infra be deployed to a region of choice where possible?
       - Specified in manifest (optionally)
       - Pipeline?
       - CodeCommit?
-      - CodeStar?
+        - CodeStar?
       - Route53?
+      
+  - Prolly out of scope, but do we need a domain??
+    - Title: string;
+    - Provisions:
+      - S3 Bucket
+      - Cf Distro
+      - No DNS [?]
+    - Cloudfront URL is the website?
+      - Need to upload content to S3
+    - "Basic-B" mode
+      - No DNS
+      - No Cert
+      - No Pipeline
+      - Just bucket + Cf
+      - Needs "title" to use for somId [?]
+    - Some adaptation, e.g.:
+      - Info connect check
+      - info.ts stuff in general?
+      - Probably some assumptions somewhere
+  
   - ???
 
 ### Tests
@@ -23,6 +47,7 @@
   - lib/manifest
   - lib/registrar
   - lib/ui
+  - bin/actions
 - CDK:
   - system/aws/defs/siteomatic/hostedzone 
   - system/aws/defs/siteomatic/hosting 
@@ -33,6 +58,9 @@
 
 
 ### Docs
+
+FM, writing documentation is much harder that I expected!
+w
 - README
 
 - Overview / Purpose / Problem-Solution / General tech (CDK)
