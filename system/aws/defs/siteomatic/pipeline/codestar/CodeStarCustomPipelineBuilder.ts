@@ -117,6 +117,15 @@ export async function build(
   });
   _somMeta(res2, props.siteStack.somId, props.siteStack.siteProps.protected);
 
+  const res3 = new ssm.StringParameter(scope, 'SsmCodePipelineConsoleUrl', {
+    parameterName: toSsmParamName(props.siteStack.somId, 'code-pipeline-console-url'),
+    stringValue: `https://${
+      props.siteStack.siteProps.env?.region ?? DEFAULT_AWS_REGION
+    }.console.aws.amazon.com/codesuite/codepipeline/pipelines/${codePipeline.pipelineName}/view`,
+    tier: ssm.ParameterTier.STANDARD,
+  });
+  _somMeta(res3, props.siteStack.somId, props.siteStack.siteProps.protected);
+
   return {
     type: SITE_PIPELINE_TYPE_CODESTAR_CUSTOM,
     ...parentResources,

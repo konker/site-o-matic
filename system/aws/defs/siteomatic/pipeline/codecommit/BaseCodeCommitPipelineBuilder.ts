@@ -6,6 +6,7 @@ import type { Construct } from 'constructs';
 import { toSsmParamName } from '../../../../../../lib/aws/ssm';
 import { SOM_TAG_NAME } from '../../../../../../lib/consts';
 import type { BaseCodeCommitSitePipelineResources, PipelineBuilderProps } from '../../../../../../lib/types';
+import { _somMeta } from '../../../../../../lib/utils';
 import * as SitePipelineStack from '../BasePipelineBuilder';
 
 export async function build(
@@ -30,11 +31,12 @@ export async function build(
 
   // ----------------------------------------------------------------------
   // SSM Params
-  new ssm.StringParameter(scope, 'SsmCodeCommitCloneUrlSsh', {
+  const res1 = new ssm.StringParameter(scope, 'SsmCodeCommitCloneUrlSsh', {
     parameterName: toSsmParamName(props.siteStack.somId, 'code-commit-clone-url-ssh'),
     stringValue: codeCommitRepo.repositoryCloneUrlSsh,
     tier: ssm.ParameterTier.STANDARD,
   });
+  _somMeta(res1, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   return {
     ...parentResources,

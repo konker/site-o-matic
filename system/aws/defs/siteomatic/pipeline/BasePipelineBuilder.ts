@@ -3,6 +3,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import type { Construct } from 'constructs';
 
 import type { BaseSitePipelineResources, PipelineBuilderProps } from '../../../../../lib/types';
+import { _somMeta } from '../../../../../lib/utils';
 
 export function build(scope: Construct, props: PipelineBuilderProps): BaseSitePipelineResources {
   if (!props.siteStack.hostingResources) {
@@ -26,6 +27,7 @@ export function build(scope: Construct, props: PipelineBuilderProps): BaseSitePi
       },
     },
   });
+  _somMeta(invalidateCloudfrontCodeBuildProject, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   // Add Cloudfront invalidation permissions to the project
   const distributionArn = `arn:aws:cloudfront::${props.siteStack.account}:distribution/${props.siteStack.hostingResources.cloudFrontDistribution.distributionId}`;

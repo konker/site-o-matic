@@ -4,7 +4,11 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 import type { Construct } from 'constructs';
 
 import { toSsmParamName } from '../../../../../../lib/aws/ssm';
-import { SITE_PIPELINE_CODESTAR_BRANCH_NAME, SITE_PIPELINE_TYPE_CODESTAR_S3 } from '../../../../../../lib/consts';
+import {
+  DEFAULT_AWS_REGION,
+  SITE_PIPELINE_CODESTAR_BRANCH_NAME,
+  SITE_PIPELINE_TYPE_CODESTAR_S3,
+} from '../../../../../../lib/consts';
 import type { CodeStarS3SitePipelineResources, PipelineBuilderProps } from '../../../../../../lib/types';
 import { _somMeta } from '../../../../../../lib/utils';
 import * as SitePipelineStack from '../BasePipelineBuilder';
@@ -72,6 +76,22 @@ export async function build(scope: Construct, props: PipelineBuilderProps): Prom
     tier: ssm.ParameterTier.STANDARD,
   });
   _somMeta(res1, props.siteStack.somId, props.siteStack.siteProps.protected);
+
+  const res2 = new ssm.StringParameter(scope, 'SsmCodePipelineName', {
+    parameterName: toSsmParamName(props.siteStack.somId, 'code-pipeline-name'),
+    stringValue: codePipeline.pipelineName,
+    tier: ssm.ParameterTier.STANDARD,
+  });
+  _somMeta(res2, props.siteStack.somId, props.siteStack.siteProps.protected);
+
+  const res3 = new ssm.StringParameter(scope, 'SsmCodePipelineConsoleUrl', {
+    parameterName: toSsmParamName(props.siteStack.somId, 'code-pipeline-console-url'),
+    stringValue: `https://${
+      props.siteStack.siteProps.env?.region ?? DEFAULT_AWS_REGION
+    }.console.aws.amazon.com/codesuite/codepipeline/pipelines/${codePipeline.pipelineName}/view`,
+    tier: ssm.ParameterTier.STANDARD,
+  });
+  _somMeta(res3, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   return {
     type: SITE_PIPELINE_TYPE_CODESTAR_S3,
