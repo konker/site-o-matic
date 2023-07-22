@@ -1,9 +1,6 @@
-var DEFAULT_OBJECT = '{{ manifest.webHosting.defaultRootObject }}';
-var DIR_URI_RE = new RegExp(/\/$/);
-var FILE_URI_RE = new RegExp(/\/.+\..+$/);
-
-function handler(event) {
-  var request = event.request;
+  var DEFAULT_OBJECT = '{{ manifest.webHosting.defaultRootObject }}';
+  var DIR_URI_RE = new RegExp(/\/$/);
+  var FILE_URI_RE = new RegExp(/\/.+\..+$/);
 
   if (request.uri.match(DIR_URI_RE)) {
     request.uri = request.uri + DEFAULT_OBJECT;
@@ -17,5 +14,3 @@ function handler(event) {
       },
     };
   }
-  return request;
-}

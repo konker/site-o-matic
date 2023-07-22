@@ -2,28 +2,68 @@ import fs from 'fs';
 import Handlebars from 'handlebars';
 
 import type { SomManifest } from '../types';
-import * as cfFunctionsDirDefault from './cf-functions/dir-default';
-import * as cfFunctionsRedirect from './cf-functions/redirect';
-import { getTmpFilePath } from './lib';
+import * as cfFunctionsViewerRequest from './cf-functions/viewer-request';
+import * as cfFunctionsViewerRequestDirDefault from './cf-functions/viewer-request/dir-default';
+import * as cfFunctionsViewerRequestRedirect from './cf-functions/viewer-request/redirect';
+import * as cfFunctionsViewerResponse from './cf-functions/viewer-response';
+import { getTmpFilePath, undefinedFunctionGenerator } from './lib';
+
+export type SomFunctionGenerator = () => Promise<string | undefined>;
 
 export type SomFunctionProducer = {
   readonly ID: string;
   readonly TEMPLATE_FILE_PATH: string;
 };
 
-export type SomFunctionGenerator = (somId: string, manifest: SomManifest) => Promise<string | undefined>;
+export function getFunctionProducer(
+  id: string,
+  subComponentIds: Array<string>,
+  somId: string,
+  manifest: SomManifest
+): SomFunctionGenerator {
+  switch (id) {
+    case cfFunctionsViewerRequest.ID:
+      return createFunctionGenerator(cfFunctionsViewerRequest, subComponentIds, somId, manifest);
+    case cfFunctionsViewerResponse.ID:
+      // Placeholder for future implementation
+      return undefinedFunctionGenerator;
+    case cfFunctionsViewerRequestRedirect.ID:
+      return createFunctionGenerator(cfFunctionsViewerRequestRedirect, subComponentIds, somId, manifest);
+    case cfFunctionsViewerRequestDirDefault.ID:
+      return createFunctionGenerator(cfFunctionsViewerRequestDirDefault, subComponentIds, somId, manifest);
+    default:
+      throw new Error(`Could not get FunctionProducer for ${id}`);
+  }
+}
 
-function createFunctionGenerator(functionProducer: SomFunctionProducer): SomFunctionGenerator {
-  return async (somId: string, manifest: SomManifest): Promise<string | undefined> => {
+export function createFunctionGenerator(
+  functionProducer: SomFunctionProducer,
+  subComponentIds: Array<string>,
+  somId: string,
+  manifest: SomManifest
+): SomFunctionGenerator {
+  return async (): Promise<string | undefined> => {
     const tmpFilePath = getTmpFilePath(somId, functionProducer.ID);
     if (!tmpFilePath) {
       console.log(`ERROR: Could not generate function: Could not get tmp file path`);
       return undefined;
     }
 
+    const subComponentFunctionProducers = subComponentIds.map((subComponentId) =>
+      getFunctionProducer(subComponentId, [], somId, manifest)
+    );
+    const subComponents = await Promise.all(
+      subComponentFunctionProducers.map(async (subComponentFunctionProducer) => {
+        const subComponentTmpFilePath = await subComponentFunctionProducer();
+        if (!subComponentTmpFilePath) return ''; //[TODO: Throw error?]
+
+        return fs.promises.readFile(subComponentTmpFilePath, 'utf8');
+      })
+    );
+
     const templateSrc = await fs.promises.readFile(functionProducer.TEMPLATE_FILE_PATH, 'utf8');
     const compliedTemplate = Handlebars.compile(templateSrc);
-    const result = compliedTemplate({ manifest });
+    const result = compliedTemplate({ manifest, subComponents });
     if (!result) {
       console.log(`ERROR: Could not generate function`);
       return undefined;
@@ -32,15 +72,4 @@ function createFunctionGenerator(functionProducer: SomFunctionProducer): SomFunc
 
     return tmpFilePath;
   };
-}
-
-export function getFunctionProducer(id: string): SomFunctionGenerator {
-  switch (id) {
-    case cfFunctionsRedirect.ID:
-      return createFunctionGenerator(cfFunctionsRedirect);
-    case cfFunctionsDirDefault.ID:
-      return createFunctionGenerator(cfFunctionsDirDefault);
-    default:
-      throw new Error(`Could not get FunctionProducer for ${id}`);
-  }
 }

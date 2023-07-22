@@ -1,0 +1,12 @@
+// Viewer Request Handler
+function handler(event) {
+  var request = event.request;
+
+  {{#each subComponents}}
+    // ---------------
+    {{{ this }}}
+
+  {{/each}}
+
+  return request;
+}

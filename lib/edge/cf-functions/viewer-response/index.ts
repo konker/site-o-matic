@@ -1,0 +1,4 @@
+import { WEB_HOSTING_VIEWER_RESPONSE_FUNCTION_PRODUCER_ID } from '../../../consts';
+
+export const ID = WEB_HOSTING_VIEWER_RESPONSE_FUNCTION_PRODUCER_ID;
+export const TEMPLATE_FILE_PATH = undefined;

@@ -21,6 +21,22 @@ export const SSM_PARAM_NAME_SNS_TOPIC_NAME = 'sns-topic-name';
 
 export const WEB_HOSTING_TYPE_CLOUDFRONT_S3 = 'cloudfront-s3';
 
+export const WEB_HOSTING_DEFAULT_ORIGIN_PATH = '/www' as const;
+export const WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT = 'index.html' as const;
+export const WEB_HOSTING_DEFAULT_ERROR_RESPONSES: Array<ErrorResponse> = [
+  {
+    httpStatus: 404,
+    responsePagePath: '/404.html',
+  },
+];
+
+export const REDIRECT_TYPE_EDGE_CF_FUNCTION = 'edge-cf-function';
+
+export const WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID = 'cf-functions-viewer-request';
+export const WEB_HOSTING_VIEWER_REQUEST_DIR_DEFAULT_FUNCTION_PRODUCER_ID = 'cf-functions-viewer-request-dir-default';
+export const WEB_HOSTING_VIEWER_REQUEST_REDIRECT_FUNCTION_PRODUCER_ID = 'cf-functions-viewer-request-redirect';
+export const WEB_HOSTING_VIEWER_RESPONSE_FUNCTION_PRODUCER_ID = 'cf-functions-viewer-response';
+
 export const SITE_PIPELINE_TYPE_CODECOMMIT_S3 = 'codecommit-s3';
 export const SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM = 'codecommit-custom';
 
@@ -53,14 +69,3 @@ export const SOM_STATUS_BREADCRUMB = [
   SOM_STATUS_HOSTED_ZONE_OK,
   SOM_STATUS_SITE_FUNCTIONAL,
 ] as const;
-
-export const WEB_HOSTING_DEFAULT_ORIGIN_PATH = '/www' as const;
-export const WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT = 'index.html' as const;
-export const WEB_HOSTING_DEFAULT_ERROR_RESPONSES: Array<ErrorResponse> = [
-  {
-    httpStatus: 404,
-    responsePagePath: '/404.html',
-  },
-];
-
-export const WEB_HOSTING_DIR_DEFAULT_FUNCTION_PRODUCER_ID = 'cf-functions-dir-default';

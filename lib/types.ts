@@ -10,6 +10,7 @@ import type * as s3 from 'aws-cdk-lib/aws-s3';
 
 import type { SiteStack } from '../system/aws/defs/siteomatic/site/SiteStack';
 import type {
+  REDIRECT_TYPE_EDGE_CF_FUNCTION,
   SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM,
   SITE_PIPELINE_TYPE_CODECOMMIT_S3,
   SITE_PIPELINE_TYPE_CODESTAR_CUSTOM,
@@ -21,7 +22,6 @@ import type {
   SOM_STATUS_SITE_FUNCTIONAL,
   WEB_HOSTING_TYPE_CLOUDFRONT_S3,
 } from './consts';
-import type { REDIRECT_TYPE_EDGE_CF_FUNCTION } from './redirect';
 
 export type WwwConnectionStatus = {
   readonly statusCode: number;
@@ -196,7 +196,8 @@ export type SiteStackProps = cdk.StackProps &
     readonly description: string;
     readonly username: string;
     readonly contextParams: Record<string, string>;
-    readonly cfFunctionTmpFilePaths: Array<[string, string | undefined]>;
+    readonly cfFunctionViewerRequestTmpFilePath: [string, string | undefined];
+    readonly cfFunctionViewerResponseTmpFilePath: [string, string | undefined];
     readonly env?: Record<string, string>;
   };
 
@@ -218,7 +219,8 @@ export type CertificateBuilderProps = {
 export type WebHostingBuilderProps = {
   readonly siteStack: SiteStack;
   readonly domainCertificate: certificatemanager.ICertificate;
-  readonly cfFunctionTmpFilePaths: Array<[string, string | undefined]>;
+  readonly cfFunctionViewerRequestTmpFilePath: [string, string | undefined];
+  readonly cfFunctionViewerResponseTmpFilePath: [string, string | undefined];
 };
 
 // ----------------------------------------------------------------------

@@ -3,6 +3,10 @@ import 'json5/lib/register';
 import * as cdk from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
 
+import {
+  WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID,
+  WEB_HOSTING_VIEWER_RESPONSE_FUNCTION_PRODUCER_ID,
+} from '../../../lib/consts';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import config from '../../../site-o-matic.config.json';
@@ -31,7 +35,8 @@ test('Empty Stack', () => {
     pipeline: { type: 'codecommit-s3' },
     certificate: { clones: [] },
     crossAccountAccess: [],
-    cfFunctionTmpFilePaths: [],
+    cfFunctionViewerRequestTmpFilePath: [WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID, undefined],
+    cfFunctionViewerResponseTmpFilePath: [WEB_HOSTING_VIEWER_RESPONSE_FUNCTION_PRODUCER_ID, undefined],
   });
   const template = Template.fromStack(stack);
 
