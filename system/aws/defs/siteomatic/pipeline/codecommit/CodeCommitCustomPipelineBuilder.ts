@@ -102,11 +102,9 @@ export async function build(
   });
   _somMeta(res1, props.siteStack.somId, props.siteStack.siteProps.protected);
 
-  const res2 = new ssm.StringParameter(scope, 'SsmCodePipelineConsoleUrl', {
-    parameterName: toSsmParamName(props.siteStack.somId, 'code-pipeline-console-url'),
-    stringValue: `https://${
-      props.siteStack.siteProps.env?.region ?? DEFAULT_AWS_REGION
-    }.console.aws.amazon.com/codesuite/codepipeline/pipelines/${codePipeline.pipelineName}/view`,
+  const res2 = new ssm.StringParameter(scope, 'SsmCodePipelineName', {
+    parameterName: toSsmParamName(props.siteStack.somId, 'code-pipeline-name'),
+    stringValue: codePipeline.pipelineName,
     tier: ssm.ParameterTier.STANDARD,
   });
   _somMeta(res2, props.siteStack.somId, props.siteStack.siteProps.protected);
