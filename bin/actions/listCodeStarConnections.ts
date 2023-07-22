@@ -25,7 +25,7 @@ export function actionListCodeStarConnections(vorpal: Vorpal, config: SomConfig,
         vorpal.log(message);
       }
     } else {
-      vorpal.log(JSON.stringify({ state, data, message }, undefined, 2));
+      vorpal.log(JSON.stringify({ state, data, message }));
     }
   };
 }

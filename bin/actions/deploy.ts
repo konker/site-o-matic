@@ -84,7 +84,7 @@ export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomState)
       );
 
       if (state.plumbing) {
-        vorpal.log(JSON.stringify({ state, code, log }, undefined, 2));
+        vorpal.log(JSON.stringify({ state, code, log }));
       }
     } catch (ex: any) {
       verror(vorpal, state, ex);

@@ -24,7 +24,7 @@ export function actionSynthesize(vorpal: Vorpal, _: SomConfig, state: SomState) 
     );
 
     if (state.plumbing) {
-      vorpal.log(JSON.stringify({ state, code, log }, undefined, 2));
+      vorpal.log(JSON.stringify({ state, code, log }));
     }
   };
 }

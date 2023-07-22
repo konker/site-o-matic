@@ -10,7 +10,7 @@ export function actionDeployCheck(vorpal: Vorpal, config: SomConfig, state: SomS
     const checksPassed = checkItems.every((checkItem) => checkItem.passed);
 
     if (state.plumbing) {
-      vorpal.log(JSON.stringify({ state, checkItems, checksPassed }, undefined, 2));
+      vorpal.log(JSON.stringify({ state, checkItems, checksPassed }));
     } else {
       for (const checkItem of checkItems) {
         vorpal.log(
