@@ -44,9 +44,9 @@ async function main(): Promise<void> {
 
   // ----------------------------------------------------------------------
   // Viewer Request cfFunction
-  const cfFunctionViewerRequestSubComponentIds = (
+  const cfFunctionViewerRequestSubComponentIds = [WEB_HOSTING_VIEWER_REQUEST_DIR_DEFAULT_FUNCTION_PRODUCER_ID].concat(
     manifest.redirect ? [WEB_HOSTING_VIEWER_REQUEST_REDIRECT_FUNCTION_PRODUCER_ID] : []
-  ).concat(WEB_HOSTING_VIEWER_REQUEST_DIR_DEFAULT_FUNCTION_PRODUCER_ID);
+  );
 
   const viewerRequestFunctionProducer = getFunctionProducer(
     WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID,

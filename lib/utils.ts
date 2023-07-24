@@ -28,3 +28,9 @@ export function _somMeta(resource: Resource, somId: string, protect: boolean) {
   _somRemovalPolicy(resource, protect);
   _somTag(resource, somId);
 }
+
+export function matchArraySorting<T>(sorted: Array<T>) {
+  return function (arr: Array<T>): Array<T> {
+    return [...arr].sort((a, b) => sorted.indexOf(a) - sorted.indexOf(b));
+  };
+}

@@ -6,6 +6,7 @@ import * as cfFunctionsViewerRequest from './cf-functions/viewer-request';
 import * as cfFunctionsViewerRequestDirDefault from './cf-functions/viewer-request/dir-default';
 import * as cfFunctionsViewerRequestRedirect from './cf-functions/viewer-request/redirect';
 import * as cfFunctionsViewerResponse from './cf-functions/viewer-response';
+import generatorWarning from './generator-warning.json';
 import { getTmpFilePath, undefinedFunctionGenerator } from './lib';
 
 export type SomFunctionGenerator = () => Promise<string | undefined>;
@@ -13,6 +14,7 @@ export type SomFunctionGenerator = () => Promise<string | undefined>;
 export type SomFunctionProducer = {
   readonly ID: string;
   readonly TEMPLATE_FILE_PATH: string;
+  readonly sortSubComponentIds: (subComponentIds: Array<string>) => Array<string>;
 };
 
 export function getFunctionProducer(
@@ -49,9 +51,10 @@ export function createFunctionGenerator(
       return undefined;
     }
 
-    const subComponentFunctionProducers = subComponentIds.map((subComponentId) =>
-      getFunctionProducer(subComponentId, [], somId, manifest)
-    );
+    const subComponentFunctionProducers = functionProducer
+      .sortSubComponentIds(subComponentIds)
+      .map((subComponentId) => getFunctionProducer(subComponentId, [], somId, manifest));
+
     const subComponents = await Promise.all(
       subComponentFunctionProducers.map(async (subComponentFunctionProducer) => {
         const subComponentTmpFilePath = await subComponentFunctionProducer();
@@ -63,7 +66,7 @@ export function createFunctionGenerator(
 
     const templateSrc = await fs.promises.readFile(functionProducer.TEMPLATE_FILE_PATH, 'utf8');
     const compliedTemplate = Handlebars.compile(templateSrc);
-    const result = compliedTemplate({ manifest, subComponents });
+    const result = compliedTemplate({ manifest, subComponents, generatorWarning });
     if (!result) {
       console.log(`ERROR: Could not generate function`);
       return undefined;

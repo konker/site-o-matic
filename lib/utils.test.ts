@@ -84,4 +84,12 @@ describe('utils', () => {
       expect(add).toHaveBeenCalledWith(SOM_TAG_NAME, 'foo');
     });
   });
+
+  describe('matchArraySorting', () => {
+    it('should work as expected', () => {
+      expect(unit.matchArraySorting([1, 2, 3])([3, 2, 1])).toStrictEqual([1, 2, 3]);
+      expect(unit.matchArraySorting([1, 2, 3])([1, 2, 3])).toStrictEqual([1, 2, 3]);
+      expect(unit.matchArraySorting([1, 2, 3])([2, 1, 4, 3])).toStrictEqual([4, 1, 2, 3]);
+    });
+  });
 });

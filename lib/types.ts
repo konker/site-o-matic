@@ -309,6 +309,8 @@ export type SomInfoSpec = {
     readonly protectedManifest: boolean;
     readonly protectedSsm: boolean;
   };
+  readonly pathToManifestFile: SomParam;
+  readonly somId: SomParam;
 };
 
 export type SomInfoStatus = {
@@ -333,6 +335,4 @@ export type SomInfoStatus = {
   readonly nameserversSet: boolean;
   readonly registrarNameservers: Array<string> | undefined;
   readonly params: Array<SomParam>;
-  readonly pathToManifestFile: SomParam;
-  readonly somId: SomParam;
 };

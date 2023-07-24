@@ -8,3 +8,7 @@ export function getTmpFilePath(somId: string, functionProducerId?: string | unde
 export async function undefinedFunctionGenerator(): Promise<string | undefined> {
   return undefined;
 }
+
+export function noopSubComponentIdSorter(subComponentIds: Array<string>): Array<string> {
+  return subComponentIds;
+}

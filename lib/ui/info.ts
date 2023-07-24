@@ -82,6 +82,8 @@ export function renderInfoSpec(infoSpec: SomInfoSpec): string {
             : chalk.red(infoSpec.protected.protectedManifest)
         }`,
       },
+      infoSpec.pathToManifestFile,
+      infoSpec.somId,
     ],
     ['Param', 'Value'],
     ['', 'Manifest']
@@ -124,9 +126,7 @@ export function renderInfoStatus(infoSpec: SomInfoSpec, infoStatus: SomInfoStatu
           ? chalk.green(infoStatus.registrarNameservers?.join('\n'))
           : infoStatus.registrarNameservers?.join('\n'),
       },
-      ...infoStatus.params,
-      infoStatus.pathToManifestFile,
-      infoStatus.somId,
+      ...infoStatus.params.map(({ Param, Value }) => ({ Param: chalk.cyan(Param), Value })),
     ],
     ['Param', 'Value'],
     ['', 'System Status']
