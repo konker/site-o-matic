@@ -99,6 +99,8 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
           protectedManifest: Boolean(state.protectedManifest) ?? false,
           protectedSsm: Boolean(state.protectedSsm) ?? false,
         },
+        pathToManifestFile: { Param: 'pathToManifestFile', Value: state.pathToManifestFile ?? UNKNOWN },
+        somId: { Param: 'somId', Value: state.somId ?? UNKNOWN },
       };
 
       const infoStatus: SomInfoStatus = {
@@ -123,8 +125,6 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
         nameserversSet: state.nameserversSet ?? false,
         registrarNameservers: state.registrarNameservers,
         params: state.params,
-        pathToManifestFile: { Param: 'pathToManifestFile', Value: state.pathToManifestFile ?? UNKNOWN },
-        somId: { Param: 'somId', Value: state.somId ?? UNKNOWN },
       };
 
       if (state.plumbing) {
