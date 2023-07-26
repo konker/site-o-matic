@@ -1,6 +1,8 @@
 import { XMLParser } from 'fast-xml-parser';
 import got from 'got';
 
+import type { SomConfig } from '../../../types';
+
 export const ID = 'dynadot';
 export const SECRETS = ['DYNADOT_API_KEY'];
 
@@ -10,6 +12,7 @@ const API_ENDPOINT = 'https://api.dynadot.com/api3.xml';
 const XML_PARSER = new XMLParser();
 
 export async function getNameServers(
+  _config: SomConfig,
   secrets: { [key: string]: string },
   domain: string
 ): Promise<Array<string> | undefined> {
@@ -31,6 +34,7 @@ export async function getNameServers(
 }
 
 export async function setNameServers(
+  config: SomConfig,
   secrets: { [key: string]: string },
   domain: string,
   hosts: Array<string>
@@ -46,7 +50,7 @@ export async function setNameServers(
       return undefined;
     }
 
-    return getNameServers(secrets, domain);
+    return getNameServers(config, secrets, domain);
   } catch (ex) {
     console.log(`[registrar/dynadot] ERROR: ${ex}`);
     return undefined;

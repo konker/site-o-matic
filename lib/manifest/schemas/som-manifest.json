@@ -40,7 +40,7 @@
     "registrar": {
       "description": "ID of the registrar that the domain has been registered with",
       "type": "string",
-      "minLength": 1
+      "enum": ["aws-route53", "dynadot"]
     },
     "pipeline": {
       "description": "Pipeline specification",

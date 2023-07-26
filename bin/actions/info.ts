@@ -48,6 +48,7 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
           vorpal.log(`WARNING: secrets required by registrar connector missing: ${registrarConnector.SECRETS}`);
         } else {
           state.registrarNameservers = await registrarConnector.getNameServers(
+            config,
             somSecrets,
             state.rootDomainName as string
           );

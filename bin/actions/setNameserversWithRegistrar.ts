@@ -43,7 +43,12 @@ export function actionSetNameServersWithRegistrar(vorpal: Vorpal, config: SomCon
           return;
         }
 
-        const result = await registrarConnector.setNameServers(somSecrets, state.rootDomainName as string, nameservers);
+        const result = await registrarConnector.setNameServers(
+          config,
+          somSecrets,
+          state.rootDomainName as string,
+          nameservers
+        );
         vlog(vorpal, state, `Set nameservers: ${result}`);
       } catch (ex: any) {
         verror(vorpal, state, ex);
