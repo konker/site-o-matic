@@ -67,6 +67,7 @@ async function main() {
     plumbing: Boolean(values.plumbing) ?? false,
     yes: Boolean(values.yes) ?? false,
     somVersion: VERSION,
+    rootDomainName: 'UNKNOWN ROOT DOMAIN NAME',
   };
 
   if (!state.plumbing) {

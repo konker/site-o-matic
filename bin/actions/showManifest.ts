@@ -1,11 +1,12 @@
 import type Vorpal from 'vorpal';
 
 import type { SomConfig, SomState } from '../../lib/types';
+import { isLoaded } from '../../lib/types';
 import { verror } from '../../lib/ui/logging';
 
 export function actionShowManifest(vorpal: Vorpal, _: SomConfig, state: SomState) {
   return async (_: Vorpal.Args): Promise<void> => {
-    if (!state.manifest) {
+    if (!isLoaded(state)) {
       const errorMessage = `ERROR: no manifest loaded`;
       verror(vorpal, state, errorMessage);
       return;

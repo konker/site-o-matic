@@ -5,12 +5,13 @@ import * as cdkExec from '../../lib/aws/cdkExec';
 import { removeVerificationCnameRecords } from '../../lib/aws/route53';
 import { SSM_PARAM_NAME_DOMAIN_USER_NAME, SSM_PARAM_NAME_HOSTED_ZONE_ID } from '../../lib/consts';
 import type { SomConfig, SomState } from '../../lib/types';
+import { isLoaded } from '../../lib/types';
 import { verror } from '../../lib/ui/logging';
 import { getParam } from '../../lib/utils';
 
 export function actionDestroy(vorpal: Vorpal, config: SomConfig, state: SomState) {
   return async (args: Vorpal.Args): Promise<void> => {
-    if (!state.manifest || !state.pathToManifestFile) {
+    if (!isLoaded(state)) {
       const errorMessage = `ERROR: no manifest loaded`;
       verror(vorpal, state, errorMessage);
       return;

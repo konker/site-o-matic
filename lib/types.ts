@@ -56,7 +56,7 @@ export type HostedZoneConfig = {
 };
 // ----------------------------------------------------------------------
 export type HostedZoneResources = {
-  readonly hostedZone: route53.PublicHostedZone;
+  readonly hostedZone: route53.IHostedZone;
 };
 
 export type CertificateResources = {
@@ -249,11 +249,11 @@ export type SomParam = {
 };
 
 export type SomState = {
+  rootDomainName?: string;
   spinner: any;
   plumbing: boolean;
   yes: boolean;
   somVersion: string;
-  rootDomainName?: string | undefined;
   siteUrl?: string;
   subdomains?: Array<string> | undefined;
   certificateCloneNames?: Array<string> | undefined;
@@ -336,3 +336,12 @@ export type SomInfoStatus = {
   readonly registrarNameservers: Array<string> | undefined;
   readonly params: Array<SomParam>;
 };
+
+export type Loaded<T extends SomState> = T & {
+  readonly manifest: SomManifest;
+  readonly pathToManifestFile: string;
+};
+
+export function isLoaded<T extends SomState>(state: T): state is Loaded<T> {
+  return state.manifest !== undefined && state.pathToManifestFile !== undefined;
+}

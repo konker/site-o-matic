@@ -20,13 +20,14 @@ import { getRegistrarConnector } from '../../lib/registrar';
 import * as status from '../../lib/status';
 import { getSomTxtRecordViaDns } from '../../lib/status';
 import type { SomConfig, SomInfoSpec, SomInfoStatus, SomState, WafAwsManagedRule } from '../../lib/types';
+import { isLoaded } from '../../lib/types';
 import { renderInfoSpec, renderInfoStatus } from '../../lib/ui/info';
 import { verror } from '../../lib/ui/logging';
 import { getParam } from '../../lib/utils';
 
 export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
   return async (_: Vorpal.Args): Promise<void> => {
-    if (!state.manifest) {
+    if (!isLoaded(state)) {
       const errorMessage = `ERROR: no manifest loaded`;
       verror(vorpal, state, errorMessage);
       return;
@@ -63,7 +64,7 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
           state.verificationTxtRecordViaDns === getParam(state, SSM_PARAM_NAME_HOSTED_ZONE_ID)
         );
       }
-      state.status = status.getStatus(state);
+      state.status = await status.getStatus(config, state);
       state.statusMessage = status.getStatusMessage(state, state.status);
 
       state.spinner.stop();

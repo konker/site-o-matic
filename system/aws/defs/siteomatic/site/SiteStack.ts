@@ -9,6 +9,7 @@ import cloneDeep from 'lodash.clonedeep';
 import { getSomSsmParam, toSsmParamName } from '../../../../../lib/aws/ssm';
 import {
   DEFAULT_STACK_PROPS,
+  REGISTRAR_ID_AWS_ROUTE53,
   SSM_PARAM_NAME_DOMAIN_USER_NAME,
   SSM_PARAM_NAME_HOSTED_ZONE_ID,
   SSM_PARAM_NAME_PROTECTED_STATUS,
@@ -142,10 +143,14 @@ export class SiteStack extends cdk.Stack {
 
     const verificationTxtRecordViaDns = await getSomTxtRecordViaDns(this.siteProps.rootDomainName);
     const verificationSsmParam = await getSomSsmParam(this.somId, this.region, SSM_PARAM_NAME_HOSTED_ZONE_ID);
+    const isAwsRoute53Registered = this.siteProps.registrar === REGISTRAR_ID_AWS_ROUTE53;
 
     // Check to see if DNS has been configured correctly,
     // including that the nameservers have been set with the registrar
-    if (verificationTxtRecordViaDns && verificationTxtRecordViaDns === verificationSsmParam) {
+    if (
+      isAwsRoute53Registered ||
+      (verificationTxtRecordViaDns && verificationTxtRecordViaDns === verificationSsmParam)
+    ) {
       // ----------------------------------------------------------------------
       // SSL Certificates
       const certificateSubStack = new SiteCertificateSubStack(this, {

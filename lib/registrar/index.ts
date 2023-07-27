@@ -1,4 +1,5 @@
 import type { SomConfig } from '../types';
+import * as awsRoute53 from './connectors/aws-route53';
 import * as dynadot from './connectors/dynadot';
 
 export type RegistrarConnector = {
@@ -22,6 +23,8 @@ export function getRegistrarConnector(id: string): RegistrarConnector {
   switch (id) {
     case dynadot.ID:
       return dynadot;
+    case awsRoute53.ID:
+      return awsRoute53;
     default:
       throw new Error(`Could not get RegistrarConnector for ${id}`);
   }

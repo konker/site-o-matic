@@ -4,8 +4,10 @@ import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import type { Construct } from 'constructs';
 
+import { findHostedZoneAttributes } from '../../../../../lib/aws/route53';
 import { toSsmParamName } from '../../../../../lib/aws/ssm';
-import { SSM_PARAM_NAME_HOSTED_ZONE_ID } from '../../../../../lib/consts';
+import { REGISTRAR_ID_AWS_ROUTE53, SSM_PARAM_NAME_HOSTED_ZONE_ID } from '../../../../../lib/consts';
+import * as awsRoute53Registrar from '../../../../../lib/registrar/connectors/aws-route53';
 import type {
   DnsConfigMx,
   HostedZoneBuilderProps,
@@ -15,7 +17,7 @@ import type {
 import { _id, _somMeta } from '../../../../../lib/utils';
 import type { SiteStack } from '../site/SiteStack';
 
-export function buildCrossAccountAccess(hostedZonesPolicy: iam.Policy, hostedZone: route53.PublicHostedZone) {
+export function buildCrossAccountAccess(hostedZonesPolicy: iam.Policy, hostedZone: route53.IHostedZone) {
   hostedZonesPolicy.addStatements(
     new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
@@ -29,7 +31,7 @@ export function buildExtraDnsConfig(
   scope: Construct,
   siteStack: SiteStack,
   props: HostedZoneConfig,
-  hostedZone: route53.PublicHostedZone,
+  hostedZone: route53.IHostedZone,
   isRoot: boolean
 ) {
   if (props.extraDnsConfig) {
@@ -79,6 +81,38 @@ export async function build(scope: Construct, props: HostedZoneBuilderProps): Pr
   }
 
   // ----------------------------------------------------------------------
+  // DNS HostedZone
+  const hostedZone = await (async () => {
+    // Special case for AWS Route53 registrar which automatically creates a hosted zone
+    if (props.siteStack.siteProps.registrar === REGISTRAR_ID_AWS_ROUTE53) {
+      const hostedZoneAttributes = await findHostedZoneAttributes(props.siteStack.config, props.domainName);
+      if (!hostedZoneAttributes?.zoneName || !hostedZoneAttributes.hostedZoneId) {
+        // [FIXME: this should be a fatal error and stop CDK execution]
+        throw new Error(`[site-o-matic] Could not resolve existing hosted zone for AWS Route53 registered domain`);
+      }
+      const ret = route53.HostedZone.fromHostedZoneAttributes(scope, 'ExistingHostedZone', hostedZoneAttributes);
+      if (!ret.hostedZoneNameServers) {
+        // Polyfill in the nameservers, clobber readonly attribute with any keyword
+        // Only because CDK doesn't instantiate this fully via fromHostedZoneAttributes
+        (ret as any).hostedZoneNameServers = await awsRoute53Registrar.getNameServers(
+          props.siteStack.config,
+          {},
+          props.domainName
+        );
+      }
+
+      return ret;
+    } else {
+      // Otherwise create a new hosted zone
+      const ret = new route53.PublicHostedZone(scope, 'HostedZone', {
+        zoneName: props.domainName,
+      });
+      _somMeta(ret, props.siteStack.somId, props.siteStack.siteProps.protected);
+      return ret;
+    }
+  })();
+
+  // ----------------------------------------------------------------------
   // Add basic list permissions to the domain policy
   props.siteStack.domainPolicy.addStatements(
     new iam.PolicyStatement({
@@ -89,12 +123,7 @@ export async function build(scope: Construct, props: HostedZoneBuilderProps): Pr
   );
 
   // ----------------------------------------------------------------------
-  // DNS HostedZone
-  const hostedZone = new route53.PublicHostedZone(scope, 'HostedZone', {
-    zoneName: props.domainName,
-  });
-  _somMeta(hostedZone, props.siteStack.somId, props.siteStack.siteProps.protected);
-
+  // Internal validation resource
   const txtRecord = new route53.TxtRecord(scope, 'DnsRecordSet_TXT_Som', {
     zone: hostedZone,
     recordName: '_som',
@@ -102,6 +131,8 @@ export async function build(scope: Construct, props: HostedZoneBuilderProps): Pr
   });
   _somMeta(txtRecord, props.siteStack.somId, props.siteStack.siteProps.protected);
 
+  // ----------------------------------------------------------------------
+  // Extra optional resources
   buildExtraDnsConfig(scope, props.siteStack, props, hostedZone, true);
   buildCrossAccountAccess(props.siteStack.domainPolicy, hostedZone);
 
@@ -124,7 +155,7 @@ export async function build(scope: Construct, props: HostedZoneBuilderProps): Pr
 
   const res2 = new ssm.StringParameter(scope, 'SsmHostedZoneNameServers', {
     parameterName: toSsmParamName(props.siteStack.somId, 'hosted-zone-name-servers'),
-    stringValue: cdk.Fn.join(',', hostedZone.hostedZoneNameServers || []),
+    stringValue: cdk.Fn.join(',', hostedZone.hostedZoneNameServers ?? []),
     tier: ssm.ParameterTier.STANDARD,
   });
   _somMeta(res2, props.siteStack.somId, props.siteStack.siteProps.protected);
