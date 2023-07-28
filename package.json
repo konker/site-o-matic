@@ -3,11 +3,14 @@
   "version": "0.1.0",
   "description": "Automatic website cloud deployment tool",
   "author": "Konrad Markus <konker@iki.fi>",
+  "main": "./dist/bin/index.js",
   "bin": {
-    "site-o-matic": "bin/site-o-matic.js"
+    "site-o-matic": "./bin/index.js",
+    "som": "./bin/index.js"
   },
-  "types": "lib/index.d.ts",
-  "main": "lib/index.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "devDependencies": {
     "@types/cli-table": "^0.3.0",
     "@types/jest": "^26.0.10",
@@ -29,14 +32,11 @@
     "git-list-updated": "^1.2.1",
     "handlebars": "^4.7.7",
     "jest": "^28.1.0",
+    "pkg": "^5.8.1",
     "prettier": "^2.6.2",
     "ts-jest": "^28.0.3",
     "ts-node": "^10.8.0",
     "typescript": "^4.7.4"
-  },
-  "peerDependencies": {
-    "aws-cdk-lib": "^2.38.1",
-    "constructs": "^10.1.83"
   },
   "dependencies": {
     "@aws-sdk/client-acm": "^3.154.0",
@@ -68,6 +68,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "prepare": "npm run build",
     "watch": "tsc -w",
     "test": "jest",
     "lint": "npx eslint --ignore-path=.gitignore .",

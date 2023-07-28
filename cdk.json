@@ -1,9 +1,5 @@
 {
-  "app": "npx node system/aws/bin/site-o-matic",
   "strict": true,
-  "json": true,
   "versionReporting": false,
-  "output": "system/aws/cdk.out",
-  "requireApproval": "never",
-  "context": {}
+  "requireApproval": "never"
 }

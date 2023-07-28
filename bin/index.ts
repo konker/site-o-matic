@@ -1,4 +1,5 @@
-import 'json5/lib/register';
+#!/usr/bin/env node
+// import 'json5/lib/register';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
