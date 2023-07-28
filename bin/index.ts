@@ -72,15 +72,18 @@ async function main() {
   };
 
   if (!state.plumbing) {
+    console.log('\n');
     cfonts.say('Site-O-Matic', {
       font: 'block',
       align: 'left',
+      space: false,
       colors: ['#0075bd', '#fff', '#0075bd'],
       background: 'transparent',
       letterSpacing: 1,
       lineHeight: 1,
       env: 'node',
     });
+    console.log('  A Morningwood Software production\n\n');
   }
 
   vorpal.command('clear', 'Clear the screen').alias('cls').action(actionClearScreen(vorpal, config, state));
