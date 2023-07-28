@@ -77,6 +77,7 @@ export async function cdkDestroy(
     vorpal,
     'npx',
     ['cdk', 'destroy', `${somId}*`, '--force']
+      .concat(['--app', `npx node system/aws/bin/site-o-matic`])
       .concat(['--output', `system/aws/.cdk-${somId}.out`])
       .concat(['--context', `paramsKeys=${JSON.stringify(Object.keys(params))}`])
       .concat(...Object.entries(params).map(([k, v]) => ['---context', `${k}=${v}`])),
