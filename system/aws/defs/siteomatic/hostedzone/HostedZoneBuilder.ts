@@ -6,7 +6,11 @@ import type { Construct } from 'constructs';
 
 import { findHostedZoneAttributes } from '../../../../../lib/aws/route53';
 import { toSsmParamName } from '../../../../../lib/aws/ssm';
-import { REGISTRAR_ID_AWS_ROUTE53, SSM_PARAM_NAME_HOSTED_ZONE_ID } from '../../../../../lib/consts';
+import {
+  REGISTRAR_ID_AWS_ROUTE53,
+  SSM_PARAM_NAME_HOSTED_ZONE_ID,
+  SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS,
+} from '../../../../../lib/consts';
 import * as awsRoute53Registrar from '../../../../../lib/registrar/connectors/aws-route53';
 import type {
   DnsConfigMx,
@@ -83,13 +87,19 @@ export async function build(scope: Construct, props: HostedZoneBuilderProps): Pr
   // ----------------------------------------------------------------------
   // DNS HostedZone
   const hostedZone = await (async () => {
-    // Special case for AWS Route53 registrar which automatically creates a hosted zone
+    // Try to detect if an existing HostedZone exists with an SOA record
+    const hostedZoneAttributes = await findHostedZoneAttributes(props.siteStack.config, props.domainName);
+
+    // Special case for AWS Route53 registrar, as we expect this to be automatically created when the domain is registered
     if (props.siteStack.siteProps.registrar === REGISTRAR_ID_AWS_ROUTE53) {
-      const hostedZoneAttributes = await findHostedZoneAttributes(props.siteStack.config, props.domainName);
       if (!hostedZoneAttributes?.zoneName || !hostedZoneAttributes.hostedZoneId) {
         // [FIXME: this should be a fatal error and stop CDK execution]
         throw new Error(`[site-o-matic] Could not resolve existing hosted zone for AWS Route53 registered domain`);
       }
+    }
+
+    // This determines whether we create a new HostedZone or use an existing one
+    if (hostedZoneAttributes) {
       const ret = route53.HostedZone.fromHostedZoneAttributes(scope, 'ExistingHostedZone', hostedZoneAttributes);
       if (!ret.hostedZoneNameServers) {
         // Polyfill in the nameservers, clobber readonly attribute with any keyword
@@ -103,7 +113,6 @@ export async function build(scope: Construct, props: HostedZoneBuilderProps): Pr
 
       return ret;
     } else {
-      // Otherwise create a new hosted zone
       const ret = new route53.PublicHostedZone(scope, 'HostedZone', {
         zoneName: props.domainName,
       });
@@ -154,7 +163,7 @@ export async function build(scope: Construct, props: HostedZoneBuilderProps): Pr
   _somMeta(res1, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   const res2 = new ssm.StringParameter(scope, 'SsmHostedZoneNameServers', {
-    parameterName: toSsmParamName(props.siteStack.somId, 'hosted-zone-name-servers'),
+    parameterName: toSsmParamName(props.siteStack.somId, SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS),
     stringValue: cdk.Fn.join(',', hostedZone.hostedZoneNameServers ?? []),
     tier: ssm.ParameterTier.STANDARD,
   });

@@ -10,14 +10,17 @@ import { getSomSsmParam, toSsmParamName } from '../../../../../lib/aws/ssm';
 import {
   DEFAULT_STACK_PROPS,
   REGISTRAR_ID_AWS_ROUTE53,
+  SSM_PARAM_NAME_DOMAIN_ROLE_ARN,
   SSM_PARAM_NAME_DOMAIN_USER_NAME,
   SSM_PARAM_NAME_HOSTED_ZONE_ID,
   SSM_PARAM_NAME_PROTECTED_STATUS,
+  SSM_PARAM_NAME_ROOT_DOMAIN_NAME,
   SSM_PARAM_NAME_SNS_TOPIC_NAME,
   SSM_PARAM_NAME_SOM_VERSION,
+  SSM_PARAM_NAME_WEBMASTER_EMAIL,
   VERSION,
 } from '../../../../../lib/consts';
-import { getSomTxtRecordViaDns } from '../../../../../lib/status';
+import { resolveDnsSomTxtRecord } from '../../../../../lib/dns';
 import type {
   CertificateResources,
   CrossAccountAccessGrantRoleSpec,
@@ -62,7 +65,7 @@ export class SiteStack extends cdk.Stack {
   async build() {
     // ----------------------------------------------------------------------
     const res1 = new ssm.StringParameter(this, 'SsmRootDomain', {
-      parameterName: toSsmParamName(this.somId, 'root-domain-name'),
+      parameterName: toSsmParamName(this.somId, SSM_PARAM_NAME_ROOT_DOMAIN_NAME),
       stringValue: this.siteProps.rootDomainName,
       tier: ssm.ParameterTier.STANDARD,
     });
@@ -70,7 +73,7 @@ export class SiteStack extends cdk.Stack {
 
     if (this.siteProps.webmasterEmail) {
       const res2 = new ssm.StringParameter(this, 'SsmWebmasterEmail', {
-        parameterName: toSsmParamName(this.somId, 'webmaster-email'),
+        parameterName: toSsmParamName(this.somId, SSM_PARAM_NAME_WEBMASTER_EMAIL),
         stringValue: this.siteProps.webmasterEmail,
         tier: ssm.ParameterTier.STANDARD,
       });
@@ -141,9 +144,10 @@ export class SiteStack extends cdk.Stack {
     await dnsSubStack.build();
     _somTag(dnsSubStack, this.somId);
 
-    const verificationTxtRecordViaDns = await getSomTxtRecordViaDns(this.siteProps.rootDomainName);
+    const verificationTxtRecordViaDns = await resolveDnsSomTxtRecord(this.siteProps.rootDomainName);
     const verificationSsmParam = await getSomSsmParam(this.somId, this.region, SSM_PARAM_NAME_HOSTED_ZONE_ID);
     const isAwsRoute53Registered = this.siteProps.registrar === REGISTRAR_ID_AWS_ROUTE53;
+    // const hostedZoneAttributes = await findHostedZoneAttributes(this.siteProps as any, this.siteProps.rootDomainName);
 
     // Check to see if DNS has been configured correctly,
     // including that the nameservers have been set with the registrar
@@ -208,7 +212,7 @@ export class SiteStack extends cdk.Stack {
         this.domainRole.attachInlinePolicy(this.domainPolicy);
 
         const res6 = new ssm.StringParameter(this, 'DomainRoleArn', {
-          parameterName: toSsmParamName(this.somId, 'domain-role-arn'),
+          parameterName: toSsmParamName(this.somId, SSM_PARAM_NAME_DOMAIN_ROLE_ARN),
           stringValue: this.domainRole.roleArn,
           tier: ssm.ParameterTier.STANDARD,
         });

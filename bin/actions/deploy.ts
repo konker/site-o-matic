@@ -4,15 +4,16 @@ import type Vorpal from 'vorpal';
 
 import * as cdkExec from '../../lib/aws/cdkExec';
 import { preDeploymentCheck } from '../../lib/deployment';
-import type { SomConfig, SomState } from '../../lib/types';
+import type { SomGlobalState } from '../../lib/SomGlobalState';
+import type { SomConfig } from '../../lib/types';
 import { verror } from '../../lib/ui/logging';
 
-export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomState) {
+export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
   return async (args: Vorpal.Args): Promise<void> => {
     if (!state.plumbing) {
       vorpal.log('Pre-flight checks...');
     }
-    const checkItems = await preDeploymentCheck(config, state, args.username);
+    const checkItems = await preDeploymentCheck(config, state.context, args.username);
     const checksPassed = checkItems.every((checkItem) => checkItem.passed);
 
     if (!state.plumbing) {
@@ -33,8 +34,8 @@ export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomState)
     }
 
     // Assert not-null for types, even though these have been checked
-    assert(state.manifest, 'absurd');
-    assert(state.pathToManifestFile, 'absurd');
+    assert(state.context.manifest, 'absurd');
+    assert(state.context.pathToManifestFile, 'absurd');
 
     const response1 = state.yes
       ? { confirm: 'y' }
@@ -42,7 +43,7 @@ export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomState)
           type: 'input',
           name: 'confirm',
           message: chalk.green(
-            `Are you sure you want to deploy site: ${chalk.bold(state.somId)} under user ${chalk.bold(
+            `Are you sure you want to deploy site: ${chalk.bold(state.context.somId)} under user ${chalk.bold(
               args.username
             )}? [y/n] `
           ),
@@ -52,14 +53,14 @@ export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomState)
       return;
     }
 
-    if (state.certificateCloneNames?.length ?? 0 > 0) {
+    if (state.context.certificateCloneNames?.length ?? 0 > 0) {
       const response2 = state.yes
         ? { confirm: 'y' }
         : await vorpal.activeCommand.prompt({
             type: 'input',
             name: 'confirm',
             message: chalk.yellow(
-              `WARNING!: Manual action needed to clone certificates into ${state.certificateCloneNames?.join(
+              `WARNING!: Manual action needed to clone certificates into ${state.context.certificateCloneNames?.join(
                 ','
               )}. Proceed? [y/n] `
             ),
@@ -74,9 +75,9 @@ export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomState)
     try {
       const [code, log] = await cdkExec.cdkDeploy(
         vorpal,
-        state.somId,
+        state.context.somId,
         {
-          pathToManifestFile: state.pathToManifestFile,
+          pathToManifestFile: state.context.pathToManifestFile,
           iamUsername: args.username,
           deploySubdomainCerts: 'true',
         },
@@ -84,7 +85,7 @@ export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomState)
       );
 
       if (state.plumbing) {
-        vorpal.log(JSON.stringify({ state, code, log }));
+        vorpal.log(JSON.stringify({ context: state.context, code, log }));
       }
     } catch (ex: any) {
       verror(vorpal, state, ex);

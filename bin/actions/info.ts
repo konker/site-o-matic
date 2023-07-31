@@ -1,137 +1,104 @@
 import type { ErrorResponse } from 'aws-cdk-lib/aws-cloudfront';
 import type Vorpal from 'vorpal';
 
-import * as secretsmanager from '../../lib/aws/secretsmanager';
-import * as ssm from '../../lib/aws/ssm';
 import {
-  DEFAULT_AWS_REGION,
   SOM_STATUS_BREADCRUMB,
-  SSM_PARAM_NAME_HOSTED_ZONE_ID,
-  SSM_PARAM_NAME_PROTECTED_STATUS,
-  SSM_PARAM_NAME_SOM_VERSION,
   UNKNOWN,
   VERSION,
   WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT,
   WEB_HOSTING_DEFAULT_ERROR_RESPONSES,
   WEB_HOSTING_DEFAULT_ORIGIN_PATH,
 } from '../../lib/consts';
-import { getSiteConnectionStatus } from '../../lib/http';
-import { getRegistrarConnector } from '../../lib/registrar';
-import * as status from '../../lib/status';
-import { getSomTxtRecordViaDns } from '../../lib/status';
-import type { SomConfig, SomInfoSpec, SomInfoStatus, SomState, WafAwsManagedRule } from '../../lib/types';
-import { isLoaded } from '../../lib/types';
+import { hasManifest, refreshContext } from '../../lib/context';
+import { siteOMaticRules } from '../../lib/rules/site-o-matic.rules';
+import type { SomGlobalState } from '../../lib/SomGlobalState';
+import { getStatus, getStatusMessage } from '../../lib/status';
+import type { SomConfig, SomInfoSpec, SomInfoStatus, WafAwsManagedRule } from '../../lib/types';
 import { renderInfoSpec, renderInfoStatus } from '../../lib/ui/info';
 import { verror } from '../../lib/ui/logging';
-import { getParam } from '../../lib/utils';
 
-export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomState) {
+export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
   return async (_: Vorpal.Args): Promise<void> => {
-    if (!isLoaded(state)) {
+    if (!hasManifest(state.context)) {
       const errorMessage = `ERROR: no manifest loaded`;
       verror(vorpal, state, errorMessage);
       return;
     }
 
-    state.spinner.start();
-
     try {
-      state.params = await ssm.getSsmParams(config, DEFAULT_AWS_REGION, state.somId);
-      state.somVersion = getParam(state, SSM_PARAM_NAME_SOM_VERSION) ?? VERSION;
-      state.connectionStatus = await getSiteConnectionStatus(state.rootDomainName, state.siteUrl);
-      state.verificationTxtRecordViaDns = await getSomTxtRecordViaDns(state.rootDomainName);
-      state.protectedSsm = getParam(state, SSM_PARAM_NAME_PROTECTED_STATUS) ?? 'false';
+      state.spinner.start();
 
-      if (state.registrar) {
-        const registrarConnector = getRegistrarConnector(state.registrar);
-        const somSecrets = await secretsmanager.getSomSecrets(config, DEFAULT_AWS_REGION, registrarConnector.SECRETS);
-        if (!registrarConnector.SECRETS.every((secretName) => somSecrets[secretName])) {
-          vorpal.log(`WARNING: secrets required by registrar connector missing: ${registrarConnector.SECRETS}`);
-        } else {
-          state.registrarNameservers = await registrarConnector.getNameServers(
-            config,
-            somSecrets,
-            state.rootDomainName as string
-          );
-        }
+      const context = await refreshContext(config, state.context);
+      const facts = await siteOMaticRules(context);
+      const status = getStatus(facts);
+      const statusMessage = getStatusMessage(context, facts, status);
 
-        state.nameserversSet = !!(
-          state.registrarNameservers &&
-          state.registrarNameservers.join(',') === getParam(state, 'hosted-zone-name-servers')
-        );
-        state.hostedZoneVerified = !!(
-          state.verificationTxtRecordViaDns &&
-          state.verificationTxtRecordViaDns === getParam(state, SSM_PARAM_NAME_HOSTED_ZONE_ID)
-        );
-      }
-      state.status = await status.getStatus(config, state);
-      state.statusMessage = status.getStatusMessage(state, state.status);
-
+      state.updateContext(context);
       state.spinner.stop();
 
       const infoSpec: SomInfoSpec = {
-        siteUrl: state.siteUrl ?? UNKNOWN,
-        registrar: state.registrar,
-        subdomains: state.subdomains,
-        certificateCloneNames: state.certificateCloneNames,
+        siteUrl: context.siteUrl ?? UNKNOWN,
+        registrar: context.registrar,
+        subdomains: context.subdomains,
+        certificateCloneNames: context.certificateCloneNames,
         webHosting: {
-          type: state.manifest.webHosting?.type,
-          originPath: state.manifest.webHosting?.originPath ?? WEB_HOSTING_DEFAULT_ORIGIN_PATH,
-          defaultRootObject: state.manifest.webHosting?.defaultRootObject ?? WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT,
-          errorResponses: (state.manifest.webHosting?.errorResponses ?? WEB_HOSTING_DEFAULT_ERROR_RESPONSES).map(
+          type: context.manifest.webHosting?.type,
+          originPath: context.manifest.webHosting?.originPath ?? WEB_HOSTING_DEFAULT_ORIGIN_PATH,
+          defaultRootObject: context.manifest.webHosting?.defaultRootObject ?? WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT,
+          errorResponses: (context.manifest.webHosting?.errorResponses ?? WEB_HOSTING_DEFAULT_ERROR_RESPONSES).map(
             (i: ErrorResponse) => `↪ ${i.httpStatus} -> ${i.responsePagePath}`
           ),
-          waf: state.manifest.webHosting?.waf
+          waf: context.manifest.webHosting?.waf
             ? {
-                enabled: state.manifest.webHosting.waf.enabled,
+                enabled: context.manifest.webHosting.waf.enabled,
                 AWSManagedRules:
-                  state.manifest.webHosting.waf.AWSManagedRules?.map((i: WafAwsManagedRule) => i.name) ?? [],
+                  context.manifest.webHosting.waf.AWSManagedRules?.map((i: WafAwsManagedRule) => i.name) ?? [],
               }
             : undefined,
         },
-        pipeline: state.manifest.pipeline,
-        redirect: state.manifest.redirect
+        pipeline: context.manifest.pipeline,
+        redirect: context.manifest.redirect
           ? {
-              type: state.manifest.redirect.type,
-              action: `${state.manifest.redirect.source} ⟶ ${state.manifest.redirect.target}`,
+              type: context.manifest.redirect.type,
+              action: `${context.manifest.redirect.source} ⟶ ${context.manifest.redirect.target}`,
             }
           : undefined,
-        crossAccountAccessNames: state.crossAccountAccessNames,
+        crossAccountAccessNames: context.crossAccountAccessNames,
         protected: {
-          protectedManifest: Boolean(state.protectedManifest) ?? false,
-          protectedSsm: Boolean(state.protectedSsm) ?? false,
+          protectedManifest: facts.protectedManifest,
+          protectedSsm: facts.protectedSsm,
         },
-        pathToManifestFile: { Param: 'pathToManifestFile', Value: state.pathToManifestFile ?? UNKNOWN },
-        somId: { Param: 'somId', Value: state.somId ?? UNKNOWN },
+        pathToManifestFile: { Param: 'pathToManifestFile', Value: context.pathToManifestFile ?? UNKNOWN },
+        somId: { Param: 'somId', Value: context.somId ?? UNKNOWN },
       };
 
       const infoStatus: SomInfoStatus = {
         somVersion: {
           somVersionSystem: VERSION,
-          somVersionSite: state.somVersion,
+          somVersionSite: context.somVersion,
         },
         status: {
-          status: state.status,
-          statusMessage: state.statusMessage,
+          status,
+          statusMessage,
           breadcrumb: SOM_STATUS_BREADCRUMB,
         },
-        connectionStatus: state.connectionStatus
+        connectionStatus: context.connectionStatus
           ? {
-              statusCode: state.connectionStatus.statusCode,
-              statusMessage: state.connectionStatus.statusMessage,
-              timing: state.connectionStatus.timing,
+              statusCode: context.connectionStatus.statusCode,
+              statusMessage: context.connectionStatus.statusMessage,
+              timing: context.connectionStatus.timing,
             }
           : undefined,
-        hostedZoneVerified: state.hostedZoneVerified ?? false,
-        verificationTxtRecordViaDns: state.verificationTxtRecordViaDns,
-        nameserversSet: state.nameserversSet ?? false,
-        registrarNameservers: state.registrarNameservers,
-        params: state.params,
+        hostedZoneVerified: facts.hostedZoneVerified,
+        verificationTxtRecordViaDns: context.dnsVerificationTxtRecord,
+        nameserversSet: facts.nameserversSetButNotPropagated,
+        registrarNameservers: context.registrarNameservers,
+        params: context.params,
       };
 
       if (state.plumbing) {
         const out = {
-          state,
+          context,
           infoSpec,
           infoStatus,
         };

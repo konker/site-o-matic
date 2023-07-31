@@ -6,13 +6,13 @@ import {
 } from '@aws-sdk/client-route-53';
 
 import { DEFAULT_AWS_REGION } from '../consts';
-import type { SomConfig } from '../types';
+import type { HostedZoneAttributes, SomConfig } from '../types';
 import { assumeSomRole } from './sts';
 
 export async function findHostedZoneAttributes(
   config: SomConfig,
   domainName: string
-): Promise<{ zoneName: string; hostedZoneId: string } | undefined> {
+): Promise<HostedZoneAttributes | undefined> {
   const somRoleCredentials = await assumeSomRole(config, DEFAULT_AWS_REGION);
   const client = new Route53Client({
     region: DEFAULT_AWS_REGION,
@@ -115,7 +115,7 @@ export async function getRecordsForHostedZoneId(
   return undefined;
 }
 
-export async function getRecordsForDomain(
+export async function getRecordsForHostedZone(
   config: SomConfig,
   domainName: string,
   recordType: string
@@ -126,12 +126,19 @@ export async function getRecordsForDomain(
   return getRecordsForHostedZoneId(config, hostedZoneAttributes.hostedZoneId, recordType);
 }
 
-export async function getNsRecordsForDomain(config: SomConfig, domainName: string): Promise<Array<string> | undefined> {
-  return getRecordsForDomain(config, domainName, 'NS');
+export async function getNsRecordsForHostedZone(
+  config: SomConfig,
+  domainName: string
+): Promise<Array<string> | undefined> {
+  const ret = await getRecordsForHostedZone(config, domainName, 'NS');
+  return ret?.map((i) => i.replace(/\.$/, ''));
 }
 
-export async function getSoaRecordForDomain(config: SomConfig, domainName: string): Promise<Array<string> | undefined> {
-  return getRecordsForDomain(config, domainName, 'SOA');
+export async function getSoaRecordForHostedZone(
+  config: SomConfig,
+  domainName: string
+): Promise<Array<string> | undefined> {
+  return getRecordsForHostedZone(config, domainName, 'SOA');
 }
 
 export function parseHostedZoneId(hostedZoneId: string): string | undefined {

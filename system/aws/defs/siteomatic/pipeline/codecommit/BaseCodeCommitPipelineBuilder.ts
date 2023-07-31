@@ -4,7 +4,7 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 import type { Construct } from 'constructs';
 
 import { toSsmParamName } from '../../../../../../lib/aws/ssm';
-import { SOM_TAG_NAME } from '../../../../../../lib/consts';
+import { SOM_TAG_NAME, SSM_PARAM_NAME_CODECOMMIT_CLONE_URL_SSH } from '../../../../../../lib/consts';
 import type { BaseCodeCommitSitePipelineResources, PipelineBuilderProps } from '../../../../../../lib/types';
 import { _somMeta } from '../../../../../../lib/utils';
 import * as SitePipelineStack from '../BasePipelineBuilder';
@@ -32,7 +32,7 @@ export async function build(
   // ----------------------------------------------------------------------
   // SSM Params
   const res1 = new ssm.StringParameter(scope, 'SsmCodeCommitCloneUrlSsh', {
-    parameterName: toSsmParamName(props.siteStack.somId, 'code-commit-clone-url-ssh'),
+    parameterName: toSsmParamName(props.siteStack.somId, SSM_PARAM_NAME_CODECOMMIT_CLONE_URL_SSH),
     stringValue: codeCommitRepo.repositoryCloneUrlSsh,
     tier: ssm.ParameterTier.STANDARD,
   });

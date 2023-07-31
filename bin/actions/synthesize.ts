@@ -1,13 +1,14 @@
 import type Vorpal from 'vorpal';
 
 import * as cdkExec from '../../lib/aws/cdkExec';
-import type { SomConfig, SomState } from '../../lib/types';
-import { isLoaded } from '../../lib/types';
+import { hasManifest } from '../../lib/context';
+import type { SomGlobalState } from '../../lib/SomGlobalState';
+import type { SomConfig } from '../../lib/types';
 import { verror } from '../../lib/ui/logging';
 
-export function actionSynthesize(vorpal: Vorpal, _: SomConfig, state: SomState) {
+export function actionSynthesize(vorpal: Vorpal, _: SomConfig, state: SomGlobalState) {
   return async (args: Vorpal.Args): Promise<void> => {
-    if (!isLoaded(state)) {
+    if (!hasManifest(state.context)) {
       const errorMessage = `ERROR: no manifest loaded`;
       verror(vorpal, state, errorMessage);
       return;
@@ -15,9 +16,9 @@ export function actionSynthesize(vorpal: Vorpal, _: SomConfig, state: SomState) 
 
     const [code, log] = await cdkExec.cdkSynth(
       vorpal,
-      state.somId,
+      state.context.somId,
       {
-        pathToManifestFile: state.pathToManifestFile,
+        pathToManifestFile: state.context.pathToManifestFile,
         iamUsername: args.username,
         deploySubdomainCerts: 'true',
       },
@@ -25,7 +26,7 @@ export function actionSynthesize(vorpal: Vorpal, _: SomConfig, state: SomState) 
     );
 
     if (state.plumbing) {
-      vorpal.log(JSON.stringify({ state, code, log }));
+      vorpal.log(JSON.stringify({ context: state.context, code, log }));
     }
   };
 }

@@ -1,4 +1,4 @@
-import { getNsRecordsForDomain } from '../../../aws/route53';
+import { getNsRecordsForHostedZone } from '../../../aws/route53';
 import type { SomConfig } from '../../../types';
 
 export const ID = 'aws-route53';
@@ -8,9 +8,10 @@ export async function getNameServers(
   config: SomConfig,
   _secrets: { [key: string]: string },
   domain: string
-): Promise<Array<string> | undefined> {
+): Promise<Array<string>> {
   // if the registrar is aws-route53 then this is where the nameservers are (right?)
-  return getNsRecordsForDomain(config, domain);
+  const ret = await getNsRecordsForHostedZone(config, domain);
+  return ret ?? [];
 }
 
 export async function setNameServers(

@@ -9,6 +9,9 @@ import {
   DEFAULT_AWS_REGION,
   SITE_PIPELINE_CODECOMMIT_BRANCH_NAME,
   SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM,
+  SSM_PARAM_NAME_CODE_PIPELINE_ARN,
+  SSM_PARAM_NAME_CODE_PIPELINE_CONSOLE_URL,
+  SSM_PARAM_NAME_CODE_PIPELINE_NAME,
 } from '../../../../../../lib/consts';
 import type { CodeCommitCustomSitePipelineResources, PipelineBuilderProps } from '../../../../../../lib/types';
 import { _somMeta } from '../../../../../../lib/utils';
@@ -96,21 +99,21 @@ export async function build(
   // ----------------------------------------------------------------------
   // SSM Params
   const res1 = new ssm.StringParameter(scope, 'SsmCodePipelineArn', {
-    parameterName: toSsmParamName(props.siteStack.somId, 'code-pipeline-arn'),
+    parameterName: toSsmParamName(props.siteStack.somId, SSM_PARAM_NAME_CODE_PIPELINE_ARN),
     stringValue: codePipeline.pipelineArn,
     tier: ssm.ParameterTier.STANDARD,
   });
   _somMeta(res1, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   const res2 = new ssm.StringParameter(scope, 'SsmCodePipelineName', {
-    parameterName: toSsmParamName(props.siteStack.somId, 'code-pipeline-name'),
+    parameterName: toSsmParamName(props.siteStack.somId, SSM_PARAM_NAME_CODE_PIPELINE_NAME),
     stringValue: codePipeline.pipelineName,
     tier: ssm.ParameterTier.STANDARD,
   });
   _somMeta(res2, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   const res3 = new ssm.StringParameter(scope, 'SsmCodePipelineConsoleUrl', {
-    parameterName: toSsmParamName(props.siteStack.somId, 'code-pipeline-console-url'),
+    parameterName: toSsmParamName(props.siteStack.somId, SSM_PARAM_NAME_CODE_PIPELINE_CONSOLE_URL),
     stringValue: `https://${
       props.siteStack.siteProps.env?.region ?? DEFAULT_AWS_REGION
     }.console.aws.amazon.com/codesuite/codepipeline/pipelines/${codePipeline.pipelineName}/view`,

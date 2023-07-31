@@ -2,21 +2,22 @@ import chalk from 'chalk';
 import type Vorpal from 'vorpal';
 
 import * as secretsmanager from '../../lib/aws/secretsmanager';
-import { DEFAULT_AWS_REGION } from '../../lib/consts';
+import { DEFAULT_AWS_REGION, SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS } from '../../lib/consts';
 import { getRegistrarConnector } from '../../lib/registrar';
-import type { SomConfig, SomState } from '../../lib/types';
+import type { SomGlobalState } from '../../lib/SomGlobalState';
+import type { SomConfig } from '../../lib/types';
 import { verror, vlog } from '../../lib/ui/logging';
 import { getParam } from '../../lib/utils';
 
-export function actionSetNameServersWithRegistrar(vorpal: Vorpal, config: SomConfig, state: SomState) {
+export function actionSetNameServersWithRegistrar(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
   return async (_: Vorpal.Args): Promise<void> => {
-    if (!state.registrar) {
+    if (!state.context.registrar) {
       const errorMessage = 'ERROR: no registrar specified in manifest';
       verror(vorpal, state, errorMessage);
       return;
     }
 
-    const nameservers = getParam(state, 'hosted-zone-name-servers')?.split(',');
+    const nameservers = getParam(state.context, SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS)?.split(',');
     if (!nameservers || nameservers.length === 0) {
       const errorMessage = 'ERROR: missing nameservers, is the hosted zone deployed?';
       verror(vorpal, state, errorMessage);
@@ -35,7 +36,7 @@ export function actionSetNameServersWithRegistrar(vorpal: Vorpal, config: SomCon
     if (response.confirm === 'y') {
       state.spinner.start();
       try {
-        const registrarConnector = getRegistrarConnector(state.registrar);
+        const registrarConnector = getRegistrarConnector(state.context.registrar);
         const somSecrets = await secretsmanager.getSomSecrets(config, DEFAULT_AWS_REGION, registrarConnector.SECRETS);
         if (!registrarConnector.SECRETS.every((secretName) => somSecrets[secretName])) {
           const errorMessage = `ERROR: secrets required by registrar connector missing: ${registrarConnector.SECRETS}`;
@@ -46,7 +47,7 @@ export function actionSetNameServersWithRegistrar(vorpal: Vorpal, config: SomCon
         const result = await registrarConnector.setNameServers(
           config,
           somSecrets,
-          state.rootDomainName as string,
+          state.context.rootDomainName as string,
           nameservers
         );
         vlog(vorpal, state, `Set nameservers: ${result}`);

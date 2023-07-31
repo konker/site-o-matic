@@ -12,6 +12,9 @@ import type { Construct } from 'constructs';
 import { toSsmParamName } from '../../../../../lib/aws/ssm';
 import {
   SOM_TAG_NAME,
+  SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID,
+  SSM_PARAM_NAME_CLOUDFRONT_DOMAIN_NAME,
+  SSM_PARAM_NAME_DOMAIN_BUCKET_NAME,
   WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT,
   WEB_HOSTING_DEFAULT_ERROR_RESPONSES,
   WEB_HOSTING_DEFAULT_ORIGIN_PATH,
@@ -221,21 +224,21 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
   // ----------------------------------------------------------------------
   // SSM Params
   const res3 = new ssm.StringParameter(scope, 'SsmDomainBucketName', {
-    parameterName: toSsmParamName(props.siteStack.somId, 'domain-bucket-name'),
+    parameterName: toSsmParamName(props.siteStack.somId, SSM_PARAM_NAME_DOMAIN_BUCKET_NAME),
     stringValue: domainBucket.bucketName,
     tier: ssm.ParameterTier.STANDARD,
   });
   _somMeta(res3, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   const res4 = new ssm.StringParameter(scope, 'SsmCloudfrontDistributionId', {
-    parameterName: toSsmParamName(props.siteStack.somId, 'cloudfront-distribution-id'),
+    parameterName: toSsmParamName(props.siteStack.somId, SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID),
     stringValue: cloudFrontDistribution.distributionId,
     tier: ssm.ParameterTier.STANDARD,
   });
   _somMeta(res4, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   const res5 = new ssm.StringParameter(scope, 'SsmCloudfrontDomainName', {
-    parameterName: toSsmParamName(props.siteStack.somId, 'cloudfront-domain-name'),
+    parameterName: toSsmParamName(props.siteStack.somId, SSM_PARAM_NAME_CLOUDFRONT_DOMAIN_NAME),
     stringValue: cloudFrontDistribution.distributionDomainName,
     tier: ssm.ParameterTier.STANDARD,
   });

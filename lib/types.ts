@@ -54,9 +54,14 @@ export type HostedZoneConfig = {
   readonly domainName: string;
   readonly extraDnsConfig?: Array<HostedZoneDnsConfig> | undefined;
 };
+
 // ----------------------------------------------------------------------
 export type HostedZoneResources = {
   readonly hostedZone: route53.IHostedZone;
+};
+export type HostedZoneAttributes = {
+  zoneName: string;
+  hostedZoneId: string;
 };
 
 export type CertificateResources = {
@@ -242,37 +247,58 @@ export type SomStatus =
   | typeof SOM_STATUS_HOSTED_ZONE_OK
   | typeof SOM_STATUS_SITE_FUNCTIONAL;
 
-// export type SomParam = Record<string, string>;
 export type SomParam = {
   readonly Param: string;
   readonly Value: string;
 };
 
-export type SomState = {
+export type SomContext = {
+  // Manifest derived
+  pathToManifestFile?: string;
+  manifest?: SomManifest;
   rootDomainName?: string;
-  spinner: any;
-  plumbing: boolean;
-  yes: boolean;
-  somVersion: string;
+  domainHash?: string;
+  somId?: string;
   siteUrl?: string;
-  subdomains?: Array<string> | undefined;
-  certificateCloneNames?: Array<string> | undefined;
-  crossAccountAccessNames?: Array<string> | undefined;
-  somId?: string | undefined;
-  domainHash?: string | undefined;
+  subdomains?: Array<string>;
+  certificateCloneNames?: Array<string>;
+  crossAccountAccessNames?: Array<string>;
   registrar?: string | undefined;
-  registrarNameservers?: Array<string> | undefined;
-  pathToManifestFile?: string | undefined;
-  manifest?: SomManifest | undefined;
-  params?: Array<SomParam> | undefined;
-  status?: SomStatus | undefined;
-  statusMessage?: string | undefined;
-  verificationTxtRecordViaDns?: string | undefined;
-  protectedManifest?: string | undefined;
-  protectedSsm?: string | undefined;
-  connectionStatus?: WwwConnectionStatus | undefined;
-  nameserversSet?: boolean | undefined;
-  hostedZoneVerified?: boolean | undefined;
+
+  // Network derived
+  params?: Array<SomParam>;
+  hostedZoneAttributes?: HostedZoneAttributes | undefined;
+  hostedZoneNameservers?: Array<string>;
+  registrarNameservers?: Array<string>;
+  dnsResolvedNameserverRecords?: Array<string>;
+  dnsVerificationTxtRecord?: string | undefined;
+  connectionStatus?: WwwConnectionStatus;
+
+  // Rest of context derived
+  somVersion: string;
+};
+
+export type HasManifest<T extends SomContext> = Omit<T, 'pathToManifest' | 'manifest'> & {
+  readonly pathToManifestFile: string;
+  readonly manifest: SomManifest;
+  readonly rootDomainName: string;
+  readonly domainHash: string;
+  readonly somId: string;
+  readonly siteUrl: string;
+  readonly subdomains: Array<string>;
+  readonly certificateCloneNames: Array<string>;
+  readonly crossAccountAccessNames: Array<string>;
+  readonly registrar: string | undefined;
+};
+
+export type HasNetworkDerived<T extends SomContext> = HasManifest<T> & {
+  readonly params: Array<SomParam>;
+  readonly hostedZoneAttributes: HostedZoneAttributes | undefined;
+  readonly hostedZoneNameservers: Array<string>;
+  readonly registrarNameservers: Array<string>;
+  readonly dnsResolvedNameserverRecords: Array<string>;
+  readonly dnsVerificationTxtRecord: string | undefined;
+  readonly connectionStatus: WwwConnectionStatus;
 };
 
 export type SomConfig = {
@@ -336,12 +362,3 @@ export type SomInfoStatus = {
   readonly registrarNameservers: Array<string> | undefined;
   readonly params: Array<SomParam>;
 };
-
-export type Loaded<T extends SomState> = T & {
-  readonly manifest: SomManifest;
-  readonly pathToManifestFile: string;
-};
-
-export function isLoaded<T extends SomState>(state: T): state is Loaded<T> {
-  return state.manifest !== undefined && state.pathToManifestFile !== undefined;
-}

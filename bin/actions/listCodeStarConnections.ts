@@ -2,10 +2,11 @@ import type Vorpal from 'vorpal';
 
 import * as codestar from '../../lib/aws/codestar';
 import { DEFAULT_AWS_REGION } from '../../lib/consts';
-import type { SomConfig, SomState } from '../../lib/types';
+import type { SomGlobalState } from '../../lib/SomGlobalState';
+import type { SomConfig } from '../../lib/types';
 import { tabulate } from '../../lib/ui/tables';
 
-export function actionListCodeStarConnections(vorpal: Vorpal, config: SomConfig, state: SomState) {
+export function actionListCodeStarConnections(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
   return async (_: Vorpal.Args): Promise<void> => {
     state.spinner.start();
     const data = await codestar.listCodeStarConnections(config, DEFAULT_AWS_REGION);
@@ -25,7 +26,7 @@ export function actionListCodeStarConnections(vorpal: Vorpal, config: SomConfig,
         vorpal.log(message);
       }
     } else {
-      vorpal.log(JSON.stringify({ state, data, message }));
+      vorpal.log(JSON.stringify({ context: state.context, data, message }));
     }
   };
 }

@@ -6,11 +6,7 @@ export type RegistrarConnector = {
   ID: string;
   SECRETS: Array<string>;
 
-  getNameServers(
-    config: SomConfig,
-    secrets: { [key: string]: string },
-    domain: string
-  ): Promise<Array<string> | undefined>;
+  getNameServers(config: SomConfig, secrets: { [key: string]: string }, domain: string): Promise<Array<string>>;
   setNameServers(
     config: SomConfig,
     secrets: { [key: string]: string },

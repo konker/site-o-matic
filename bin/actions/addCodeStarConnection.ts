@@ -3,10 +3,11 @@ import type Vorpal from 'vorpal';
 import * as codestar from '../../lib/aws/codestar';
 import { CODESTAR_CONNECTION_PROVIDER_TYPES } from '../../lib/aws/codestar';
 import { DEFAULT_AWS_REGION } from '../../lib/consts';
-import type { SomConfig, SomState } from '../../lib/types';
+import type { SomGlobalState } from '../../lib/SomGlobalState';
+import type { SomConfig } from '../../lib/types';
 import { verror, vtabulate } from '../../lib/ui/logging';
 
-export function actionAddCodeStarConnection(vorpal: Vorpal, config: SomConfig, state: SomState) {
+export function actionAddCodeStarConnection(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
   return async (args: Vorpal.Args): Promise<void> => {
     if (!CODESTAR_CONNECTION_PROVIDER_TYPES.includes(args.providerType)) {
       const errorMessage = `Invalid provider type: ${

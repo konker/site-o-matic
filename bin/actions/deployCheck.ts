@@ -2,15 +2,16 @@ import chalk from 'chalk';
 import type Vorpal from 'vorpal';
 
 import { preDeploymentCheck } from '../../lib/deployment';
-import type { SomConfig, SomState } from '../../lib/types';
+import type { SomGlobalState } from '../../lib/SomGlobalState';
+import type { SomConfig } from '../../lib/types';
 
-export function actionDeployCheck(vorpal: Vorpal, config: SomConfig, state: SomState) {
+export function actionDeployCheck(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
   return async (args: Vorpal.Args): Promise<void> => {
-    const checkItems = await preDeploymentCheck(config, state, args.username);
+    const checkItems = await preDeploymentCheck(config, state.context, args.username);
     const checksPassed = checkItems.every((checkItem) => checkItem.passed);
 
     if (state.plumbing) {
-      vorpal.log(JSON.stringify({ state, checkItems, checksPassed }));
+      vorpal.log(JSON.stringify({ context: state.context, checkItems, checksPassed }));
     } else {
       for (const checkItem of checkItems) {
         vorpal.log(

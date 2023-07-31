@@ -9,10 +9,14 @@ import {
   SITE_PIPELINE_TYPE_CODESTAR_S3,
   SITE_PIPELINE_TYPES,
   SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG,
+  SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS,
   VERSION,
 } from './consts';
+import { hasManifest } from './context';
 import { getRegistrarConnector } from './registrar';
-import type { SomConfig, SomState } from './types';
+import { siteOMaticRules } from './rules/site-o-matic.rules';
+import { getStatus } from './status';
+import type { SomConfig, SomContext } from './types';
 
 export type DeploymentCheckItem = {
   readonly name: string;
@@ -25,22 +29,25 @@ export const checkFailed = (name: string, message?: string): DeploymentCheckItem
 
 export async function preDeploymentCheck(
   config: SomConfig,
-  state: SomState,
+  context: SomContext,
   somUser: string
 ): Promise<Array<DeploymentCheckItem>> {
+  const facts = await siteOMaticRules(context);
+  const status = getStatus(facts);
+
   const checkItems: Array<DeploymentCheckItem> = [];
 
-  if (!state.manifest || !state.pathToManifestFile) {
+  if (!hasManifest(context)) {
     checkItems.push(checkFailed('Manifest Loaded'));
   } else {
     checkItems.push(checkPassed('Manifest Loaded'));
   }
 
-  if (state.somVersion !== VERSION) {
+  if (context.somVersion !== VERSION) {
     checkItems.push(
       checkFailed(
         'Site-O-Matic version',
-        `Currently running version ${VERSION}, does not match deployment version ${state.somVersion}`
+        `Currently running version ${VERSION}, does not match deployment version ${context.somVersion}`
       )
     );
   } else {
@@ -54,20 +61,20 @@ export async function preDeploymentCheck(
     checkItems.push(checkPassed('User'));
   }
 
-  if (state.manifest?.pipeline && !SITE_PIPELINE_TYPES.includes(state.manifest.pipeline.type)) {
+  if (context.manifest?.pipeline && !SITE_PIPELINE_TYPES.includes(context.manifest.pipeline.type)) {
     checkItems.push(checkFailed('Pipeline Type', `Must be one of: ${SITE_PIPELINE_TYPES.join(', ')}`));
   } else {
     checkItems.push(checkPassed('Pipeline Type'));
   }
 
-  if (state.manifest) {
+  if (context.manifest) {
     // Check codestar pipeline
     if (
-      state.manifest.pipeline?.type === SITE_PIPELINE_TYPE_CODESTAR_S3 ||
-      state.manifest.pipeline?.type === SITE_PIPELINE_TYPE_CODESTAR_CUSTOM
+      context.manifest.pipeline?.type === SITE_PIPELINE_TYPE_CODESTAR_S3 ||
+      context.manifest.pipeline?.type === SITE_PIPELINE_TYPE_CODESTAR_CUSTOM
     ) {
       const codestarConnections = await codestar.listCodeStarConnections(config, DEFAULT_AWS_REGION);
-      const manifestCodestarConnection = state.manifest?.pipeline?.codestarConnectionArn;
+      const manifestCodestarConnection = context.manifest?.pipeline?.codestarConnectionArn;
       const codestarConnection = codestarConnections.find(
         (i) => manifestCodestarConnection && i.ConnectionArn === manifestCodestarConnection
       );
@@ -79,14 +86,14 @@ export async function preDeploymentCheck(
     }
   }
 
-  if (state.registrar) {
-    const registrarConnector = getRegistrarConnector(state.registrar);
+  if (context.registrar) {
+    const registrarConnector = getRegistrarConnector(context.registrar);
     const somSecrets = await secretsmanager.getSomSecrets(config, DEFAULT_AWS_REGION, registrarConnector.SECRETS);
     if (!registrarConnector.SECRETS.every((secretName) => somSecrets[secretName])) {
       checkItems.push(
         checkFailed(
           'Registrar secrets',
-          `Registrar ${state.registrar} requires missing secret(s): ${registrarConnector.SECRETS.join(', ')}`
+          `Registrar ${context.registrar} requires missing secret(s): ${registrarConnector.SECRETS.join(', ')}`
         )
       );
     } else {
@@ -94,10 +101,10 @@ export async function preDeploymentCheck(
     }
   }
 
-  if (state.manifest?.webHosting?.waf) {
+  if (context.manifest?.webHosting?.waf) {
     if (
-      state.manifest?.webHosting?.waf?.enabled &&
-      (state.manifest?.webHosting?.waf?.AWSManagedRules?.length ?? 0) === 0
+      context.manifest?.webHosting?.waf?.enabled &&
+      (context.manifest?.webHosting?.waf?.AWSManagedRules?.length ?? 0) === 0
     ) {
       checkItems.push(checkFailed('WAF', 'WAF is enabled, but no AWS Managed Rules are configured'));
     } else {
@@ -105,9 +112,9 @@ export async function preDeploymentCheck(
     }
   }
 
-  if (state.status === SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG) {
-    if (state.registrar) {
-      if (state.nameserversSet) {
+  if (status === SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG) {
+    if (context.registrar) {
+      if (facts.nameserversSetButNotPropagated) {
         checkItems.push(checkFailed('Nameservers', 'Waiting for nameserver propagation'));
       }
       checkItems.push(checkFailed('Nameservers', 'Set the nameservers with the registrar: `> set nameservers`.'));
@@ -116,7 +123,7 @@ export async function preDeploymentCheck(
       checkFailed(
         'Nameservers',
         `You must manually set the nameservers with your registrar.\nSee ${chalk.white(
-          'hosted-zone-name-servers'
+          SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS
         )} property above.`
       )
     );

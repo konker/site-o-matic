@@ -15,7 +15,7 @@ export async function getNameServers(
   _config: SomConfig,
   secrets: { [key: string]: string },
   domain: string
-): Promise<Array<string> | undefined> {
+): Promise<Array<string>> {
   try {
     const apiUrl = `${API_ENDPOINT}?key=${secrets.DYNADOT_API_KEY}&command=get_ns&domain=${domain}`;
     const result = await got.get(apiUrl);
@@ -23,13 +23,13 @@ export async function getNameServers(
     const data = XML_PARSER.parse(result.body);
     if (data?.GetNsResponse?.GetNsHeader?.Status !== SUCCESS) {
       console.log(data[1]);
-      return undefined;
+      return [];
     }
 
     return data.GetNsResponse.NsContent.Host;
   } catch (ex) {
     console.log(`[registrar/dynadot] ERROR: ${ex}`);
-    return undefined;
+    return [];
   }
 }
 

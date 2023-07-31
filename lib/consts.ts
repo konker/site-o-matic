@@ -13,11 +13,22 @@ export const SOM_PREFIX = 'som';
 export const SOM_TAG_NAME = 'Site-o-Matic';
 export const MAX_SOM_ID_LEN = 48;
 
-export const SSM_PARAM_NAME_DOMAIN_USER_NAME = 'domain-user-name';
-export const SSM_PARAM_NAME_HOSTED_ZONE_ID = 'hosted-zone-id';
-export const SSM_PARAM_NAME_PROTECTED_STATUS = 'protected-status';
 export const SSM_PARAM_NAME_SOM_VERSION = 'som-version';
+export const SSM_PARAM_NAME_ROOT_DOMAIN_NAME = 'root-domain-name';
+export const SSM_PARAM_NAME_DOMAIN_USER_NAME = 'domain-user-name';
+export const SSM_PARAM_NAME_DOMAIN_ROLE_ARN = 'domain-role-arn';
+export const SSM_PARAM_NAME_WEBMASTER_EMAIL = 'webmaster-email';
+export const SSM_PARAM_NAME_PROTECTED_STATUS = 'protected-status';
+export const SSM_PARAM_NAME_HOSTED_ZONE_ID = 'hosted-zone-id';
+export const SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS = 'hosted-zone-name-servers';
 export const SSM_PARAM_NAME_SNS_TOPIC_NAME = 'sns-topic-name';
+export const SSM_PARAM_NAME_DOMAIN_BUCKET_NAME = 'domain-bucket-name';
+export const SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID = 'cloudfront-distribution-id';
+export const SSM_PARAM_NAME_CLOUDFRONT_DOMAIN_NAME = 'cloudfront-domain-name';
+export const SSM_PARAM_NAME_CODE_PIPELINE_ARN = 'code-pipeline-arn';
+export const SSM_PARAM_NAME_CODE_PIPELINE_NAME = 'code-pipeline-name';
+export const SSM_PARAM_NAME_CODE_PIPELINE_CONSOLE_URL = 'code-pipeline-console-url';
+export const SSM_PARAM_NAME_CODECOMMIT_CLONE_URL_SSH = 'code-commit-clone-url-ssh';
 
 export const REGISTRAR_ID_AWS_ROUTE53 = 'aws-route53';
 export const WEB_HOSTING_TYPE_CLOUDFRONT_S3 = 'cloudfront-s3';

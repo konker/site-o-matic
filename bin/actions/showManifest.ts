@@ -1,21 +1,22 @@
 import type Vorpal from 'vorpal';
 
-import type { SomConfig, SomState } from '../../lib/types';
-import { isLoaded } from '../../lib/types';
+import { hasManifest } from '../../lib/context';
+import type { SomGlobalState } from '../../lib/SomGlobalState';
+import type { SomConfig } from '../../lib/types';
 import { verror } from '../../lib/ui/logging';
 
-export function actionShowManifest(vorpal: Vorpal, _: SomConfig, state: SomState) {
+export function actionShowManifest(vorpal: Vorpal, _: SomConfig, state: SomGlobalState) {
   return async (_: Vorpal.Args): Promise<void> => {
-    if (!isLoaded(state)) {
+    if (!hasManifest(state.context)) {
       const errorMessage = `ERROR: no manifest loaded`;
       verror(vorpal, state, errorMessage);
       return;
     }
 
     if (state.plumbing) {
-      vorpal.log(JSON.stringify({ state, data: state.manifest }));
+      vorpal.log(JSON.stringify({ context: state.context, data: state.context.manifest }));
     } else {
-      vorpal.log(JSON.stringify(state.manifest, undefined, 2));
+      vorpal.log(JSON.stringify(state.context.manifest, undefined, 2));
     }
   };
 }
