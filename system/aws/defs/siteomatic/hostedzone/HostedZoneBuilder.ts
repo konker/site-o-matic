@@ -91,7 +91,7 @@ export async function build(scope: Construct, props: HostedZoneBuilderProps): Pr
     const hostedZoneAttributes = await findHostedZoneAttributes(props.siteStack.config, props.domainName);
 
     // Special case for AWS Route53 registrar, as we expect this to be automatically created when the domain is registered
-    if (props.siteStack.siteProps.registrar === REGISTRAR_ID_AWS_ROUTE53) {
+    if (props.siteStack.siteProps.context.manifest.registrar === REGISTRAR_ID_AWS_ROUTE53) {
       if (!hostedZoneAttributes?.zoneName || !hostedZoneAttributes.hostedZoneId) {
         // [FIXME: this should be a fatal error and stop CDK execution]
         throw new Error(`[site-o-matic] Could not resolve existing hosted zone for AWS Route53 registered domain`);

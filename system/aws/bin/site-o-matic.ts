@@ -5,7 +5,6 @@ import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import chalk from 'chalk';
 
-import { formulateSomId } from '../../../lib';
 import {
   WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT,
   WEB_HOSTING_VIEWER_REQUEST_DIR_DEFAULT_FUNCTION_PRODUCER_ID,
@@ -13,8 +12,12 @@ import {
   WEB_HOSTING_VIEWER_REQUEST_REDIRECT_FUNCTION_PRODUCER_ID,
   WEB_HOSTING_VIEWER_RESPONSE_FUNCTION_PRODUCER_ID,
 } from '../../../lib/consts';
+import type { SomContentGenerator } from '../../../lib/content';
+import { getContentProducer } from '../../../lib/content';
+import { loadContext } from '../../../lib/context';
 import { getFunctionProducer } from '../../../lib/edge';
 import { loadManifest } from '../../../lib/manifest';
+import { siteOMaticRules } from '../../../lib/rules/site-o-matic.rules';
 import config from '../../../site-o-matic.config.json';
 import { SiteStack } from '../defs/siteomatic/site/SiteStack';
 
@@ -39,8 +42,8 @@ async function main(): Promise<void> {
     console.log(chalk.red(chalk.bold('Invalid manifest')));
     return;
   }
-
-  const somId = formulateSomId(manifest.rootDomainName);
+  const context = await loadContext(config, pathToManifestFile, manifest);
+  const facts = await siteOMaticRules(context);
 
   // ----------------------------------------------------------------------
   // Viewer Request cfFunction
@@ -51,7 +54,7 @@ async function main(): Promise<void> {
   const viewerRequestFunctionProducer = getFunctionProducer(
     WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID,
     cfFunctionViewerRequestSubComponentIds,
-    somId,
+    context.somId,
     {
       ...manifest,
       webHosting: {
@@ -69,17 +72,35 @@ async function main(): Promise<void> {
   const viewerResponseFunctionProducer = getFunctionProducer(
     WEB_HOSTING_VIEWER_RESPONSE_FUNCTION_PRODUCER_ID,
     [],
-    somId,
+    context.somId,
     manifest
   );
   if (!viewerResponseFunctionProducer) throw new Error(`Could not get functionProducer for Cloudfront viewer response`);
   const cfFunctionViewerResponse_TmpFilePath = await viewerResponseFunctionProducer();
 
   // ----------------------------------------------------------------------
-  const stack = new SiteStack(app, config, somId, {
-    ...manifest,
+  // Content?
+  const siteContentTmpDirPath = await (async () => {
+    const contentProducerId = manifest.content?.producerId;
+    const contentGenerator: SomContentGenerator = getContentProducer(contentProducerId);
+    const ret = await contentGenerator(context.somId, manifest);
+    if (ret) {
+      console.log(chalk.blue(chalk.bold(`Created content dir: ${ret}`)));
+    } else {
+      console.log(chalk.yellow(chalk.bold('WARNING: Content generation failed')));
+    }
+    return ret;
+  })();
+  console.log('KONK90', siteContentTmpDirPath);
+
+  // ----------------------------------------------------------------------
+  const stack = new SiteStack(app, config, {
+    context,
+    facts,
+    protected: context.manifest.protected,
     username,
     contextParams,
+    siteContentTmpDirPath,
     cfFunctionViewerRequestTmpFilePath: [
       WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID,
       cfFunctionViewerRequest_TmpFilePath,

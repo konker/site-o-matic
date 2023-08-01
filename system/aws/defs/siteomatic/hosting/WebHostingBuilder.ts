@@ -68,9 +68,9 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
   // ----------------------------------------------------------------------
   // WAF ACl
   const wafEnabled =
-    !!props.siteStack.siteProps.webHosting?.waf?.enabled &&
-    props.siteStack.siteProps.webHosting?.waf?.AWSManagedRules &&
-    props.siteStack.siteProps.webHosting?.waf?.AWSManagedRules.length > 0;
+    !!props.siteStack.siteProps.context.manifest.webHosting?.waf?.enabled &&
+    props.siteStack.siteProps.context.manifest.webHosting?.waf?.AWSManagedRules &&
+    props.siteStack.siteProps.context.manifest.webHosting?.waf?.AWSManagedRules.length > 0;
 
   const wafAcl = wafEnabled
     ? new wafv2.CfnWebACL(scope, 'WafAcl', {
@@ -81,7 +81,7 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
           sampledRequestsEnabled: true,
           metricName: `${props.siteStack.somId}-wafAcl`,
         },
-        rules: props.siteStack.siteProps.webHosting.waf.AWSManagedRules.map((rule) => ({
+        rules: props.siteStack.siteProps.context.manifest.webHosting.waf.AWSManagedRules.map((rule) => ({
           name: rule.name,
           priority: rule.priority,
           statement: {
@@ -167,7 +167,8 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
         defaultBehavior: Object.assign(
           {
             origin: new origins.S3Origin(domainBucket, {
-              originPath: props.siteStack.siteProps?.webHosting?.originPath ?? WEB_HOSTING_DEFAULT_ORIGIN_PATH,
+              originPath:
+                props.siteStack.siteProps?.context?.manifest?.webHosting?.originPath ?? WEB_HOSTING_DEFAULT_ORIGIN_PATH,
               originAccessIdentity: originAccessIdentity,
             }),
             allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
@@ -193,14 +194,17 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
               }
             : {}
         ),
-        domainNames: [props.siteStack.siteProps.rootDomainName],
+        domainNames: [props.siteStack.siteProps.context.rootDomainName],
         certificate: props.domainCertificate,
         priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
         defaultRootObject:
-          props.siteStack.siteProps?.webHosting?.defaultRootObject ?? WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT,
+          props.siteStack.siteProps?.context?.manifest?.webHosting?.defaultRootObject ??
+          WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT,
         enableIpv6: true,
         responseHeadersPolicy,
-        errorResponses: props.siteStack.siteProps?.webHosting?.errorResponses ?? WEB_HOSTING_DEFAULT_ERROR_RESPONSES,
+        errorResponses:
+          props.siteStack.siteProps?.context?.manifest?.webHosting?.errorResponses ??
+          WEB_HOSTING_DEFAULT_ERROR_RESPONSES,
       },
       wafEnabled && wafAcl ? { webAclId: wafAcl.attrArn } : {}
     )

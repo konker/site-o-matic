@@ -7,7 +7,7 @@ import { getRegistrarConnector } from '../../lib/registrar';
 import type { SomGlobalState } from '../../lib/SomGlobalState';
 import type { SomConfig } from '../../lib/types';
 import { verror, vlog } from '../../lib/ui/logging';
-import { getParam } from '../../lib/utils';
+import { getContextParam } from '../../lib/utils';
 
 export function actionSetNameServersWithRegistrar(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
   return async (_: Vorpal.Args): Promise<void> => {
@@ -17,7 +17,7 @@ export function actionSetNameServersWithRegistrar(vorpal: Vorpal, config: SomCon
       return;
     }
 
-    const nameservers = getParam(state.context, SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS)?.split(',');
+    const nameservers = getContextParam(state.context, SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS)?.split(',');
     if (!nameservers || nameservers.length === 0) {
       const errorMessage = 'ERROR: missing nameservers, is the hosted zone deployed?';
       verror(vorpal, state, errorMessage);

@@ -1,6 +1,6 @@
 import ora from 'ora';
 
-import { VERSION } from './consts';
+import { DEFAULT_INITIAL_CONTEXT } from './context';
 import type { SomContext } from './types';
 
 const spinner = (plumbing: boolean) =>
@@ -26,8 +26,7 @@ export class SomGlobalState {
     this.spinner = spinner(this.plumbing);
     this.yes = Boolean(cliValues.yes);
     this.context = {
-      somVersion: VERSION,
-      rootDomainName: 'UNKNOWN ROOT DOMAIN NAME',
+      ...DEFAULT_INITIAL_CONTEXT,
     };
   }
 

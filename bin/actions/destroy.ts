@@ -9,7 +9,7 @@ import { siteOMaticRules } from '../../lib/rules/site-o-matic.rules';
 import type { SomGlobalState } from '../../lib/SomGlobalState';
 import type { SomConfig } from '../../lib/types';
 import { verror } from '../../lib/ui/logging';
-import { getParam } from '../../lib/utils';
+import { getContextParam } from '../../lib/utils';
 
 export function actionDestroy(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
   return async (args: Vorpal.Args): Promise<void> => {
@@ -20,7 +20,7 @@ export function actionDestroy(vorpal: Vorpal, config: SomConfig, state: SomGloba
     }
 
     const facts = await siteOMaticRules(state.context);
-    const username = getParam(state.context, SSM_PARAM_NAME_DOMAIN_USER_NAME);
+    const username = getContextParam(state.context, SSM_PARAM_NAME_DOMAIN_USER_NAME);
     const response = state.yes
       ? { confirm: 'y' }
       : await vorpal.activeCommand.prompt({
@@ -35,7 +35,10 @@ export function actionDestroy(vorpal: Vorpal, config: SomConfig, state: SomGloba
     if (response.confirm === 'y') {
       // Check that the SSM protected status is set to 'false'
       if (!facts.protectedSsm) {
-        await removeVerificationCnameRecords(config, getParam(state.context, SSM_PARAM_NAME_HOSTED_ZONE_ID) as string);
+        await removeVerificationCnameRecords(
+          config,
+          getContextParam(state.context, SSM_PARAM_NAME_HOSTED_ZONE_ID) as string
+        );
         const [code, log] = await cdkExec.cdkDestroy(
           vorpal,
           state.context.somId,

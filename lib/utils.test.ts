@@ -6,10 +6,10 @@ import * as unit from './utils';
 describe('utils', () => {
   describe('getParam', () => {
     it('should work as expected', async () => {
-      expect(unit.getParam({ params: [] } as any, 'foo')).toBeUndefined();
-      expect(unit.getParam({} as any, 'foo')).toBeUndefined();
+      expect(unit.getContextParam({ params: [] } as any, 'foo')).toBeUndefined();
+      expect(unit.getContextParam({} as any, 'foo')).toBeUndefined();
       expect(
-        unit.getParam(
+        unit.getContextParam(
           {
             params: [
               { Param: 'baz', Value: 'abc' },

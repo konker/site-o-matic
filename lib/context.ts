@@ -1,13 +1,19 @@
 import { findHostedZoneAttributes, getNsRecordsForHostedZone } from './aws/route53';
+import { getIsS3BucketEmpty } from './aws/s3';
 import * as secretsmanager from './aws/secretsmanager';
 import * as ssm from './aws/ssm';
-import { DEFAULT_AWS_REGION, SSM_PARAM_NAME_SOM_VERSION, VERSION } from './consts';
+import { DEFAULT_AWS_REGION, SSM_PARAM_NAME_DOMAIN_BUCKET_NAME, SSM_PARAM_NAME_SOM_VERSION, VERSION } from './consts';
 import { resolveDnsNameserverRecords, resolveDnsSomTxtRecord } from './dns';
 import { getSiteConnectionStatus } from './http';
 import { calculateDomainHash, formulateSomId } from './index';
 import { getRegistrarConnector } from './registrar';
 import type { HasManifest, HasNetworkDerived, SomConfig, SomContext, SomManifest } from './types';
-import { getParam } from './utils';
+import { getContextParam, getParam } from './utils';
+
+export const DEFAULT_INITIAL_CONTEXT: SomContext = {
+  somVersion: VERSION,
+  rootDomainName: 'UNKNOWN ROOT DOMAIN NAME',
+};
 
 export function hasManifest(context: SomContext): context is HasManifest<SomContext> {
   return (
@@ -28,12 +34,12 @@ export function hasNetworkDerived(context: SomContext): context is HasNetworkDer
   return (
     hasManifest(context) &&
     context.params !== undefined &&
-    // context.hostedZoneAttributes !== undefined && -- can be undefined
     context.hostedZoneNameservers !== undefined &&
     context.registrarNameservers !== undefined &&
     context.dnsResolvedNameserverRecords !== undefined &&
     context.dnsVerificationTxtRecord !== undefined &&
     context.connectionStatus !== undefined
+    // context.hostedZoneAttributes !== undefined && -- can be undefined
   );
 }
 
@@ -56,7 +62,7 @@ export async function loadContextDerivedProps(
 ): Promise<HasNetworkDerived<SomContext>> {
   return {
     ...context,
-    somVersion: getParam(context, SSM_PARAM_NAME_SOM_VERSION) ?? VERSION,
+    somVersion: getContextParam(context, SSM_PARAM_NAME_SOM_VERSION) ?? VERSION,
   };
 }
 
@@ -74,13 +80,15 @@ export async function loadNetworkDerivedContext(
     connectionStatus,
   ] = await Promise.all([
     ssm.getSsmParams(config, DEFAULT_AWS_REGION, context.somId),
-    findHostedZoneAttributes(config, context.manifest.rootDomainName),
-    getNsRecordsForHostedZone(config, context.manifest.rootDomainName),
-    resolveDnsNameserverRecords(context.manifest.rootDomainName),
+    findHostedZoneAttributes(config, context.rootDomainName),
+    getNsRecordsForHostedZone(config, context.rootDomainName),
+    resolveDnsNameserverRecords(context.rootDomainName),
     getRegistrarNameservers(config, context),
     resolveDnsSomTxtRecord(context.rootDomainName),
     getSiteConnectionStatus(context.rootDomainName, context.siteUrl),
   ]);
+  const s3BucketName = getParam(params, SSM_PARAM_NAME_DOMAIN_BUCKET_NAME);
+  const isS3BucketEmpty = !!s3BucketName ? await getIsS3BucketEmpty(config, s3BucketName) : false;
 
   return {
     ...context,
@@ -91,6 +99,7 @@ export async function loadNetworkDerivedContext(
     dnsResolvedNameserverRecords,
     dnsVerificationTxtRecord,
     connectionStatus,
+    isS3BucketEmpty,
   };
 }
 
@@ -119,4 +128,12 @@ export async function refreshContext(
   context: HasManifest<SomContext>
 ): Promise<HasNetworkDerived<SomContext>> {
   return loadContextDerivedProps(await loadNetworkDerivedContext(config, context));
+}
+
+export async function loadContext(
+  config: SomConfig,
+  pathToManifestFile: string,
+  manifest: SomManifest
+): Promise<HasNetworkDerived<SomContext>> {
+  return refreshContext(config, manifestDerivedProps(DEFAULT_INITIAL_CONTEXT, pathToManifestFile, manifest));
 }

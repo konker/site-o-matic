@@ -52,6 +52,10 @@
       "items": {
         "$ref": "#/definitions/crossAccountAccessSpec"
       }
+    },
+    "content": {
+      "description": "Content generation specification",
+      "$ref": "#/definitions/contentClause"
     }
   },
   "required": ["rootDomainName"],
@@ -416,6 +420,16 @@
       },
       "required": ["name", "arn"],
       "additionalProperties": false
+    },
+    "contentClause": {
+      "type": "object",
+      "properties": {
+        "producerId": {
+          "enum": ["none","default"]
+        }
+      },
+      "required": ["producerId"],
+      "additionalProperties": false
     }
   },
   "examples": [
@@ -505,7 +519,10 @@
           "name": "eg-production",
           "arn": "arn:aws:iam::222222222222:role/OrganizationAccountAccessRole"
         }
-      ]
+      ],
+      "content": {
+        "producerId": "default"
+      }
     }
   ]
 }

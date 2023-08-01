@@ -24,12 +24,12 @@ export async function build(
   if (!props.siteStack.hostingResources) {
     throw new Error(`[site-o-matic] Could not build pipeline sub-stack when hostingResources is missing`);
   }
-  if (props.siteStack?.siteProps?.pipeline?.type !== SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM) {
+  if (props.siteStack?.siteProps?.context?.manifest?.pipeline?.type !== SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM) {
     throw new Error(`[site-o-matic] Could not build pipeline sub-stack with incorrect pipeline type`);
   }
 
   const parentResources = await CodeCommitSitePipelineStack.build(scope, props);
-  const buildPhases = props.siteStack?.siteProps?.pipeline?.buildPhases;
+  const buildPhases = props.siteStack?.siteProps?.context?.manifest?.pipeline?.buildPhases;
 
   // ----------------------------------------------------------------------
   const codePipeline = new codepipeline.Pipeline(scope, 'CodePipeline', {

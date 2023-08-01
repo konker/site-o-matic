@@ -22,6 +22,7 @@ import type {
   SOM_STATUS_SITE_FUNCTIONAL,
   WEB_HOSTING_TYPE_CLOUDFRONT_S3,
 } from './consts';
+import type { SomFacts } from './rules/site-o-matic.rules';
 
 export type WwwConnectionStatus = {
   readonly statusCode: number;
@@ -193,18 +194,26 @@ export type SomManifest = {
         readonly buildPhases: Record<string, PipelineBuildPhase>;
       };
   readonly crossAccountAccess?: undefined | Array<CrossAccountAccessGrantRoleSpec>;
+  readonly content?:
+    | undefined
+    | {
+        readonly producerId: string;
+      };
 };
 
 // ----------------------------------------------------------------------
-export type SiteStackProps = cdk.StackProps &
-  SomManifest & {
-    readonly description: string;
-    readonly username: string;
-    readonly contextParams: Record<string, string>;
-    readonly cfFunctionViewerRequestTmpFilePath: [string, string | undefined];
-    readonly cfFunctionViewerResponseTmpFilePath: [string, string | undefined];
-    readonly env?: Record<string, string>;
-  };
+export type SiteStackProps = cdk.StackProps & {
+  readonly context: HasNetworkDerived<SomContext>;
+  readonly facts: SomFacts;
+  readonly protected: boolean;
+  readonly description: string;
+  readonly username: string;
+  readonly contextParams: Record<string, string>;
+  readonly cfFunctionViewerRequestTmpFilePath: [string, string | undefined];
+  readonly cfFunctionViewerResponseTmpFilePath: [string, string | undefined];
+  readonly siteContentTmpDirPath?: string | undefined;
+  readonly env?: Record<string, string>;
+};
 
 export type SiteNestedStackProps = cdk.StackProps & {
   readonly description: string;
@@ -273,6 +282,7 @@ export type SomContext = {
   dnsResolvedNameserverRecords?: Array<string>;
   dnsVerificationTxtRecord?: string | undefined;
   connectionStatus?: WwwConnectionStatus;
+  isS3BucketEmpty?: boolean;
 
   // Rest of context derived
   somVersion: string;
@@ -299,6 +309,7 @@ export type HasNetworkDerived<T extends SomContext> = HasManifest<T> & {
   readonly dnsResolvedNameserverRecords: Array<string>;
   readonly dnsVerificationTxtRecord: string | undefined;
   readonly connectionStatus: WwwConnectionStatus;
+  readonly isS3BucketEmpty: boolean;
 };
 
 export type SomConfig = {

@@ -1,0 +1,21 @@
+#ucr {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 116px;
+    height: 116px;
+    z-index: 2;
+}
+
+#ucl {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 116px;
+    height: 116px;
+    z-index: 2;
+}
+
+h1 {
+    font-size: 320%;
+}

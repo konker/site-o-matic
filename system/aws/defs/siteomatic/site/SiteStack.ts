@@ -6,13 +6,11 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 import type { Construct } from 'constructs';
 import cloneDeep from 'lodash.clonedeep';
 
-import { getSomSsmParam, toSsmParamName } from '../../../../../lib/aws/ssm';
+import { toSsmParamName } from '../../../../../lib/aws/ssm';
 import {
   DEFAULT_STACK_PROPS,
-  REGISTRAR_ID_AWS_ROUTE53,
   SSM_PARAM_NAME_DOMAIN_ROLE_ARN,
   SSM_PARAM_NAME_DOMAIN_USER_NAME,
-  SSM_PARAM_NAME_HOSTED_ZONE_ID,
   SSM_PARAM_NAME_PROTECTED_STATUS,
   SSM_PARAM_NAME_ROOT_DOMAIN_NAME,
   SSM_PARAM_NAME_SNS_TOPIC_NAME,
@@ -20,7 +18,6 @@ import {
   SSM_PARAM_NAME_WEBMASTER_EMAIL,
   VERSION,
 } from '../../../../../lib/consts';
-import { resolveDnsSomTxtRecord } from '../../../../../lib/dns';
 import type {
   CertificateResources,
   CrossAccountAccessGrantRoleSpec,
@@ -53,12 +50,12 @@ export class SiteStack extends cdk.Stack {
   public hostingResources?: WebHostingResources | undefined;
   public sitePipelineResources?: PipelineResources | undefined;
 
-  constructor(scope: Construct, config: SomConfig, somId: string, props: SiteStackProps) {
-    super(scope, somId, Object.assign({}, DEFAULT_STACK_PROPS(somId, props), props));
+  constructor(scope: Construct, config: SomConfig, props: SiteStackProps) {
+    super(scope, props.context.somId, Object.assign({}, DEFAULT_STACK_PROPS(props.context.somId, props), props));
 
     this.config = cloneDeep(config);
     this.siteProps = cloneDeep(props);
-    this.somId = somId;
+    this.somId = props.context.somId;
     console.log('Created SiteStack');
   }
 
@@ -66,15 +63,15 @@ export class SiteStack extends cdk.Stack {
     // ----------------------------------------------------------------------
     const res1 = new ssm.StringParameter(this, 'SsmRootDomain', {
       parameterName: toSsmParamName(this.somId, SSM_PARAM_NAME_ROOT_DOMAIN_NAME),
-      stringValue: this.siteProps.rootDomainName,
+      stringValue: this.siteProps.context.rootDomainName,
       tier: ssm.ParameterTier.STANDARD,
     });
     _somMeta(res1, this.somId, this.siteProps.protected);
 
-    if (this.siteProps.webmasterEmail) {
+    if (this.siteProps.context.manifest.webmasterEmail) {
       const res2 = new ssm.StringParameter(this, 'SsmWebmasterEmail', {
         parameterName: toSsmParamName(this.somId, SSM_PARAM_NAME_WEBMASTER_EMAIL),
-        stringValue: this.siteProps.webmasterEmail,
+        stringValue: this.siteProps.context.manifest.webmasterEmail,
         tier: ssm.ParameterTier.STANDARD,
       });
       _somMeta(res2, this.somId, this.siteProps.protected);
@@ -114,7 +111,7 @@ export class SiteStack extends cdk.Stack {
 
     // ----------------------------------------------------------------------
     // Initialize cross account access grant roles, if any
-    const crossAccountAccess = this.siteProps.crossAccountAccess ?? [];
+    const crossAccountAccess = this.siteProps.context.manifest.crossAccountAccess ?? [];
     this.crossAccountGrantRoles = crossAccountAccess.map((spec: CrossAccountAccessGrantRoleSpec) =>
       iam.Role.fromRoleArn(this, _id('CrossAccountGrantRole', spec.name, false), spec.arn, {
         mutable: true,
@@ -139,26 +136,18 @@ export class SiteStack extends cdk.Stack {
     // ----------------------------------------------------------------------
     // DNS / HostedZone
     const dnsSubStack = new SiteDnsSubStack(this, {
-      description: `Site-o-Matic DNS sub-stack for ${this.siteProps.rootDomainName}`,
+      description: `Site-o-Matic DNS sub-stack for ${this.siteProps.context.rootDomainName}`,
     });
     await dnsSubStack.build();
     _somTag(dnsSubStack, this.somId);
 
-    const verificationTxtRecordViaDns = await resolveDnsSomTxtRecord(this.siteProps.rootDomainName);
-    const verificationSsmParam = await getSomSsmParam(this.somId, this.region, SSM_PARAM_NAME_HOSTED_ZONE_ID);
-    const isAwsRoute53Registered = this.siteProps.registrar === REGISTRAR_ID_AWS_ROUTE53;
-    // const hostedZoneAttributes = await findHostedZoneAttributes(this.siteProps as any, this.siteProps.rootDomainName);
-
     // Check to see if DNS has been configured correctly,
     // including that the nameservers have been set with the registrar
-    if (
-      isAwsRoute53Registered ||
-      (verificationTxtRecordViaDns && verificationTxtRecordViaDns === verificationSsmParam)
-    ) {
+    if (this.siteProps.facts.isAwsRoute53RegisteredDomain || this.siteProps.facts.hostedZoneVerified) {
       // ----------------------------------------------------------------------
       // SSL Certificates
       const certificateSubStack = new SiteCertificateSubStack(this, {
-        description: `Site-o-Matic certificate sub-stack for ${this.siteProps.rootDomainName}`,
+        description: `Site-o-Matic certificate sub-stack for ${this.siteProps.context.rootDomainName}`,
       });
       await certificateSubStack.build();
       certificateSubStack.addDependency(dnsSubStack);
@@ -166,11 +155,11 @@ export class SiteStack extends cdk.Stack {
 
       // ----------------------------------------------------------------------
       // Certificate clones, if any
-      const certificateClones = this.siteProps.certificate?.clones ?? [];
+      const certificateClones = this.siteProps.context.manifest.certificate?.clones ?? [];
       if (certificateClones.length > 0) {
         for (const certificateClone of certificateClones) {
           const certificateCloneSubStack = new SiteCertificateCloneSubStack(this, {
-            description: `Site-o-Matic certificate clone sub-stack for ${this.siteProps.rootDomainName}`,
+            description: `Site-o-Matic certificate clone sub-stack for ${this.siteProps.context.rootDomainName}`,
             env: {
               account: certificateClone.account,
               region: certificateClone.region,
@@ -185,7 +174,7 @@ export class SiteStack extends cdk.Stack {
       // ----------------------------------------------------------------------
       // Web Hosting
       const webHostingSubStack = new SiteWebHostingSubStack(this, {
-        description: `Site-o-Matic web hosting sub-stack for ${this.siteProps.rootDomainName}`,
+        description: `Site-o-Matic web hosting sub-stack for ${this.siteProps.context.rootDomainName}`,
       });
       await webHostingSubStack.build();
       webHostingSubStack.addDependency(certificateSubStack);
@@ -193,9 +182,9 @@ export class SiteStack extends cdk.Stack {
 
       // ----------------------------------------------------------------------
       // Pipeline for the site
-      if (this.siteProps.pipeline) {
+      if (this.siteProps.context.manifest.pipeline) {
         const pipelineSubStack = new SitePipelineSubStack(this, {
-          description: `Site-o-Matic pipeline sub-stack for ${this.siteProps.rootDomainName}`,
+          description: `Site-o-Matic pipeline sub-stack for ${this.siteProps.context.rootDomainName}`,
         });
         await pipelineSubStack.build();
         pipelineSubStack.addDependency(webHostingSubStack);

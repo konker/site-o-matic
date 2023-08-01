@@ -31,7 +31,7 @@ export class SitePipelineSubStack extends cdk.NestedStack {
   }
 
   async build() {
-    const pipelineType = this.siteStack.siteProps.pipeline?.type;
+    const pipelineType = this.siteStack.siteProps.context.manifest.pipeline?.type;
     switch (pipelineType) {
       case SITE_PIPELINE_TYPE_CODECOMMIT_S3: {
         this.siteStack.sitePipelineResources = await CodeCommitS3SitePipelineBuilder.build(this, {

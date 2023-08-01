@@ -21,7 +21,7 @@ export function actionLoadManifest(vorpal: Vorpal, config: SomConfig, state: Som
     state.updateContext(context);
 
     if (!state.plumbing) {
-      vorpal.log(`Loaded manifest for: ${context.manifest.rootDomainName}`);
+      vorpal.log(`Loaded manifest for: ${context.rootDomainName}`);
       await actionInfo(vorpal, config, state)({ options: {} });
     }
   };

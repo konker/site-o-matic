@@ -21,9 +21,9 @@ export class SiteDnsSubStack extends cdk.NestedStack {
   async build() {
     this.siteStack.hostedZoneResources = await HostedZoneBuilder.build(this, {
       siteStack: this.siteStack,
-      domainName: this.siteStack.siteProps.rootDomainName,
-      extraDnsConfig: this.siteStack.siteProps.dns?.extraDnsConfig ?? [],
-      subdomains: this.siteStack.siteProps.dns?.subdomains ?? [],
+      domainName: this.siteStack.siteProps.context.rootDomainName,
+      extraDnsConfig: this.siteStack.siteProps.context.manifest.dns?.extraDnsConfig ?? [],
+      subdomains: this.siteStack.siteProps.context.manifest.dns?.subdomains ?? [],
     });
   }
 }

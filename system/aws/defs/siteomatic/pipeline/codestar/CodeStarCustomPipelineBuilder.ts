@@ -24,16 +24,16 @@ export async function build(
   if (!props.siteStack.hostingResources) {
     throw new Error(`[site-o-matic] Could not build pipeline sub-stack when hostingResources is missing`);
   }
-  if (props.siteStack?.siteProps?.pipeline?.type !== SITE_PIPELINE_TYPE_CODESTAR_CUSTOM) {
+  if (props.siteStack?.siteProps?.context?.manifest?.pipeline?.type !== SITE_PIPELINE_TYPE_CODESTAR_CUSTOM) {
     throw new Error(`[site-o-matic] Could not build pipeline sub-stack with incorrect pipeline type`);
   }
 
   const parentResources = await SitePipelineStack.build(scope, props);
 
-  const codestarConnectionArn = props.siteStack?.siteProps?.pipeline?.codestarConnectionArn;
-  const owner = props.siteStack?.siteProps?.pipeline?.owner;
-  const repo = props.siteStack?.siteProps?.pipeline?.repo;
-  const buildPhases = props.siteStack?.siteProps?.pipeline?.buildPhases;
+  const codestarConnectionArn = props.siteStack?.siteProps?.context?.manifest?.pipeline?.codestarConnectionArn;
+  const owner = props.siteStack?.siteProps?.context?.manifest?.pipeline?.owner;
+  const repo = props.siteStack?.siteProps?.context?.manifest?.pipeline?.repo;
+  const buildPhases = props.siteStack?.siteProps?.context?.manifest?.pipeline?.buildPhases;
 
   // ----------------------------------------------------------------------
   const codePipeline = new codepipeline.Pipeline(scope, 'CodePipeline', {
