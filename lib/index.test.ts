@@ -18,10 +18,10 @@ describe('lib', () => {
 
   describe('formulateSomId', () => {
     it('should work as expected', () => {
-      expect(unit.formulateSomId('example.com')).toBe('som--example-dot-com--2a7405');
-      expect(unit.formulateSomId('verylongdomainnamewhichwillbreachthethreshold.example.com')).toBe(
-        'som--verylongdomainnamewhichwillbreachth--ed17fc'
-      );
+      expect(unit.formulateSomId({ SOM_PREFIX: 'som' } as any, 'example.com')).toBe('som--example-dot-com--2a7405');
+      expect(
+        unit.formulateSomId({ SOM_PREFIX: 'som' } as any, 'verylongdomainnamewhichwillbreachthethreshold.example.com')
+      ).toBe('som--verylongdomainnamewhichwillbreachth--ed17fc');
     });
   });
 });

@@ -2,8 +2,7 @@ import type { Resource, Stack } from 'aws-cdk-lib';
 import { RemovalPolicy, Tags } from 'aws-cdk-lib';
 import Handlebars from 'handlebars';
 
-import { SOM_TAG_NAME } from './consts';
-import type { HasManifest, SomContext, SomParam } from './types';
+import type { HasManifest, SomConfig, SomContext, SomParam } from './types';
 
 export function getParam(params: Array<SomParam> | undefined, name: string): string | undefined {
   return params?.find((i: any) => i.Param === name)?.Value;
@@ -25,13 +24,13 @@ export function _somRemovalPolicy(resource: Resource, protect: boolean) {
   resource.applyRemovalPolicy(_removalPolicyFromBoolean(protect));
 }
 
-export function _somTag(resource: Resource | Stack, somId: string) {
-  Tags.of(resource).add(SOM_TAG_NAME, somId);
+export function _somTag(config: SomConfig, resource: Resource | Stack, somId: string) {
+  Tags.of(resource).add(config.SOM_TAG_NAME, somId);
 }
 
-export function _somMeta(resource: Resource, somId: string, protect: boolean) {
+export function _somMeta(config: SomConfig, resource: Resource, somId: string, protect: boolean) {
   _somRemovalPolicy(resource, protect);
-  _somTag(resource, somId);
+  _somTag(config, resource, somId);
 }
 
 export function matchArraySorting<T>(sorted: Array<T>) {

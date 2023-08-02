@@ -6,7 +6,6 @@ import {
   ListConnectionsCommand,
 } from '@aws-sdk/client-codestar-connections';
 
-import { SOM_TAG_NAME } from '../consts';
 import type { SomConfig } from '../types';
 import { assumeSomRole } from './sts';
 
@@ -43,7 +42,7 @@ export async function addCodeStarConnection(
   const cmd1 = new CreateConnectionCommand({
     ProviderType: providerType,
     ConnectionName: `som-${connectionName}`,
-    Tags: [{ Key: SOM_TAG_NAME, Value: SOM_TAG_NAME }],
+    Tags: [{ Key: config.SOM_TAG_NAME, Value: config.SOM_TAG_NAME }],
   });
   await client.send(cmd1);
 

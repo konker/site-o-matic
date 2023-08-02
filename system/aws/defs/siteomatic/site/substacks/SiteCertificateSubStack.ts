@@ -12,7 +12,7 @@ export class SiteCertificateSubStack extends cdk.NestedStack {
     super(
       scope,
       `${scope.somId}-nested-certificate`,
-      Object.assign({}, DEFAULT_STACK_PROPS(scope.somId, scope.siteProps), props)
+      Object.assign({}, DEFAULT_STACK_PROPS(scope.config, scope.somId, scope.siteProps), props)
     );
     this.siteStack = scope;
     console.log('\t⮡ Created SiteCertificateSubStack');
@@ -23,7 +23,7 @@ export class SiteCertificateSubStack extends cdk.NestedStack {
       throw new Error(`[site-o-matic] Could not build certificate sub-stack when hostedZoneId is missing`);
     }
 
-    this.siteStack.certificateResources = await CertificateBuilder.build(this, {
+    this.siteStack.certificateResources = await CertificateBuilder.build(this, this.siteStack.config, {
       siteStack: this.siteStack,
       region: DEFAULT_CERTIFICATE_REGION,
       domainName: this.siteStack.siteProps.context.rootDomainName,

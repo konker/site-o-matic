@@ -12,11 +12,15 @@ import {
   SSM_PARAM_NAME_CODE_PIPELINE_CONSOLE_URL,
   SSM_PARAM_NAME_CODE_PIPELINE_NAME,
 } from '../../../../../../lib/consts';
-import type { CodeStarS3SitePipelineResources, PipelineBuilderProps } from '../../../../../../lib/types';
+import type { CodeStarS3SitePipelineResources, PipelineBuilderProps, SomConfig } from '../../../../../../lib/types';
 import { _somMeta } from '../../../../../../lib/utils';
 import * as SitePipelineStack from '../BasePipelineBuilder';
 
-export async function build(scope: Construct, props: PipelineBuilderProps): Promise<CodeStarS3SitePipelineResources> {
+export async function build(
+  scope: Construct,
+  config: SomConfig,
+  props: PipelineBuilderProps
+): Promise<CodeStarS3SitePipelineResources> {
   if (!props.siteStack.hostingResources) {
     throw new Error(`[site-o-matic] Could not build pipeline sub-stack when hostingResources is missing`);
   }
@@ -24,7 +28,7 @@ export async function build(scope: Construct, props: PipelineBuilderProps): Prom
     throw new Error(`[site-o-matic] Could not build pipeline sub-stack with incorrect pipeline type`);
   }
 
-  const parentResources = await SitePipelineStack.build(scope, props);
+  const parentResources = SitePipelineStack.build(scope, config, props);
 
   const codestarConnectionArn = props.siteStack?.siteProps?.context?.manifest?.pipeline?.codestarConnectionArn;
   const owner = props.siteStack?.siteProps?.context?.manifest?.pipeline?.owner;
@@ -36,7 +40,7 @@ export async function build(scope: Construct, props: PipelineBuilderProps): Prom
     pipelineName: props.siteStack.somId,
     crossAccountKeys: false,
   });
-  _somMeta(codePipeline, props.siteStack.somId, props.siteStack.siteProps.protected);
+  _somMeta(config, codePipeline, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   const sourceOutput = new codepipeline.Artifact();
   const sourceAction = new actions.CodeStarConnectionsSourceAction({
@@ -78,14 +82,14 @@ export async function build(scope: Construct, props: PipelineBuilderProps): Prom
     stringValue: codePipeline.pipelineArn,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(res1, props.siteStack.somId, props.siteStack.siteProps.protected);
+  _somMeta(config, res1, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   const res2 = new ssm.StringParameter(scope, 'SsmCodePipelineName', {
     parameterName: toSsmParamName(props.siteStack.somId, SSM_PARAM_NAME_CODE_PIPELINE_NAME),
     stringValue: codePipeline.pipelineName,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(res2, props.siteStack.somId, props.siteStack.siteProps.protected);
+  _somMeta(config, res2, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   const res3 = new ssm.StringParameter(scope, 'SsmCodePipelineConsoleUrl', {
     parameterName: toSsmParamName(props.siteStack.somId, SSM_PARAM_NAME_CODE_PIPELINE_CONSOLE_URL),
@@ -94,7 +98,7 @@ export async function build(scope: Construct, props: PipelineBuilderProps): Prom
     }.console.aws.amazon.com/codesuite/codepipeline/pipelines/${codePipeline.pipelineName}/view`,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(res3, props.siteStack.somId, props.siteStack.siteProps.protected);
+  _somMeta(config, res3, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   return {
     type: SITE_PIPELINE_TYPE_CODESTAR_S3,

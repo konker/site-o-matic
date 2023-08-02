@@ -115,7 +115,7 @@ export function manifestDerivedProps(
     manifest,
     rootDomainName: manifest.rootDomainName,
     domainHash: calculateDomainHash(manifest.rootDomainName),
-    somId: formulateSomId(manifest.rootDomainName),
+    somId: formulateSomId(config, manifest.rootDomainName),
     siteUrl: `https://${manifest.rootDomainName}/`,
     subdomains: manifest.dns?.subdomains?.map((i: any) => i.domainName) ?? [],
     certificateCloneNames: manifest.certificate?.clones?.map((i: any) => i.name) ?? [],

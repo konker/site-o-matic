@@ -8,7 +8,6 @@ import {
   UploadSSHPublicKeyCommand,
 } from '@aws-sdk/client-iam';
 
-import { SOM_TAG_NAME } from '../consts';
 import type { SomConfig } from '../types';
 import { assumeSomRole } from './sts';
 
@@ -33,7 +32,7 @@ export async function listSomUsers(config: SomConfig, region: string): Promise<A
   );
 
   return usersWithTags
-    .filter(({ Tags, UserName }) => UserName && Tags && Tags.find(({ Key }) => Key === SOM_TAG_NAME))
+    .filter(({ Tags, UserName }) => UserName && Tags && Tags.find(({ Key }) => Key === config.SOM_TAG_NAME))
     .map(({ UserName }) => ({
       UserName: UserName as string,
     }));
@@ -47,7 +46,10 @@ export async function addSomUser(
   const somRoleCredentials = await assumeSomRole(config, region);
   const client = new IAMClient({ region, credentials: somRoleCredentials });
 
-  const cmd1 = new CreateUserCommand({ UserName: username, Tags: [{ Key: SOM_TAG_NAME, Value: SOM_TAG_NAME }] });
+  const cmd1 = new CreateUserCommand({
+    UserName: username,
+    Tags: [{ Key: config.SOM_TAG_NAME, Value: config.SOM_TAG_NAME }],
+  });
   await client.send(cmd1);
 
   return listSomUsers(config, region);

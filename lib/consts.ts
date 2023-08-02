@@ -1,7 +1,7 @@
 import type * as cdk from 'aws-cdk-lib';
 import type { ErrorResponse } from 'aws-cdk-lib/aws-cloudfront';
 
-import type { SiteStackProps } from './types';
+import type { SiteStackProps, SomConfig } from './types';
 
 export const UNKNOWN = 'UNKNOWN';
 export const VERSION = '0.0.2';
@@ -9,8 +9,8 @@ export const DEFAULT_AWS_REGION = 'us-east-1';
 export const DEFAULT_CERTIFICATE_REGION = 'us-east-1';
 export const CLS = '\u001b[2J\u001b[0;0H';
 
-export const SOM_PREFIX = 'som';
-export const SOM_TAG_NAME = 'Site-o-Matic';
+export const CONFIG_DEFAULT_SOM_PREFIX = 'som';
+export const CONFIG_DEFAULT_SOM_TAG_NAME = 'Site-o-Matic';
 export const MAX_SOM_ID_LEN = 48;
 
 export const SSM_PARAM_NAME_SOM_VERSION = 'som-version';
@@ -63,12 +63,12 @@ export const SITE_PIPELINE_TYPES = [...SITE_PIPELINE_TYPES_CODECOMMIT, ...SITE_P
 export const SITE_PIPELINE_CODECOMMIT_BRANCH_NAME = 'main';
 export const SITE_PIPELINE_CODESTAR_BRANCH_NAME = 'main';
 
-export const DEFAULT_STACK_PROPS = (somId: string, siteProps?: SiteStackProps): cdk.StackProps => ({
+export const DEFAULT_STACK_PROPS = (config: SomConfig, somId: string, siteProps?: SiteStackProps): cdk.StackProps => ({
   env: {
     account: siteProps?.env?.account ?? (process.env.CDK_DEFAULT_ACCOUNT as string),
     region: siteProps?.env?.region ?? (process.env.CDK_DEFAULT_REGION as string),
   },
-  tags: { [SOM_TAG_NAME]: somId },
+  tags: { [config.SOM_TAG_NAME]: somId },
 });
 
 export const SOM_STATUS_NOT_STARTED = 'NotStarted';

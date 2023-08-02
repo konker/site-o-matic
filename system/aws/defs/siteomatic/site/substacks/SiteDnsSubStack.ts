@@ -12,14 +12,14 @@ export class SiteDnsSubStack extends cdk.NestedStack {
     super(
       scope,
       `${scope.somId}-nested-dns`,
-      Object.assign({}, DEFAULT_STACK_PROPS(scope.somId, scope.siteProps), props)
+      Object.assign({}, DEFAULT_STACK_PROPS(scope.config, scope.somId, scope.siteProps), props)
     );
     this.siteStack = scope;
     console.log('\t⮡ Created SiteDnsSubStack');
   }
 
   async build() {
-    this.siteStack.hostedZoneResources = await HostedZoneBuilder.build(this, {
+    this.siteStack.hostedZoneResources = await HostedZoneBuilder.build(this, this.siteStack.config, {
       siteStack: this.siteStack,
       domainName: this.siteStack.siteProps.context.rootDomainName,
       extraDnsConfig: this.siteStack.siteProps.context.manifest.dns?.extraDnsConfig ?? [],

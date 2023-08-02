@@ -6,7 +6,6 @@ import {
   SecretsManagerClient,
 } from '@aws-sdk/client-secrets-manager';
 
-import { SOM_TAG_NAME } from '../consts';
 import type { SomConfig } from '../types';
 import { assumeSomRole } from './sts';
 
@@ -23,7 +22,9 @@ export async function getSomSecrets(
   const secrets = await client.send(cmd1);
   if (!secrets || !secrets.SecretList) return {};
 
-  const somSecretNames = secrets.SecretList.filter(({ Tags }) => Tags && Tags.find(({ Key }) => Key === SOM_TAG_NAME))
+  const somSecretNames = secrets.SecretList.filter(
+    ({ Tags }) => Tags && Tags.find(({ Key }) => Key === config.SOM_TAG_NAME)
+  )
     .map(({ Name }) => Name)
     .filter((Name) => secretNames.includes(Name as string));
 
@@ -49,7 +50,7 @@ export async function listSomSecrets(config: SomConfig, region: string): Promise
   const secrets = await client.send(cmd1);
   if (!secrets || !secrets.SecretList) return [];
 
-  return secrets.SecretList.filter(({ Tags }) => Tags && Tags.find(({ Key }) => Key === SOM_TAG_NAME)).map(
+  return secrets.SecretList.filter(({ Tags }) => Tags && Tags.find(({ Key }) => Key === config.SOM_TAG_NAME)).map(
     ({ Name }) => ({ Name: Name as string })
   );
 }
@@ -66,7 +67,7 @@ export async function addSomSecret(
   const cmd1 = new CreateSecretCommand({
     Name: name,
     SecretString: value,
-    Tags: [{ Key: SOM_TAG_NAME, Value: SOM_TAG_NAME }],
+    Tags: [{ Key: config.SOM_TAG_NAME, Value: config.SOM_TAG_NAME }],
   });
   await client.send(cmd1);
 

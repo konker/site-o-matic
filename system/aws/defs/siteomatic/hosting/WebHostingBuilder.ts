@@ -12,7 +12,6 @@ import type { Construct } from 'constructs';
 
 import { toSsmParamName } from '../../../../../lib/aws/ssm';
 import {
-  SOM_TAG_NAME,
   SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID,
   SSM_PARAM_NAME_CLOUDFRONT_DOMAIN_NAME,
   SSM_PARAM_NAME_DOMAIN_BUCKET_NAME,
@@ -20,10 +19,14 @@ import {
   WEB_HOSTING_DEFAULT_ERROR_RESPONSES,
   WEB_HOSTING_DEFAULT_ORIGIN_PATH,
 } from '../../../../../lib/consts';
-import type { WebHostingBuilderProps, WebHostingResources } from '../../../../../lib/types';
+import type { SomConfig, WebHostingBuilderProps, WebHostingResources } from '../../../../../lib/types';
 import { _removalPolicyFromBoolean, _somMeta } from '../../../../../lib/utils';
 
-export async function build(scope: Construct, props: WebHostingBuilderProps): Promise<WebHostingResources> {
+export async function build(
+  scope: Construct,
+  config: SomConfig,
+  props: WebHostingBuilderProps
+): Promise<WebHostingResources> {
   if (!props.siteStack.domainUser || !props.siteStack.hostedZoneResources) {
     throw new Error(
       `[site-o-matic] Could not build web hosting sub-stack when domainUser or hostedZoneResources is missing`
@@ -35,7 +38,7 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
   const originAccessIdentity = new cloudfront.OriginAccessIdentity(scope, 'OriginAccessIdentity', {
     comment: `OriginAccessIdentity for ${props.siteStack.somId}`,
   });
-  _somMeta(originAccessIdentity, props.siteStack.somId, props.siteStack.siteProps.protected);
+  _somMeta(config, originAccessIdentity, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   // ----------------------------------------------------------------------
   // Domain www content bucket and bucket policy
@@ -49,7 +52,7 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
     autoDeleteObjects: !props.siteStack.siteProps.protected,
     publicReadAccess: false,
   });
-  _somMeta(domainBucket, props.siteStack.somId, props.siteStack.siteProps.protected);
+  _somMeta(config, domainBucket, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   domainBucket.addToResourcePolicy(
     new iam.PolicyStatement({
@@ -110,7 +113,7 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
             sampledRequestsEnabled: true,
           },
         })),
-        tags: [{ key: SOM_TAG_NAME, value: props.siteStack.somId }],
+        tags: [{ key: config.SOM_TAG_NAME, value: props.siteStack.somId }],
       })
     : undefined;
 
@@ -146,7 +149,7 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
       },
     },
   });
-  _somMeta(responseHeadersPolicy, props.siteStack.somId, props.siteStack.siteProps.protected);
+  _somMeta(config, responseHeadersPolicy, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   // ----------------------------------------------------------------------
   // Cloudfront functions
@@ -167,7 +170,7 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
   }, [] as Array<[cloudfront.Function, cloudfront.FunctionEventType]>);
 
   cfFunctions.forEach(([cfFunction]) => {
-    _somMeta(cfFunction, props.siteStack.somId, props.siteStack.siteProps.protected);
+    _somMeta(config, cfFunction, props.siteStack.somId, props.siteStack.siteProps.protected);
   });
 
   // ----------------------------------------------------------------------
@@ -222,7 +225,7 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
       wafEnabled && wafAcl ? { webAclId: wafAcl.attrArn } : {}
     )
   );
-  _somMeta(cloudFrontDistribution, props.siteStack.somId, props.siteStack.siteProps.protected);
+  _somMeta(config, cloudFrontDistribution, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   // ----------------------------------------------------------------------
   // DNS records
@@ -230,13 +233,13 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
     zone: props.siteStack.hostedZoneResources.hostedZone,
     target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(cloudFrontDistribution)),
   });
-  _somMeta(res1, props.siteStack.somId, props.siteStack.siteProps.protected);
+  _somMeta(config, res1, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   const res2 = new route53.AaaaRecord(scope, 'DnsRecordSet_AAAA', {
     zone: props.siteStack.hostedZoneResources.hostedZone,
     target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(cloudFrontDistribution)),
   });
-  _somMeta(res2, props.siteStack.somId, props.siteStack.siteProps.protected);
+  _somMeta(config, res2, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   // ----------------------------------------------------------------------
   // SSM Params
@@ -245,21 +248,21 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
     stringValue: domainBucket.bucketName,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(res3, props.siteStack.somId, props.siteStack.siteProps.protected);
+  _somMeta(config, res3, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   const res4 = new ssm.StringParameter(scope, 'SsmCloudfrontDistributionId', {
     parameterName: toSsmParamName(props.siteStack.somId, SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID),
     stringValue: cloudFrontDistribution.distributionId,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(res4, props.siteStack.somId, props.siteStack.siteProps.protected);
+  _somMeta(config, res4, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   const res5 = new ssm.StringParameter(scope, 'SsmCloudfrontDomainName', {
     parameterName: toSsmParamName(props.siteStack.somId, SSM_PARAM_NAME_CLOUDFRONT_DOMAIN_NAME),
     stringValue: cloudFrontDistribution.distributionDomainName,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(res5, props.siteStack.somId, props.siteStack.siteProps.protected);
+  _somMeta(config, res5, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   return {
     domainBucket,

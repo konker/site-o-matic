@@ -5,6 +5,7 @@ import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import chalk from 'chalk';
 
+import { getConfig } from '../../../lib/config';
 import {
   WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT,
   WEB_HOSTING_VIEWER_REQUEST_DIR_DEFAULT_FUNCTION_PRODUCER_ID,
@@ -18,11 +19,11 @@ import { loadContext } from '../../../lib/context';
 import { getFunctionProducer } from '../../../lib/edge';
 import { loadManifest } from '../../../lib/manifest';
 import { siteOMaticRules } from '../../../lib/rules/site-o-matic.rules';
-import config from '../../../site-o-matic.config.json';
 import { SiteStack } from '../defs/siteomatic/site/SiteStack';
 
 async function main(): Promise<void> {
   const app = new cdk.App();
+  const config = getConfig();
 
   // ----------------------------------------------------------------------
   const paramKeys = app.node.tryGetContext('paramsKeys') ?? '[]';

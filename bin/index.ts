@@ -9,8 +9,8 @@ import { parseArgs } from 'util';
 import Vorpal from 'vorpal';
 
 import { CODESTAR_CONNECTION_PROVIDER_TYPES } from '../lib/aws/codestar';
+import { getConfig } from '../lib/config';
 import { VERSION } from '../lib/consts';
-import config from '../site-o-matic.config.json';
 import { actionAddCodeStarConnection } from './actions/addCodeStarConnection';
 import { actionAddPublicKey } from './actions/addPublicKey';
 import { actionAddSecret } from './actions/addSecret';
@@ -53,6 +53,7 @@ async function main() {
 
   const vorpal = new Vorpal();
   const globalState = new SomGlobalState(values);
+  const config = getConfig();
 
   if (!globalState.plumbing) {
     console.log('\n');

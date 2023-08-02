@@ -2,10 +2,14 @@ import * as certificatemanager from 'aws-cdk-lib/aws-certificatemanager';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import type { Construct } from 'constructs';
 
-import type { CertificateBuilderProps, CertificateResources } from '../../../../../lib/types';
+import type { CertificateBuilderProps, CertificateResources, SomConfig } from '../../../../../lib/types';
 import { _id, _somMeta, _somTag } from '../../../../../lib/utils';
 
-export async function build(scope: Construct, props: CertificateBuilderProps): Promise<CertificateResources> {
+export async function build(
+  scope: Construct,
+  config: SomConfig,
+  props: CertificateBuilderProps
+): Promise<CertificateResources> {
   // ----------------------------------------------------------------------
   // Retrieve HostedZone
   const hostedZone = (() => {
@@ -26,7 +30,7 @@ export async function build(scope: Construct, props: CertificateBuilderProps): P
     subjectAlternativeNames: [`*.${props.siteStack.siteProps.context.rootDomainName}`],
     validation: certificatemanager.CertificateValidation.fromDns(hostedZone),
   });
-  _somTag(domainCertificate, props.siteStack.somId);
+  _somTag(config, domainCertificate, props.siteStack.somId);
   // Setting removalPolicy does not work: https://github.com/aws/aws-cdk/issues/20649
   // _somMeta(domainCertificate, props.siteStack.somId, props.siteStack.siteProps.protected);
 
@@ -46,7 +50,7 @@ export async function build(scope: Construct, props: CertificateBuilderProps): P
           validation: certificatemanager.CertificateValidation.fromDns(hostedZone),
         }
       );
-      _somTag(subdomainCertificate, props.siteStack.somId);
+      _somTag(config, subdomainCertificate, props.siteStack.somId);
       // Setting removalPolicy does not work: https://github.com/aws/aws-cdk/issues/20649
       // _somMeta(subdomainCertificate, props.siteStack.somId, props.siteStack.siteProps.protected);
     });
@@ -59,6 +63,7 @@ export async function build(scope: Construct, props: CertificateBuilderProps): P
 
 export async function buildManualValidation(
   scope: Construct,
+  config: SomConfig,
   props: CertificateBuilderProps
 ): Promise<CertificateResources> {
   // ----------------------------------------------------------------------
@@ -67,7 +72,7 @@ export async function buildManualValidation(
     domainName: props.siteStack.siteProps.context.rootDomainName,
     subjectAlternativeNames: [`*.${props.siteStack.siteProps.context.rootDomainName}`],
   });
-  _somMeta(domainCertificate, props.siteStack.somId, props.siteStack.siteProps.protected);
+  _somMeta(config, domainCertificate, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   // ----------------------------------------------------------------------
   // SSL certificates for subdomains
@@ -84,7 +89,7 @@ export async function buildManualValidation(
           subjectAlternativeNames: [`*.${subdomain.domainName}`],
         }
       );
-      _somMeta(subdomainCertificate, props.siteStack.somId, props.siteStack.siteProps.protected);
+      _somMeta(config, subdomainCertificate, props.siteStack.somId, props.siteStack.siteProps.protected);
     });
   }
 

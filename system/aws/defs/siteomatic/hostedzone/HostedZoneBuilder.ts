@@ -17,6 +17,7 @@ import type {
   HostedZoneBuilderProps,
   HostedZoneConfig,
   HostedZoneResources,
+  SomConfig,
 } from '../../../../../lib/types';
 import { _id, _somMeta } from '../../../../../lib/utils';
 import type { SiteStack } from '../site/SiteStack';
@@ -49,7 +50,7 @@ export function buildExtraDnsConfig(
           priority: i.priority,
         })),
       });
-      _somMeta(res, siteStack.somId, siteStack.siteProps.protected);
+      _somMeta(siteStack.config, res, siteStack.somId, siteStack.siteProps.protected);
     }
 
     props.extraDnsConfig
@@ -62,7 +63,7 @@ export function buildExtraDnsConfig(
               recordName: dnsConfig.recordName,
               domainName: dnsConfig.domainName,
             });
-            _somMeta(res1, siteStack.somId, siteStack.siteProps.protected);
+            _somMeta(siteStack.config, res1, siteStack.somId, siteStack.siteProps.protected);
             break;
           case 'TXT':
             const res2 = new route53.TxtRecord(scope, _id(`DnsRecordSet_TXT_${i}`, props.domainName, isRoot), {
@@ -70,7 +71,7 @@ export function buildExtraDnsConfig(
               recordName: dnsConfig.recordName,
               values: dnsConfig.values,
             });
-            _somMeta(res2, siteStack.somId, siteStack.siteProps.protected);
+            _somMeta(siteStack.config, res2, siteStack.somId, siteStack.siteProps.protected);
             break;
           default:
             console.log(`WARNING: cannot handle extra dns config with type: ${dnsConfig.type}`);
@@ -79,7 +80,11 @@ export function buildExtraDnsConfig(
   }
 }
 
-export async function build(scope: Construct, props: HostedZoneBuilderProps): Promise<HostedZoneResources> {
+export async function build(
+  scope: Construct,
+  config: SomConfig,
+  props: HostedZoneBuilderProps
+): Promise<HostedZoneResources> {
   if (!props.siteStack.domainPolicy) {
     throw new Error(`[site-o-matic] Could not build hosted zone sub-stack when domainPolicy is missing`);
   }
@@ -116,7 +121,7 @@ export async function build(scope: Construct, props: HostedZoneBuilderProps): Pr
       const ret = new route53.PublicHostedZone(scope, 'HostedZone', {
         zoneName: props.domainName,
       });
-      _somMeta(ret, props.siteStack.somId, props.siteStack.siteProps.protected);
+      _somMeta(config, ret, props.siteStack.somId, props.siteStack.siteProps.protected);
       return ret;
     }
   })();
@@ -138,7 +143,7 @@ export async function build(scope: Construct, props: HostedZoneBuilderProps): Pr
     recordName: '_som',
     values: [hostedZone.hostedZoneId.toString()],
   });
-  _somMeta(txtRecord, props.siteStack.somId, props.siteStack.siteProps.protected);
+  _somMeta(config, txtRecord, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   // ----------------------------------------------------------------------
   // Extra optional resources
@@ -160,14 +165,14 @@ export async function build(scope: Construct, props: HostedZoneBuilderProps): Pr
     stringValue: hostedZone.hostedZoneId,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(res1, props.siteStack.somId, props.siteStack.siteProps.protected);
+  _somMeta(config, res1, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   const res2 = new ssm.StringParameter(scope, 'SsmHostedZoneNameServers', {
     parameterName: toSsmParamName(props.siteStack.somId, SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS),
     stringValue: cdk.Fn.join(',', hostedZone.hostedZoneNameServers ?? []),
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(res2, props.siteStack.somId, props.siteStack.siteProps.protected);
+  _somMeta(config, res2, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   // ----------------------------------------------------------------------
   // Returned resources

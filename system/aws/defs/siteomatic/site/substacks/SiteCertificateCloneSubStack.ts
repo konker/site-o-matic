@@ -20,10 +20,10 @@ export class SiteCertificateCloneSubStack extends cdk.NestedStack {
     super(
       scope,
       `${scope.somId}-certificate-clones-nested-${props.env.account}-${props.env.region}`,
-      Object.assign({}, DEFAULT_STACK_PROPS(scope.somId, scope.siteProps), props)
+      Object.assign({}, DEFAULT_STACK_PROPS(scope.config, scope.somId, scope.siteProps), props)
     );
     this.siteStack = scope;
-    this.props = Object.assign({}, DEFAULT_STACK_PROPS(scope.somId, scope.siteProps), props);
+    this.props = Object.assign({}, DEFAULT_STACK_PROPS(scope.config, scope.somId, scope.siteProps), props);
 
     console.log(`\t⮡ Created SiteCertificateCloneSubStack: ${props.env.account} / ${props.env.region}`);
   }
@@ -40,7 +40,7 @@ export class SiteCertificateCloneSubStack extends cdk.NestedStack {
 
     // ----------------------------------------------------------------------
     // SSL Certificates
-    await CertificateBuilder.buildManualValidation(this, {
+    await CertificateBuilder.buildManualValidation(this, this.siteStack.config, {
       siteStack: this.siteStack,
       region: this.props.env.region,
       domainName: this.siteStack.siteProps.context.rootDomainName,

@@ -1,6 +1,5 @@
 import { RemovalPolicy, Tags } from 'aws-cdk-lib';
 
-import { SOM_TAG_NAME } from './consts';
 import * as unit from './utils';
 
 describe('utils', () => {
@@ -59,8 +58,8 @@ describe('utils', () => {
     it('should work as expected', async () => {
       const add = jest.fn();
 
-      unit._somTag({ add } as any, 'foo');
-      expect(add).toHaveBeenCalledWith(SOM_TAG_NAME, 'foo');
+      unit._somTag({ SOM_TAG_NAME: 'TAG_NAME' } as any, { add } as any, 'foo');
+      expect(add).toHaveBeenCalledWith('TAG_NAME', 'foo');
     });
   });
 
@@ -75,13 +74,13 @@ describe('utils', () => {
       const applyRemovalPolicy = jest.fn();
       const add = jest.fn();
 
-      unit._somMeta({ applyRemovalPolicy, add } as any, 'foo', true);
+      unit._somMeta({ SOM_TAG_NAME: 'TAG_NAME' } as any, { applyRemovalPolicy, add } as any, 'foo', true);
       expect(applyRemovalPolicy).toHaveBeenCalledWith(RemovalPolicy.RETAIN);
-      expect(add).toHaveBeenCalledWith(SOM_TAG_NAME, 'foo');
+      expect(add).toHaveBeenCalledWith('TAG_NAME', 'foo');
 
-      unit._somMeta({ applyRemovalPolicy, add } as any, 'foo', false);
+      unit._somMeta({ SOM_TAG_NAME: 'TAG_NAME' } as any, { applyRemovalPolicy, add } as any, 'foo', false);
       expect(applyRemovalPolicy).toHaveBeenCalledWith(RemovalPolicy.DESTROY);
-      expect(add).toHaveBeenCalledWith(SOM_TAG_NAME, 'foo');
+      expect(add).toHaveBeenCalledWith('TAG_NAME', 'foo');
     });
   });
 

@@ -3,14 +3,12 @@ import 'json5/lib/register';
 import * as cdk from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
 
+import { getConfig } from '../../../lib/config';
 import {
   WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID,
   WEB_HOSTING_VIEWER_RESPONSE_FUNCTION_PRODUCER_ID,
 } from '../../../lib/consts';
 import type { SomFacts } from '../../../lib/rules/site-o-matic.rules';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import config from '../../../site-o-matic.config.json';
 import { SiteStack } from '../defs/siteomatic/site/SiteStack';
 
 test('Empty Stack', () => {
@@ -18,7 +16,7 @@ test('Empty Stack', () => {
 
   // WHEN
   const stack = new SiteStack(app, {
-    config,
+    config: getConfig(),
     username: 'som-example-user',
     contextParams: {},
     description: 'Site-o-matic test stack',

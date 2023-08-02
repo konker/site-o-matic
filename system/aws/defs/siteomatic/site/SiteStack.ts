@@ -52,7 +52,11 @@ export class SiteStack extends cdk.Stack {
   public sitePipelineResources?: PipelineResources | undefined;
 
   constructor(scope: Construct, props: SiteStackProps) {
-    super(scope, props.context.somId, Object.assign({}, DEFAULT_STACK_PROPS(props.context.somId, props), props));
+    super(
+      scope,
+      props.context.somId,
+      Object.assign({}, DEFAULT_STACK_PROPS(props.config, props.context.somId, props), props)
+    );
 
     this.config = cloneDeep(props.config);
     this.siteProps = cloneDeep(props);
@@ -67,7 +71,7 @@ export class SiteStack extends cdk.Stack {
       stringValue: this.siteProps.context.rootDomainName,
       tier: ssm.ParameterTier.STANDARD,
     });
-    _somMeta(res1, this.somId, this.siteProps.protected);
+    _somMeta(this.config, res1, this.somId, this.siteProps.protected);
 
     if (this.siteProps.context.manifest.webmasterEmail) {
       const res2 = new ssm.StringParameter(this, 'SsmWebmasterEmail', {
@@ -75,7 +79,7 @@ export class SiteStack extends cdk.Stack {
         stringValue: this.siteProps.context.manifest.webmasterEmail,
         tier: ssm.ParameterTier.STANDARD,
       });
-      _somMeta(res2, this.somId, this.siteProps.protected);
+      _somMeta(this.config, res2, this.somId, this.siteProps.protected);
     }
 
     const res3 = new ssm.StringParameter(this, 'SsmProtectedStatus', {
@@ -83,21 +87,21 @@ export class SiteStack extends cdk.Stack {
       stringValue: this.siteProps.protected ? 'true' : 'false',
       tier: ssm.ParameterTier.STANDARD,
     });
-    _somMeta(res3, this.somId, this.siteProps.protected);
+    _somMeta(this.config, res3, this.somId, this.siteProps.protected);
 
     const res4 = new ssm.StringParameter(this, 'SsmDomainUserName', {
       parameterName: toSsmParamName(this.somId, SSM_PARAM_NAME_DOMAIN_USER_NAME),
       stringValue: this.siteProps.username,
       tier: ssm.ParameterTier.STANDARD,
     });
-    _somMeta(res4, this.somId, this.siteProps.protected);
+    _somMeta(this.config, res4, this.somId, this.siteProps.protected);
 
     const res5 = new ssm.StringParameter(this, 'SsmSomVersion', {
       parameterName: toSsmParamName(this.somId, SSM_PARAM_NAME_SOM_VERSION),
       stringValue: VERSION,
       tier: ssm.ParameterTier.STANDARD,
     });
-    _somMeta(res5, this.somId, this.siteProps.protected);
+    _somMeta(this.config, res5, this.somId, this.siteProps.protected);
 
     // ----------------------------------------------------------------------
     // User for all resources
@@ -108,7 +112,7 @@ export class SiteStack extends cdk.Stack {
     this.domainPolicy = new iam.Policy(this, 'DomainPolicy', {
       statements: [],
     });
-    _somMeta(this.domainPolicy, this.somId, this.siteProps.protected);
+    _somMeta(this.config, this.domainPolicy, this.somId, this.siteProps.protected);
 
     // ----------------------------------------------------------------------
     // Initialize cross account access grant roles, if any
@@ -126,7 +130,7 @@ export class SiteStack extends cdk.Stack {
       topicName: `NotificationsSnsTopic-${this.somId}`,
     });
     this.notificationsSnsTopic.grantPublish(this.domainUser);
-    _somMeta(this.notificationsSnsTopic, this.somId, this.siteProps.protected);
+    _somMeta(this.config, this.notificationsSnsTopic, this.somId, this.siteProps.protected);
 
     if (this.siteProps.context.webmasterEmail && this.siteProps.facts.shouldSubscribeEmailToNotificationsSnsTopic) {
       const snsTopicSubscription = new sns.Subscription(this, 'NotificationsSnsTopicSubscription', {
@@ -134,7 +138,7 @@ export class SiteStack extends cdk.Stack {
         protocol: sns.SubscriptionProtocol.EMAIL,
         endpoint: this.siteProps.context.webmasterEmail,
       });
-      _somMeta(snsTopicSubscription, this.somId, this.siteProps.protected);
+      _somMeta(this.config, snsTopicSubscription, this.somId, this.siteProps.protected);
     }
 
     const res6 = new ssm.StringParameter(this, 'SsmSnsTopicName', {
@@ -142,14 +146,14 @@ export class SiteStack extends cdk.Stack {
       stringValue: this.notificationsSnsTopic.topicName,
       tier: ssm.ParameterTier.STANDARD,
     });
-    _somMeta(res6, this.somId, this.siteProps.protected);
+    _somMeta(this.config, res6, this.somId, this.siteProps.protected);
 
     const res7 = new ssm.StringParameter(this, 'SsmSnsTopicArn', {
       parameterName: toSsmParamName(this.somId, SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN),
       stringValue: this.notificationsSnsTopic.topicArn,
       tier: ssm.ParameterTier.STANDARD,
     });
-    _somMeta(res7, this.somId, this.siteProps.protected);
+    _somMeta(this.config, res7, this.somId, this.siteProps.protected);
 
     // ----------------------------------------------------------------------
     // DNS / HostedZone
@@ -157,7 +161,7 @@ export class SiteStack extends cdk.Stack {
       description: `Site-o-Matic DNS sub-stack for ${this.siteProps.context.rootDomainName}`,
     });
     await dnsSubStack.build();
-    _somTag(dnsSubStack, this.somId);
+    _somTag(this.config, dnsSubStack, this.somId);
 
     // Check to see if DNS has been configured correctly,
     // including that the nameservers have been set with the registrar
@@ -169,7 +173,7 @@ export class SiteStack extends cdk.Stack {
       });
       await certificateSubStack.build();
       certificateSubStack.addDependency(dnsSubStack);
-      _somTag(certificateSubStack, this.somId);
+      _somTag(this.config, certificateSubStack, this.somId);
 
       // ----------------------------------------------------------------------
       // Certificate clones, if any
@@ -185,7 +189,7 @@ export class SiteStack extends cdk.Stack {
           });
           await certificateCloneSubStack.build();
           certificateCloneSubStack.addDependency(certificateSubStack);
-          _somTag(certificateCloneSubStack, this.somId);
+          _somTag(this.config, certificateCloneSubStack, this.somId);
         }
       }
 
@@ -196,7 +200,7 @@ export class SiteStack extends cdk.Stack {
       });
       await webHostingSubStack.build();
       webHostingSubStack.addDependency(certificateSubStack);
-      _somTag(webHostingSubStack, this.somId);
+      _somTag(this.config, webHostingSubStack, this.somId);
 
       // ----------------------------------------------------------------------
       // Pipeline for the site
@@ -206,7 +210,7 @@ export class SiteStack extends cdk.Stack {
         });
         await pipelineSubStack.build();
         pipelineSubStack.addDependency(webHostingSubStack);
-        _somTag(pipelineSubStack, this.somId);
+        _somTag(this.config, pipelineSubStack, this.somId);
       }
 
       // ----------------------------------------------------------------------
@@ -215,7 +219,7 @@ export class SiteStack extends cdk.Stack {
         this.domainRole = new iam.Role(this, 'DomainRole', {
           assumedBy: new iam.CompositePrincipal(...this.crossAccountGrantRoles) as IPrincipal,
         });
-        _somMeta(this.domainRole, this.somId, this.siteProps.protected);
+        _somMeta(this.config, this.domainRole, this.somId, this.siteProps.protected);
         this.domainRole.attachInlinePolicy(this.domainPolicy);
 
         const res6 = new ssm.StringParameter(this, 'SsmDomainRoleArn', {
@@ -223,7 +227,7 @@ export class SiteStack extends cdk.Stack {
           stringValue: this.domainRole.roleArn,
           tier: ssm.ParameterTier.STANDARD,
         });
-        _somMeta(res6, this.somId, this.siteProps.protected);
+        _somMeta(this.config, res6, this.somId, this.siteProps.protected);
       }
     }
   }
