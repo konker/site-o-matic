@@ -50,10 +50,10 @@ export class SiteStack extends cdk.Stack {
   public hostingResources?: WebHostingResources | undefined;
   public sitePipelineResources?: PipelineResources | undefined;
 
-  constructor(scope: Construct, config: SomConfig, props: SiteStackProps) {
+  constructor(scope: Construct, props: SiteStackProps) {
     super(scope, props.context.somId, Object.assign({}, DEFAULT_STACK_PROPS(props.context.somId, props), props));
 
-    this.config = cloneDeep(config);
+    this.config = cloneDeep(props.config);
     this.siteProps = cloneDeep(props);
     this.somId = props.context.somId;
     console.log('Created SiteStack');

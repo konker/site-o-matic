@@ -5,6 +5,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import type { Construct } from 'constructs';
@@ -38,8 +39,9 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
 
   // ----------------------------------------------------------------------
   // Domain www content bucket and bucket policy
+  const bucketName = `wwwbucket-${props.siteStack.somId}`;
   const domainBucket = new s3.Bucket(scope, 'DomainBucket', {
-    bucketName: `wwwbucket-${props.siteStack.somId}`,
+    bucketName,
     blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
     encryption: s3.BucketEncryption.S3_MANAGED,
     versioned: false,
@@ -64,6 +66,17 @@ export async function build(scope: Construct, props: WebHostingBuilderProps): Pr
     })
   );
   domainBucket.grantRead(originAccessIdentity);
+
+  // ----------------------------------------------------------------------
+  // Add automatically generated content to the bucket if it is empty
+  if (props.siteStack.siteProps.siteContentTmpDirPath) {
+    if (props.siteStack.siteProps.facts.shouldDeployS3Content) {
+      new s3Deployment.BucketDeployment(scope, 'S3BucketContentDeployment', {
+        sources: [s3Deployment.Source.asset(props.siteStack.siteProps.siteContentTmpDirPath)],
+        destinationBucket: domainBucket,
+      });
+    }
+  }
 
   // ----------------------------------------------------------------------
   // WAF ACl

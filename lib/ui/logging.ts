@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import type Vorpal from 'vorpal';
 
-import type { SomGlobalState } from '../SomGlobalState';
+import type { SomGlobalState } from '../../bin/SomGlobalState';
 import { tabulate } from './tables';
 
 export function vlog(vorpal: Vorpal, state: SomGlobalState, message: string) {

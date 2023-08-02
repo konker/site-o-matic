@@ -13,7 +13,17 @@ export async function getIsS3BucketEmpty(config: SomConfig, bucketName: string):
     Bucket: bucketName,
     MaxKeys: 1,
   });
-  const resp1 = await client.send(cmd1);
 
-  return resp1.KeyCount === 0;
+  try {
+    const resp1 = await client.send(cmd1);
+    return resp1.KeyCount === 0;
+  } catch (err: any) {
+    if (err?.$metadata?.httpStatusCode === 404) {
+      // If there is NoSuchBucket, we can assume that it's empty
+      return true;
+    }
+
+    // If some other error occurred, assume the bucket is not empty for safety
+    return false;
+  }
 }

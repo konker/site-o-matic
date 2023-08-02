@@ -91,10 +91,10 @@ async function main(): Promise<void> {
     }
     return ret;
   })();
-  console.log('KONK90', siteContentTmpDirPath);
 
   // ----------------------------------------------------------------------
-  const stack = new SiteStack(app, config, {
+  const stack = new SiteStack(app, {
+    config,
     context,
     facts,
     protected: context.manifest.protected,

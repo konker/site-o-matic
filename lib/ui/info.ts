@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 
 import { UNKNOWN } from '../consts';
+import { CONTENT_PRODUCER_ID_DEFAULT } from '../content';
 import { formatStatusBreadCrumbAndMessage } from '../status';
 import type { SomInfoSpec, SomInfoStatus } from '../types';
 import { tabulate } from './tables';
@@ -18,8 +19,8 @@ export function renderInfoSpec(infoSpec: SomInfoSpec): string {
         Value: infoSpec.subdomains?.join('\n'),
       },
       {
-        Param: chalk.bold(chalk.white('certificate clones')),
-        Value: infoSpec.certificateCloneNames?.join('\n'),
+        Param: chalk.bold(chalk.white('content')),
+        Value: infoSpec.content ?? CONTENT_PRODUCER_ID_DEFAULT,
       },
       {
         Param: chalk.bold(chalk.white('web hosting')),
@@ -65,6 +66,10 @@ export function renderInfoSpec(infoSpec: SomInfoSpec): string {
           ? `${chalk.bold(chalk.white('type'))}:\n↪ ${infoSpec.redirect.type}` +
             `\n${chalk.bold(chalk.white('action'))}:\n ${infoSpec.redirect.action}`
           : undefined,
+      },
+      {
+        Param: chalk.bold(chalk.white('certificate clones')),
+        Value: infoSpec.certificateCloneNames?.join('\n'),
       },
       {
         Param: chalk.bold(chalk.white('cross account access')),

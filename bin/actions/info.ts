@@ -56,6 +56,7 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomGlobalSt
               }
             : undefined,
         },
+        content: context.manifest.content?.producerId,
         pipeline: context.manifest.pipeline,
         redirect: context.manifest.redirect
           ? {

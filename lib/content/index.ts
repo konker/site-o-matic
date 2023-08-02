@@ -2,6 +2,7 @@ import type { SomManifest } from '../types';
 import { getTmpDirPath, processContentDirectory } from './lib';
 import * as default_ from './producers/default/manifest';
 
+export const CONTENT_PRODUCER_ID_DEFAULT = default_.ID;
 export const CONTENT_PRODUCER_ID_NONE = 'none';
 
 export type SomContentProducer = {

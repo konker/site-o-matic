@@ -203,6 +203,7 @@ export type SomManifest = {
 
 // ----------------------------------------------------------------------
 export type SiteStackProps = cdk.StackProps & {
+  readonly config: SomConfig;
   readonly context: HasNetworkDerived<SomContext>;
   readonly facts: SomFacts;
   readonly protected: boolean;
@@ -334,6 +335,7 @@ export type SomInfoSpec = {
           | undefined;
       })
     | undefined;
+  readonly content: string | undefined;
   readonly pipeline: Required<SomManifest['pipeline']> | undefined;
   readonly redirect:
     | {

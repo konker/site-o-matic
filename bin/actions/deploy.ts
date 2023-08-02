@@ -37,6 +37,7 @@ export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomGlobal
     // Assert not-null for types, even though these have been checked
     assert(state.context.manifest, 'absurd');
     assert(state.context.pathToManifestFile, 'absurd');
+    const facts = await siteOMaticRules(state.context);
 
     const response1 = state.yes
       ? { confirm: 'y' }
@@ -44,7 +45,9 @@ export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomGlobal
           type: 'input',
           name: 'confirm',
           message: chalk.green(
-            `Are you sure you want to deploy site: ${chalk.bold(state.context.somId)} under user ${chalk.bold(
+            `${
+              facts.shouldDeployS3Content ? chalk.cyan('NOTE: content will be uploaded to the S3 bucket.\n') : ''
+            }Are you sure you want to deploy site: ${chalk.bold(state.context.somId)} under user ${chalk.bold(
               args.username
             )}? [y/n] `
           ),

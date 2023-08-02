@@ -7,6 +7,7 @@ import {
   SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS,
   SSM_PARAM_NAME_PROTECTED_STATUS,
 } from '../consts';
+import { CONTENT_PRODUCER_ID_NONE } from '../content';
 import type { SomContext } from '../types';
 import { getContextParam } from '../utils';
 import type { Facts } from './index';
@@ -21,9 +22,10 @@ export const SOM_FACTS_NAMES = [
   'hasDnsResolvedNameservers',
   'hasDnsResolvedTxtRecord',
   'hasRegistrarConfig',
-  'hasContentProducerConfig',
+  'hasNoneContentProducerConfig',
   'hasContentBucket',
   'isContentBucketEmpty',
+  'shouldDeployS3Content',
   'hasRegistrarNameservers',
   'has200ConnectionStatus',
   'hasAwsRoute53RegistrarConfig',
@@ -56,9 +58,12 @@ export const siteOMaticRules = rulesEngineFactory<SomFactNames, SomContext>({
   hasDnsResolvedNameservers: async (_facts, context) => is(context.dnsResolvedNameserverRecords),
   hasRegistrarNameservers: async (_facts, context) => is(context.registrarNameservers),
   hasDnsResolvedTxtRecord: async (_facts, context) => is(context.dnsVerificationTxtRecord),
-  hasContentProducerConfig: async (_facts, context) => is(context.manifest?.content?.producerId),
+  hasNoneContentProducerConfig: async (_facts, context) =>
+    is(context.manifest?.content?.producerId === CONTENT_PRODUCER_ID_NONE),
   hasContentBucket: async (_facts, context) => is(getContextParam(context, SSM_PARAM_NAME_DOMAIN_BUCKET_NAME)),
-  isContentBucketEmpty: async (_facts, _context) => is(false),
+  isContentBucketEmpty: async (_facts, context) => is(context.isS3BucketEmpty),
+  shouldDeployS3Content: async (facts, _context) =>
+    isNot(facts.hasNoneContentProducerConfig) && (isNot(facts.hasContentBucket) || is(facts.isContentBucketEmpty)),
 
   dnsResolvedNameserversMatchHostedZoneNameServers: async (facts, context) =>
     is(facts.hasDnsResolvedNameservers) &&

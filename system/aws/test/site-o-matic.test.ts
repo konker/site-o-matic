@@ -17,7 +17,8 @@ test('Empty Stack', () => {
   const app = new cdk.App();
 
   // WHEN
-  const stack = new SiteStack(app, config, {
+  const stack = new SiteStack(app, {
+    config,
     username: 'som-example-user',
     contextParams: {},
     description: 'Site-o-matic test stack',
