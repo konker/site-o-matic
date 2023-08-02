@@ -5,7 +5,7 @@ import Metalsmith from 'metalsmith';
 import os from 'os';
 import path from 'path';
 
-import type { SomManifest } from '../../types';
+import type { HasNetworkDerived, SomContext } from '../../types';
 
 const MetalsmithInPlace = require('@metalsmith/in-place');
 const MetalsmithRenamer = require('metalsmith-renamer');
@@ -16,7 +16,7 @@ export function getTmpDirPath(somId: string, contentProducerId?: string | undefi
 
 export async function processContentDirectory(
   somId: string,
-  manifest: SomManifest,
+  context: HasNetworkDerived<SomContext>,
   contentDirPath: string,
   tmpDirPath: string
 ): Promise<boolean> {
@@ -37,7 +37,7 @@ export async function processContentDirectory(
     Metalsmith(contentDirPath)
       .source('.')
       .destination(tmpDirPath)
-      .metadata({ somId, manifest })
+      .metadata({ somId, context })
       .use(
         MetalsmithInPlace({
           suppressNoFilesError: true,

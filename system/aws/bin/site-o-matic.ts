@@ -83,7 +83,7 @@ async function main(): Promise<void> {
   const siteContentTmpDirPath = await (async () => {
     const contentProducerId = manifest.content?.producerId;
     const contentGenerator: SomContentGenerator = getContentProducer(contentProducerId);
-    const ret = await contentGenerator(context.somId, manifest);
+    const ret = await contentGenerator(context.somId, context);
     if (ret) {
       console.log(chalk.blue(chalk.bold(`Created content dir: ${ret}`)));
     } else {

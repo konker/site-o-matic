@@ -1,27 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>{{ manifest.dns.rootDomainName }}</title>
+    <title>{{ context.manifest.rootDomainName }}</title>
 
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="all">
     <meta name="MSSmartTagsPreventParsing" content="TRUE">
 
-    <link rel="stylesheet" href="css/normalize.min.css">
-    <link rel="stylesheet" href="css/fonts.css">
-    <link rel="stylesheet" href="css/gutenberg.min.css">
-    <link rel="stylesheet" href="css/som-common.css">
-    <link rel="stylesheet" href="css/som-holding.css">
+    <link rel="stylesheet" href="/css/normalize.min.css">
+    <link rel="stylesheet" href="/css/fonts.css">
+    <link rel="stylesheet" href="/css/gutenberg.min.css">
+    <link rel="stylesheet" href="/css/som-common.css">
+    <link rel="stylesheet" href="/css/som-holding.css">
+    <style>
+    </style>
 </head>
 <body>
 <div id="container">
-    <header>
-        <h1>Error</h1>
-    </header>
+    <div id="ucl">
+        <img src="/images/uc-strip-left.png" alt="Under Construction" title="Under Construction">
+    </div>
     <main>
+        <header>
+            <h1>{{ context.manifest.rootDomainName }}</h1>
+        </header>
         <section id="content">
+            <h2>Error, Not found (404)</h2>
             <p>Shaka and the walls fell!</p>
+            <p><a href="{{ context.siteUrl }}">{{ context.siteUrl }}</a></p>
         </section>
     </main>
     <footer>
