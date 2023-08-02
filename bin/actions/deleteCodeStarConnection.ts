@@ -15,7 +15,7 @@ export function actionDeleteCodeStarConnection(vorpal: Vorpal, config: SomConfig
           type: 'input',
           name: 'confirm',
           message: chalk.red(
-            `Are you sure you want to destroy codestar connection: ${chalk.bold(args.connectionArn)}? [y/n] `
+            `Are you sure you want to destroy codestar connection: ${chalk.bold(args.connectionArn)}? [y/N] `
           ),
         });
     if (response.confirm === 'y') {

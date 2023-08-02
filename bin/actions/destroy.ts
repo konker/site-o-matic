@@ -29,7 +29,7 @@ export function actionDestroy(vorpal: Vorpal, config: SomConfig, state: SomGloba
           message: chalk.red(
             `Are you sure you want to destroy site: ${chalk.bold(state.context.somId)} under user ${chalk.bold(
               username
-            )}? [y/n] `
+            )}? [y/N] `
           ),
         });
     if (response.confirm === 'y') {

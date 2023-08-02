@@ -49,7 +49,7 @@ export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomGlobal
               facts.shouldDeployS3Content ? chalk.cyan('NOTE: content will be uploaded to the S3 bucket.\n') : ''
             }Are you sure you want to deploy site: ${chalk.bold(state.context.somId)} under user ${chalk.bold(
               args.username
-            )}? [y/n] `
+            )}? [y/N] `
           ),
         });
     if (response1.confirm !== 'y') {
@@ -66,7 +66,7 @@ export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomGlobal
             message: chalk.yellow(
               `WARNING!: Manual action needed to clone certificates into ${state.context.certificateCloneNames?.join(
                 ','
-              )}. Proceed? [y/n] `
+              )}. Proceed? [y/N] `
             ),
           });
       if (response2.confirm !== 'y') {

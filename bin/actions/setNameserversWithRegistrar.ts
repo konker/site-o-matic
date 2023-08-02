@@ -30,7 +30,7 @@ export function actionSetNameServersWithRegistrar(vorpal: Vorpal, config: SomCon
           type: 'input',
           name: 'confirm',
           message: chalk.green(
-            `Are you sure you want to set registrar nameservers to: ${chalk.bold(nameservers.join(','))}? [y/n] `
+            `Are you sure you want to set registrar nameservers to: ${chalk.bold(nameservers.join(','))}? [y/N] `
           ),
         });
     if (response.confirm === 'y') {
