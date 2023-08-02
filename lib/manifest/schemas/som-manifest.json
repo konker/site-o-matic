@@ -56,6 +56,10 @@
     "content": {
       "description": "Content generation specification",
       "$ref": "#/definitions/contentClause"
+    },
+    "notifications": {
+      "description": "Notification settings",
+      "$ref": "#/definitions/notificationsClause"
     }
   },
   "required": ["rootDomainName"],
@@ -425,10 +429,27 @@
       "type": "object",
       "properties": {
         "producerId": {
-          "enum": ["none","default"]
+          "enum": ["none", "default"]
         }
       },
       "required": ["producerId"],
+      "additionalProperties": false
+    },
+    "notificationsClause": {
+      "type": "object",
+      "properties": {
+        "disable": {
+          "type": "boolean"
+        },
+        "noSubscription": {
+          "type": "boolean"
+        },
+        "subscriptionEmail": {
+          "type": "string",
+          "pattern": "^.+@.+\\..+$"
+        }
+      },
+      "required": [],
       "additionalProperties": false
     }
   },
@@ -522,6 +543,11 @@
       ],
       "content": {
         "producerId": "default"
+      },
+      "notifications": {
+        "disable": false,
+        "noSubscription": false,
+        "subscriptionEmail": "webmaster@example.com"
       }
     }
   ]

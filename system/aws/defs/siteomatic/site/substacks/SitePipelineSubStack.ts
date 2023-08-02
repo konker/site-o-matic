@@ -67,11 +67,11 @@ export class SitePipelineSubStack extends cdk.NestedStack {
 
     // ----------------------------------------------------------------------
     // Send CodePipeline events to SNS
-    assert(this.siteStack.snsTopic, '[SitePipelineSiteStack] No SNS Topic');
+    assert(this.siteStack.notificationsSnsTopic, '[SitePipelineSiteStack] No SNS Topic');
 
     const rule = new notifications.NotificationRule(this, 'PipelineNotificationRule', {
       source: this.siteStack.sitePipelineResources.codePipeline,
-      targets: [this.siteStack.snsTopic],
+      targets: [this.siteStack.notificationsSnsTopic],
       events: ['codepipeline-pipeline-pipeline-execution-failed', 'codepipeline-pipeline-pipeline-execution-succeeded'],
     });
     _somMeta(rule, this.siteStack.somId, this.siteStack.siteProps.protected);

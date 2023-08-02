@@ -46,6 +46,7 @@
     "@aws-sdk/client-route-53": "3.131.0",
     "@aws-sdk/client-s3": "^3.142.0",
     "@aws-sdk/client-secrets-manager": "^3.142.0",
+    "@aws-sdk/client-sns": "^3.382.0",
     "@aws-sdk/client-ssm": "^3.142.0",
     "@aws-sdk/client-sts": "^3.145.0",
     "@metalsmith/in-place": "^4.5.0",

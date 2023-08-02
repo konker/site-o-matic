@@ -92,4 +92,15 @@ describe('utils', () => {
       expect(unit.matchArraySorting([1, 2, 3])([2, 1, 4, 3])).toStrictEqual([4, 1, 2, 3]);
     });
   });
+
+  describe('contextTemplateString', () => {
+    it('should work as expected', () => {
+      expect(unit.contextTemplateString(undefined, {} as any)).toBeUndefined();
+      expect(unit.contextTemplateString('foo', {} as any)).toBe('foo');
+      expect(unit.contextTemplateString('{{foo}}', {} as any)).toBe('');
+      expect(unit.contextTemplateString('something+{{context.foo}}@example.com', { foo: 'FOO' } as any)).toBe(
+        'something+FOO@example.com'
+      );
+    });
+  });
 });

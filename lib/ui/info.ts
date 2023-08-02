@@ -11,6 +11,10 @@ export function renderInfoSpec(infoSpec: SomInfoSpec): string {
     [
       { Param: chalk.bold(chalk.white('site')), Value: chalk.bold(chalk.blue(chalk.underline(infoSpec.siteUrl))) },
       {
+        Param: chalk.bold(chalk.white('webmasterEmail')),
+        Value: infoSpec.webmasterEmail,
+      },
+      {
         Param: chalk.bold(chalk.white('registrar')),
         Value: infoSpec.registrar,
       },
@@ -66,6 +70,22 @@ export function renderInfoSpec(infoSpec: SomInfoSpec): string {
           ? `${chalk.bold(chalk.white('type'))}:\n↪ ${infoSpec.redirect.type}` +
             `\n${chalk.bold(chalk.white('action'))}:\n ${infoSpec.redirect.action}`
           : undefined,
+      },
+      {
+        Param: chalk.bold(chalk.white('notifications')),
+        Value: tabulate(
+          [
+            {
+              Disabled: infoSpec.notifications.disabled ? 'true' : 'false',
+              NoSNSSubscription: infoSpec.notifications.noSubscription ? 'true' : 'false',
+              SubscriptionEmail: infoSpec.notifications.subscriptionEmail,
+            },
+          ],
+          ['Disabled', 'NoSNSSubscription', 'SubscriptionEmail'],
+          undefined,
+          false,
+          [25, 25, 28]
+        ),
       },
       {
         Param: chalk.bold(chalk.white('certificate clones')),

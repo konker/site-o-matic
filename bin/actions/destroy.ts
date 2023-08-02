@@ -3,7 +3,12 @@ import type Vorpal from 'vorpal';
 
 import * as cdkExec from '../../lib/aws/cdkExec';
 import { removeVerificationCnameRecords } from '../../lib/aws/route53';
-import { SSM_PARAM_NAME_DOMAIN_USER_NAME, SSM_PARAM_NAME_HOSTED_ZONE_ID } from '../../lib/consts';
+import { postToSnsTopic } from '../../lib/aws/sns';
+import {
+  SSM_PARAM_NAME_DOMAIN_USER_NAME,
+  SSM_PARAM_NAME_HOSTED_ZONE_ID,
+  SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN,
+} from '../../lib/consts';
 import { hasNetworkDerived } from '../../lib/context';
 import { siteOMaticRules } from '../../lib/rules/site-o-matic.rules';
 import type { SomConfig } from '../../lib/types';
@@ -51,6 +56,14 @@ export function actionDestroy(vorpal: Vorpal, config: SomConfig, state: SomGloba
         );
         if (state.plumbing) {
           vorpal.log(JSON.stringify({ context: state.context, code, log }));
+        }
+
+        if (facts.hasNotificationsSnsTopic && facts.isSnsNotificationsEnabled) {
+          await postToSnsTopic(getContextParam(state.context, SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN) as string, {
+            somId: state.context.somId,
+            message: 'Site-O-Matic deployment completed',
+            code,
+          });
         }
       } else {
         const errorMessage =

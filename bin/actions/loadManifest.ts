@@ -17,7 +17,7 @@ export function actionLoadManifest(vorpal: Vorpal, config: SomConfig, state: Som
       return;
     }
 
-    const context = manifestDerivedProps(state.context, pathToManifestFile, manifest);
+    const context = manifestDerivedProps(config, state.context, pathToManifestFile, manifest);
     state.updateContext(context);
 
     if (!state.plumbing) {

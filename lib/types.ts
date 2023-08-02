@@ -199,6 +199,13 @@ export type SomManifest = {
     | {
         readonly producerId: string;
       };
+  readonly notifications?:
+    | undefined
+    | {
+        readonly disabled?: boolean;
+        readonly noSubscription?: boolean;
+        readonly subscriptionEmail?: string;
+      };
 };
 
 // ----------------------------------------------------------------------
@@ -270,6 +277,7 @@ export type SomContext = {
   domainHash?: string;
   somId?: string;
   siteUrl?: string;
+  webmasterEmail?: string | undefined;
   subdomains?: Array<string>;
   certificateCloneNames?: Array<string>;
   crossAccountAccessNames?: Array<string>;
@@ -317,10 +325,12 @@ export type SomConfig = {
   readonly SOM_PREFIX: string;
   readonly SOM_TAG_NAME: string;
   readonly SOM_ROLE_ARN: string;
+  readonly DEFAULT_WEBMASTER_EMAIL?: string;
 };
 
 export type SomInfoSpec = {
   readonly siteUrl: string;
+  readonly webmasterEmail: string | undefined;
   readonly registrar: string | undefined;
   readonly subdomains: Array<string> | undefined;
   readonly certificateCloneNames: Array<string> | undefined;
@@ -344,6 +354,11 @@ export type SomInfoSpec = {
       }
     | undefined;
   readonly crossAccountAccessNames: Array<string> | undefined;
+  readonly notifications: {
+    readonly disabled: boolean;
+    readonly noSubscription: boolean;
+    readonly subscriptionEmail: string | undefined;
+  };
   readonly protected: {
     readonly protectedManifest: boolean;
     readonly protectedSsm: boolean;

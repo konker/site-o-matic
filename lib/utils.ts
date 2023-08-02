@@ -1,8 +1,9 @@
 import type { Resource, Stack } from 'aws-cdk-lib';
 import { RemovalPolicy, Tags } from 'aws-cdk-lib';
+import Handlebars from 'handlebars';
 
 import { SOM_TAG_NAME } from './consts';
-import type { SomContext, SomParam } from './types';
+import type { HasManifest, SomContext, SomParam } from './types';
 
 export function getParam(params: Array<SomParam> | undefined, name: string): string | undefined {
   return params?.find((i: any) => i.Param === name)?.Value;
@@ -37,4 +38,11 @@ export function matchArraySorting<T>(sorted: Array<T>) {
   return function (arr: Array<T>): Array<T> {
     return [...arr].sort((a, b) => sorted.indexOf(a) - sorted.indexOf(b));
   };
+}
+
+export function contextTemplateString(s: string | undefined, context: HasManifest<SomContext>): string | undefined {
+  if (!s) return undefined;
+
+  const compliedTemplate = Handlebars.compile(s);
+  return compliedTemplate({ context });
 }

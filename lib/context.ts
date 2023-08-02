@@ -8,7 +8,7 @@ import { getSiteConnectionStatus } from './http';
 import { calculateDomainHash, formulateSomId } from './index';
 import { getRegistrarConnector } from './registrar';
 import type { HasManifest, HasNetworkDerived, SomConfig, SomContext, SomManifest } from './types';
-import { getContextParam, getParam } from './utils';
+import { contextTemplateString, getContextParam, getParam } from './utils';
 
 export const DEFAULT_INITIAL_CONTEXT: SomContext = {
   somVersion: VERSION,
@@ -104,11 +104,12 @@ export async function loadNetworkDerivedContext(
 }
 
 export function manifestDerivedProps(
+  config: SomConfig,
   context: SomContext,
   pathToManifestFile: string,
   manifest: SomManifest
 ): HasManifest<SomContext> {
-  return {
+  const ret: HasManifest<SomContext> = {
     ...context,
     pathToManifestFile,
     manifest,
@@ -120,6 +121,10 @@ export function manifestDerivedProps(
     certificateCloneNames: manifest.certificate?.clones?.map((i: any) => i.name) ?? [],
     crossAccountAccessNames: manifest.crossAccountAccess?.map((i: any) => i.name) ?? [],
     registrar: manifest.registrar,
+  };
+  return {
+    ...ret,
+    webmasterEmail: contextTemplateString(manifest.webmasterEmail ?? config.DEFAULT_WEBMASTER_EMAIL, ret),
   };
 }
 
@@ -135,5 +140,5 @@ export async function loadContext(
   pathToManifestFile: string,
   manifest: SomManifest
 ): Promise<HasNetworkDerived<SomContext>> {
-  return refreshContext(config, manifestDerivedProps(DEFAULT_INITIAL_CONTEXT, pathToManifestFile, manifest));
+  return refreshContext(config, manifestDerivedProps(config, DEFAULT_INITIAL_CONTEXT, pathToManifestFile, manifest));
 }

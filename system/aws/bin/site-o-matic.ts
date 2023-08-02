@@ -81,15 +81,18 @@ async function main(): Promise<void> {
   // ----------------------------------------------------------------------
   // Content?
   const siteContentTmpDirPath = await (async () => {
-    const contentProducerId = manifest.content?.producerId;
-    const contentGenerator: SomContentGenerator = getContentProducer(contentProducerId);
-    const ret = await contentGenerator(context.somId, context);
-    if (ret) {
-      console.log(chalk.blue(chalk.bold(`Created content dir: ${ret}`)));
-    } else {
-      console.log(chalk.yellow(chalk.bold('WARNING: Content generation failed')));
+    if (facts.shouldDeployS3Content) {
+      const contentProducerId = manifest.content?.producerId;
+      const contentGenerator: SomContentGenerator = getContentProducer(contentProducerId);
+      const ret = await contentGenerator(context.somId, context);
+      if (ret) {
+        console.log(chalk.blue(chalk.bold(`Created content dir: ${ret}`)));
+      } else {
+        console.log(chalk.yellow(chalk.bold('WARNING: Content generation failed')));
+      }
+      return ret;
     }
-    return ret;
+    return undefined;
   })();
 
   // ----------------------------------------------------------------------

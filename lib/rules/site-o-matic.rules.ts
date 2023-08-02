@@ -5,6 +5,7 @@ import {
   SSM_PARAM_NAME_DOMAIN_BUCKET_NAME,
   SSM_PARAM_NAME_HOSTED_ZONE_ID,
   SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS,
+  SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN,
   SSM_PARAM_NAME_PROTECTED_STATUS,
 } from '../consts';
 import { CONTENT_PRODUCER_ID_NONE } from '../content';
@@ -22,6 +23,10 @@ export const SOM_FACTS_NAMES = [
   'hasDnsResolvedNameservers',
   'hasDnsResolvedTxtRecord',
   'hasRegistrarConfig',
+  'hasNotificationsSnsTopic',
+  'isSnsNotificationsEnabled',
+  'hasWebmasterEmail',
+  'shouldSubscribeEmailToNotificationsSnsTopic',
   'hasNoneContentProducerConfig',
   'hasContentBucket',
   'isContentBucketEmpty',
@@ -64,6 +69,17 @@ export const siteOMaticRules = rulesEngineFactory<SomFactNames, SomContext>({
   isContentBucketEmpty: async (_facts, context) => is(context.isS3BucketEmpty),
   shouldDeployS3Content: async (facts, _context) =>
     isNot(facts.hasNoneContentProducerConfig) && (isNot(facts.hasContentBucket) || is(facts.isContentBucketEmpty)),
+
+  hasNotificationsSnsTopic: async (_facts, context) =>
+    is(getContextParam(context, SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN)),
+  isSnsNotificationsEnabled: async (facts, context) =>
+    is(facts.hasNotificationsSnsTopic) && isNot(context.manifest?.notifications?.disabled),
+
+  hasWebmasterEmail: async (_facts, context) => is(context.webmasterEmail),
+  shouldSubscribeEmailToNotificationsSnsTopic: async (facts, context) =>
+    is(facts.hasNotificationsSnsTopic) &&
+    is(facts.hasWebmasterEmail) &&
+    isNot(context.manifest?.notifications?.noSubscription),
 
   dnsResolvedNameserversMatchHostedZoneNameServers: async (facts, context) =>
     is(facts.hasDnsResolvedNameservers) &&

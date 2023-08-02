@@ -38,6 +38,7 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomGlobalSt
 
       const infoSpec: SomInfoSpec = {
         siteUrl: context.siteUrl ?? UNKNOWN,
+        webmasterEmail: context.webmasterEmail,
         registrar: context.registrar,
         subdomains: context.subdomains,
         certificateCloneNames: context.certificateCloneNames,
@@ -65,6 +66,11 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomGlobalSt
             }
           : undefined,
         crossAccountAccessNames: context.crossAccountAccessNames,
+        notifications: {
+          disabled: context.manifest.notifications?.disabled ?? false,
+          noSubscription: context.manifest.notifications?.noSubscription ?? false,
+          subscriptionEmail: context.manifest.notifications?.subscriptionEmail ?? context.webmasterEmail,
+        },
         protected: {
           protectedManifest: facts.protectedManifest,
           protectedSsm: facts.protectedSsm,

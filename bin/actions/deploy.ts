@@ -3,10 +3,13 @@ import chalk from 'chalk';
 import type Vorpal from 'vorpal';
 
 import * as cdkExec from '../../lib/aws/cdkExec';
+import { postToSnsTopic } from '../../lib/aws/sns';
+import { SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN } from '../../lib/consts';
 import { preDeploymentCheck } from '../../lib/deployment';
 import { siteOMaticRules } from '../../lib/rules/site-o-matic.rules';
 import type { SomConfig } from '../../lib/types';
 import { verror } from '../../lib/ui/logging';
+import { getContextParam } from '../../lib/utils';
 import type { SomGlobalState } from '../SomGlobalState';
 
 export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
@@ -91,8 +94,35 @@ export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomGlobal
       if (state.plumbing) {
         vorpal.log(JSON.stringify({ context: state.context, code, log }));
       }
+      if (facts.hasNotificationsSnsTopic && facts.isSnsNotificationsEnabled) {
+        const resp = await postToSnsTopic(
+          getContextParam(state.context, SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN) as string,
+          {
+            somId: state.context.somId,
+            message: 'Site-O-Matic deployment completed',
+            code,
+          }
+        );
+        if (resp) {
+          vorpal.log(`Posted notification to SNS topic: ${resp}`);
+        }
+      }
     } catch (ex: any) {
       verror(vorpal, state, ex);
+      if (facts.hasNotificationsSnsTopic && facts.isSnsNotificationsEnabled) {
+        const resp = await postToSnsTopic(
+          getContextParam(state.context, SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN) as string,
+          {
+            somId: state.context.somId,
+            message: 'Site-O-Matic deployment failed',
+            code: -1,
+            error: ex,
+          }
+        );
+        if (resp) {
+          vorpal.log(`Posted notification to SNS topic: ${resp}`);
+        }
+      }
     }
   };
 }

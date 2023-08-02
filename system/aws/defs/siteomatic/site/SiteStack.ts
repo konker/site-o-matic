@@ -11,9 +11,10 @@ import {
   DEFAULT_STACK_PROPS,
   SSM_PARAM_NAME_DOMAIN_ROLE_ARN,
   SSM_PARAM_NAME_DOMAIN_USER_NAME,
+  SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN,
+  SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_NAME,
   SSM_PARAM_NAME_PROTECTED_STATUS,
   SSM_PARAM_NAME_ROOT_DOMAIN_NAME,
-  SSM_PARAM_NAME_SNS_TOPIC_NAME,
   SSM_PARAM_NAME_SOM_VERSION,
   SSM_PARAM_NAME_WEBMASTER_EMAIL,
   VERSION,
@@ -43,7 +44,7 @@ export class SiteStack extends cdk.Stack {
   public domainRole?: iam.Role | undefined;
   public domainPolicy?: iam.Policy | undefined;
   public crossAccountGrantRoles?: Array<iam.IRole>;
-  public snsTopic?: sns.Topic | undefined;
+  public notificationsSnsTopic?: sns.Topic | undefined;
 
   public hostedZoneResources?: HostedZoneResources | undefined;
   public certificateResources?: CertificateResources | undefined;
@@ -120,18 +121,35 @@ export class SiteStack extends cdk.Stack {
 
     // ----------------------------------------------------------------------
     // SNS topic for pipeline notifications
-    this.snsTopic = new sns.Topic(this, 'SnsTopic', {
-      displayName: `SnsTopic-${this.somId}`,
+    this.notificationsSnsTopic = new sns.Topic(this, 'NotificationsSnsTopic', {
+      displayName: `NotificationsSnsTopic-${this.somId}`,
+      topicName: `NotificationsSnsTopic-${this.somId}`,
     });
-    this.snsTopic.grantPublish(this.domainUser);
-    _somMeta(this.snsTopic, this.somId, this.siteProps.protected);
+    this.notificationsSnsTopic.grantPublish(this.domainUser);
+    _somMeta(this.notificationsSnsTopic, this.somId, this.siteProps.protected);
 
-    const res6 = new ssm.StringParameter(this, 'SnsTopicName', {
-      parameterName: toSsmParamName(this.somId, SSM_PARAM_NAME_SNS_TOPIC_NAME),
-      stringValue: this.snsTopic.topicName,
+    if (this.siteProps.context.webmasterEmail && this.siteProps.facts.shouldSubscribeEmailToNotificationsSnsTopic) {
+      const snsTopicSubscription = new sns.Subscription(this, 'NotificationsSnsTopicSubscription', {
+        topic: this.notificationsSnsTopic,
+        protocol: sns.SubscriptionProtocol.EMAIL,
+        endpoint: this.siteProps.context.webmasterEmail,
+      });
+      _somMeta(snsTopicSubscription, this.somId, this.siteProps.protected);
+    }
+
+    const res6 = new ssm.StringParameter(this, 'SsmSnsTopicName', {
+      parameterName: toSsmParamName(this.somId, SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_NAME),
+      stringValue: this.notificationsSnsTopic.topicName,
       tier: ssm.ParameterTier.STANDARD,
     });
     _somMeta(res6, this.somId, this.siteProps.protected);
+
+    const res7 = new ssm.StringParameter(this, 'SsmSnsTopicArn', {
+      parameterName: toSsmParamName(this.somId, SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN),
+      stringValue: this.notificationsSnsTopic.topicArn,
+      tier: ssm.ParameterTier.STANDARD,
+    });
+    _somMeta(res7, this.somId, this.siteProps.protected);
 
     // ----------------------------------------------------------------------
     // DNS / HostedZone
@@ -200,7 +218,7 @@ export class SiteStack extends cdk.Stack {
         _somMeta(this.domainRole, this.somId, this.siteProps.protected);
         this.domainRole.attachInlinePolicy(this.domainPolicy);
 
-        const res6 = new ssm.StringParameter(this, 'DomainRoleArn', {
+        const res6 = new ssm.StringParameter(this, 'SsmDomainRoleArn', {
           parameterName: toSsmParamName(this.somId, SSM_PARAM_NAME_DOMAIN_ROLE_ARN),
           stringValue: this.domainRole.roleArn,
           tier: ssm.ParameterTier.STANDARD,
