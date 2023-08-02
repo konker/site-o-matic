@@ -11,11 +11,11 @@ import {
 } from '../../lib/consts';
 import { hasManifest, refreshContext } from '../../lib/context';
 import { siteOMaticRules } from '../../lib/rules/site-o-matic.rules';
-import type { SomGlobalState } from '../../lib/SomGlobalState';
 import { getStatus, getStatusMessage } from '../../lib/status';
 import type { SomConfig, SomInfoSpec, SomInfoStatus, WafAwsManagedRule } from '../../lib/types';
 import { renderInfoSpec, renderInfoStatus } from '../../lib/ui/info';
 import { verror } from '../../lib/ui/logging';
+import type { SomGlobalState } from '../SomGlobalState';
 
 export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
   return async (_: Vorpal.Args): Promise<void> => {

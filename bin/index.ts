@@ -10,7 +10,6 @@ import Vorpal from 'vorpal';
 
 import { CODESTAR_CONNECTION_PROVIDER_TYPES } from '../lib/aws/codestar';
 import { VERSION } from '../lib/consts';
-import { SomGlobalState } from '../lib/SomGlobalState';
 import config from '../site-o-matic.config.json';
 import { actionAddCodeStarConnection } from './actions/addCodeStarConnection';
 import { actionAddPublicKey } from './actions/addPublicKey';
@@ -34,6 +33,7 @@ import { actionShowContext } from './actions/showContext';
 import { actionShowFacts } from './actions/showFacts';
 import { actionShowManifest } from './actions/showManifest';
 import { actionSynthesize } from './actions/synthesize';
+import { SomGlobalState } from './SomGlobalState';
 
 const ARG_PARSE_CONFIG: ParseArgsConfig = {
   strict: true,

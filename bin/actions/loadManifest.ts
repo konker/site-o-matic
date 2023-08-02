@@ -3,9 +3,9 @@ import type Vorpal from 'vorpal';
 
 import { manifestDerivedProps } from '../../lib/context';
 import { loadManifest } from '../../lib/manifest';
-import type { SomGlobalState } from '../../lib/SomGlobalState';
 import type { SomConfig } from '../../lib/types';
 import { verror } from '../../lib/ui/logging';
+import type { SomGlobalState } from '../SomGlobalState';
 import { actionInfo } from './info';
 
 export function actionLoadManifest(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {

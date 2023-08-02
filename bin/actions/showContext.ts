@@ -1,7 +1,7 @@
 import type Vorpal from 'vorpal';
 
-import type { SomGlobalState } from '../../lib/SomGlobalState';
 import type { SomConfig } from '../../lib/types';
+import type { SomGlobalState } from '../SomGlobalState';
 
 export function actionShowContext(vorpal: Vorpal, _: SomConfig, state: SomGlobalState) {
   return async (_: Vorpal.Args): Promise<void> => {

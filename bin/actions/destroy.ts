@@ -6,10 +6,10 @@ import { removeVerificationCnameRecords } from '../../lib/aws/route53';
 import { SSM_PARAM_NAME_DOMAIN_USER_NAME, SSM_PARAM_NAME_HOSTED_ZONE_ID } from '../../lib/consts';
 import { hasNetworkDerived } from '../../lib/context';
 import { siteOMaticRules } from '../../lib/rules/site-o-matic.rules';
-import type { SomGlobalState } from '../../lib/SomGlobalState';
 import type { SomConfig } from '../../lib/types';
 import { verror } from '../../lib/ui/logging';
 import { getContextParam } from '../../lib/utils';
+import type { SomGlobalState } from '../SomGlobalState';
 
 export function actionDestroy(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
   return async (args: Vorpal.Args): Promise<void> => {

@@ -2,8 +2,8 @@ import chalk from 'chalk';
 import type Vorpal from 'vorpal';
 
 import { preDeploymentCheck } from '../../lib/deployment';
-import type { SomGlobalState } from '../../lib/SomGlobalState';
 import type { SomConfig } from '../../lib/types';
+import type { SomGlobalState } from '../SomGlobalState';
 
 export function actionDeployCheck(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
   return async (args: Vorpal.Args): Promise<void> => {

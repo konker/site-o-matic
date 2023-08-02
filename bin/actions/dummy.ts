@@ -1,6 +1,6 @@
 import type Vorpal from 'vorpal';
 
-import type { SomGlobalState } from '../../lib/SomGlobalState';
+import type { SomGlobalState } from '../SomGlobalState';
 
 export function actionDummy(vorpal: Vorpal, state: SomGlobalState) {
   return async (args: Vorpal.Args): Promise<void> => {

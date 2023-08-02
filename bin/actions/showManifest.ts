@@ -1,9 +1,9 @@
 import type Vorpal from 'vorpal';
 
 import { hasManifest } from '../../lib/context';
-import type { SomGlobalState } from '../../lib/SomGlobalState';
 import type { SomConfig } from '../../lib/types';
 import { verror } from '../../lib/ui/logging';
+import type { SomGlobalState } from '../SomGlobalState';
 
 export function actionShowManifest(vorpal: Vorpal, _: SomConfig, state: SomGlobalState) {
   return async (_: Vorpal.Args): Promise<void> => {

@@ -4,9 +4,10 @@ import type Vorpal from 'vorpal';
 
 import * as cdkExec from '../../lib/aws/cdkExec';
 import { preDeploymentCheck } from '../../lib/deployment';
-import type { SomGlobalState } from '../../lib/SomGlobalState';
+import { siteOMaticRules } from '../../lib/rules/site-o-matic.rules';
 import type { SomConfig } from '../../lib/types';
 import { verror } from '../../lib/ui/logging';
+import type { SomGlobalState } from '../SomGlobalState';
 
 export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
   return async (args: Vorpal.Args): Promise<void> => {

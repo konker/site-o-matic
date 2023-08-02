@@ -2,9 +2,9 @@ import type Vorpal from 'vorpal';
 
 import * as secretsmanager from '../../lib/aws/secretsmanager';
 import { DEFAULT_AWS_REGION } from '../../lib/consts';
-import type { SomGlobalState } from '../../lib/SomGlobalState';
 import type { SomConfig } from '../../lib/types';
 import { vtabulate } from '../../lib/ui/logging';
+import type { SomGlobalState } from '../SomGlobalState';
 
 export function actionListSecrets(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
   return async (_: Vorpal.Args): Promise<void> => {
