@@ -1,11 +1,9 @@
-import fs from 'fs';
-
-import exampleManifest from '../../docs/site-o-matic.manifest.example.json';
+// import exampleManifest from '../../docs/site-o-matic.manifest.example.json5';
 import * as unit from './index';
 
 describe('manifest', () => {
   beforeAll(() => {
-    jest.spyOn(fs.promises, 'readFile').mockResolvedValue(Buffer.from(JSON.stringify(exampleManifest)));
+    // jest.spyOn(fs.promises, 'readFile').mockResolvedValue(Buffer.from(JSON.stringify(exampleManifest)));
   });
   afterAll(() => {
     jest.restoreAllMocks();
