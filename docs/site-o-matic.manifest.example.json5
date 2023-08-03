@@ -1,0 +1,150 @@
+{
+  // The root domain name of the website, this is the only required property
+  "rootDomainName": "example.com",
+
+  // A title for the website, this is used as the HTML title by the default content producer
+  "title": "example.com",
+
+  // An email address which will be subscribed to notifications sent to the SNS Topic
+  "webmasterEmail": "webmaster@example.com",
+
+  // A registrar ID from the list of supported registrars, currently [dynadot, awsRoute53]
+  "registrar": "dynadot",
+
+  // Whether to add protection rules to resources created by the tool
+  "protected": true,
+
+  // Extra DNS configuration, this is in addition to DNS records required for the website itself
+  "dns": {
+    "domainName": "example.com",
+    "extraDnsConfig": [
+      {
+        "type": "MX",
+        "hostName": "in1-smtp.example.com",
+        "priority": 10
+      },
+      {
+        "type": "CNAME",
+        "recordName": "fm1._domainkey.example.com",
+        "domainName": "fm1.example.com.dkim.example.com"
+      },
+      {
+        "type": "TXT",
+        "recordName": "",
+        "values": ["v=spf1 include:spf.example.com ?all"]
+      }
+    ],
+
+    // Subdomains to create. These will have functioning SSL certificates
+    // Subdomains can also have their own extraDnsConfig clauses
+    "subdomains": [{ "domainName": "dev.example.com" }]
+  },
+
+  // Cloudfront configuration
+  "webHosting": {
+    // This is currently the only supported type
+    "type": "cloudfront-s3",
+
+    // The path in the S3 bucket which is the web root
+    "originPath": "/www",
+
+    // The default file that will be served when a directory is requested
+    "defaultRootObject": "index.html",
+
+    // A mapping to custom files for HTTP error situations
+    "errorResponses": [
+      { "httpStatus": 403, "responsePagePath": "/403.html" },
+      { "httpStatus": 404, "responsePagePath": "/404.html" }
+    ],
+
+    // Add WAF protection
+    "waf": {
+      // Toggle whether WAF is enabled or not
+      "enabled": true,
+
+      // Currently only AWS Managed Rules are supported. This is a list of rule-sets to enable.
+      "AWSManagedRules": [
+        { "name": "AWSManagedRulesCommonRuleSet", "priority":  10 },
+        { "name": "AWSManagedRulesBotControlRuleSet", "priority":  20 }
+      ]
+    }
+  },
+
+  // Add a redirect to the website
+  "redirect": {
+    // Currently this is the only supported type
+    "type": "edge-cf-function",
+
+    // A regex to match against the incoming request path.
+    // If the regex matches, the redirect will be triggered.
+    "source": ".",
+
+    // The target URL to redirect to
+    "target": "https://www.example.org/"
+  },
+
+  // Configuration related to the site SNS topic.
+  // This topic receives a message whenever the site is deployed or destroyed via the tool.
+  // Additionally, if a deployment pipeline is configured, the topic will receive messages
+  // related to pipeline execution status.
+  "notifications": {
+    // Disable the SNS Topic
+    "disable": false,
+
+    // By default, if there is a webmaster email, then it will be automatically subscribed to the SNS topic.
+    // This setting allows you to disable that behaviour.
+    "noSubscription": false,
+
+    // Override the webmaster email with a different email address
+    "subscriptionEmail": "webmaster+{{context.manifest.rootDomainName}}@example.com"
+  },
+  "pipeline": {
+    // Type of pipeline to create, currently one of [codestar-s3, codestar-custom, codecommit-s3, codecommit-custom]
+    "type": "codestar-custom",
+
+    // If the type is [codestar-s3, codestar-custom], then this is the source GitHub repo connection via CodeStar Connections
+    "codestarConnectionArn": "arn:aws:codestar-connections:us-east-1:111111111111:connection/12345678-cafe-cafe-cafe-123456789012",
+    // The GitHub user
+    "owner": "example",
+    // The GitHub repo
+    "repo": "example.com",
+
+    // Optionally specify some custom build phases for the CodeBuild pipeline
+    "buildPhases": {
+      "install": {
+        "commands": ["npm install"]
+      },
+      "build": {
+        "commands": ["npm run build"]
+      }
+    }
+  },
+
+  "certificate": {
+    // Clone the SSL certificates for this domain and sub-domains to the following accounts
+    "clones": [
+      {
+        "name": "eg-development",
+        "account": "111111111111",
+        "region": "eu-north-1"
+      },
+      {
+        "name": "eg-production",
+        "account": "222222222222",
+        "region": "eu-north-1"
+      }
+    ]
+  },
+
+  // Allow the following roles to assume the DomainRole for this website
+  "crossAccountAccess": [
+    {
+      "name": "eg-development",
+      "arn": "arn:aws:sts::111111111111:role/OrganizationAccountAccessRole"
+    },
+    {
+      "name": "eg-production",
+      "arn": "arn:aws:iam::222222222222:role/OrganizationAccountAccessRole"
+    }
+  ]
+}
