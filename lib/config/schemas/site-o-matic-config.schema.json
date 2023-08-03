@@ -1,0 +1,32 @@
+{
+  "$id": "https://schemas.site-o-matic.com/config.json",
+  "type": "object",
+  "description": "A site-o-matic config",
+  "properties": {
+    "SOM_ROLE_ARN": {
+      "description": "The role to assume to deploy resources",
+      "type": "string",
+      "pattern": "^arn:aws:iam:.*:\\d+:role/.+$"
+    },
+    "DEFAULT_WEBMASTER_EMAIL": {
+      "description": "The default webmaster email address if one is not specified in the site manifest",
+      "type": "string",
+      "pattern": "^.+@.+\\..+$"
+    },
+    "SOM_TAG_NAME": {
+      "description": "The tag name to use for site-o-matic resources",
+      "type": "string",
+      "minLength": 2
+    },
+    "SOM_PREFIX": {
+      "description": "The prefix to use for site-o-matic resource IDs",
+      "type": "string",
+      "default": "som",
+      "minLength": 2
+    }
+  },
+  "required": ["SOM_ROLE_ARN"],
+  "additionalProperties": false,
+  "definitions": {},
+  "examples": [{ "rootDomainName": "example.org" }]
+}

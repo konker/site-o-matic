@@ -3,7 +3,6 @@ import 'json5/lib/register';
 import * as cdk from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
 
-import { getConfig } from '../../../lib/config';
 import {
   WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID,
   WEB_HOSTING_VIEWER_RESPONSE_FUNCTION_PRODUCER_ID,
@@ -11,12 +10,16 @@ import {
 import type { SomFacts } from '../../../lib/rules/site-o-matic.rules';
 import { SiteStack } from '../defs/siteomatic/site/SiteStack';
 
-test('Empty Stack', () => {
+test('Empty Stack', async () => {
   const app = new cdk.App();
 
   // WHEN
   const stack = new SiteStack(app, {
-    config: getConfig(),
+    config: {
+      SOM_ROLE_ARN: 'arn:aws:iam::123456789012:role/som-role',
+      SOM_PREFIX: 'som-prefix',
+      SOM_TAG_NAME: 'som-tag-name',
+    },
     username: 'som-example-user',
     contextParams: {},
     description: 'Site-o-matic test stack',

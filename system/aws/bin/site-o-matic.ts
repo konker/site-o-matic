@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
-import 'source-map-support/register';
-
+import assert from 'assert';
 import * as cdk from 'aws-cdk-lib';
 import chalk from 'chalk';
 
-import { getConfig } from '../../../lib/config';
+import { loadConfig } from '../../../lib/config';
 import {
+  SOM_CONFIG_PATH_TO_DEFAULT_FILE,
   WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT,
   WEB_HOSTING_VIEWER_REQUEST_DIR_DEFAULT_FUNCTION_PRODUCER_ID,
   WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID,
@@ -23,7 +23,8 @@ import { SiteStack } from '../defs/siteomatic/site/SiteStack';
 
 async function main(): Promise<void> {
   const app = new cdk.App();
-  const config = getConfig();
+  const config = await loadConfig(SOM_CONFIG_PATH_TO_DEFAULT_FILE);
+  assert(config, '[site-o-matic] Fatal Error: Failed to load config');
 
   // ----------------------------------------------------------------------
   const paramKeys = app.node.tryGetContext('paramsKeys') ?? '[]';

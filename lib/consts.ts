@@ -1,5 +1,6 @@
 import type * as cdk from 'aws-cdk-lib';
 import type { ErrorResponse } from 'aws-cdk-lib/aws-cloudfront';
+import path from 'path';
 
 import type { SiteStackProps, SomConfig } from './types';
 
@@ -8,9 +9,13 @@ export const VERSION = '0.0.2';
 export const DEFAULT_AWS_REGION = 'us-east-1';
 export const DEFAULT_CERTIFICATE_REGION = 'us-east-1';
 export const CLS = '\u001b[2J\u001b[0;0H';
+export const SOM_ROOT_PATH = path.join(__dirname, '..');
 
-export const CONFIG_DEFAULT_SOM_PREFIX = 'som';
-export const CONFIG_DEFAULT_SOM_TAG_NAME = 'Site-o-Matic';
+export const SOM_CONFIG_DEFAULT_FILE_NAME = 'site-o-matic.config.json5';
+export const SOM_CONFIG_PATH_TO_DEFAULT_FILE = path.join(SOM_ROOT_PATH, SOM_CONFIG_DEFAULT_FILE_NAME);
+
+export const SOM_CONFIG_DEFAULT_SOM_PREFIX = 'som';
+export const SOM_CONFIG_DEFAULT_SOM_TAG_NAME = 'Site-o-Matic';
 export const MAX_SOM_ID_LEN = 48;
 
 export const SSM_PARAM_NAME_SOM_VERSION = 'som-version';

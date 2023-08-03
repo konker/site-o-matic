@@ -1,6 +1,4 @@
-#!/usr/bin/env node
-// import 'json5/lib/register';
-
+import assert from 'assert';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import * as cfonts from 'cfonts';
@@ -9,8 +7,8 @@ import { parseArgs } from 'util';
 import Vorpal from 'vorpal';
 
 import { CODESTAR_CONNECTION_PROVIDER_TYPES } from '../lib/aws/codestar';
-import { getConfig } from '../lib/config';
-import { VERSION } from '../lib/consts';
+import { loadConfig } from '../lib/config';
+import { SOM_CONFIG_PATH_TO_DEFAULT_FILE, VERSION } from '../lib/consts';
 import { actionAddCodeStarConnection } from './actions/addCodeStarConnection';
 import { actionAddPublicKey } from './actions/addPublicKey';
 import { actionAddSecret } from './actions/addSecret';
@@ -53,7 +51,8 @@ async function main() {
 
   const vorpal = new Vorpal();
   const globalState = new SomGlobalState(values);
-  const config = getConfig();
+  const config = await loadConfig(SOM_CONFIG_PATH_TO_DEFAULT_FILE);
+  assert(config, '[site-o-matic] Fatal Error: Failed to load config');
 
   if (!globalState.plumbing) {
     console.log('\n');

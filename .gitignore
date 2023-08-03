@@ -5,6 +5,7 @@
 node_modules
 dist
 coverage
+site-o-matic.config.json5
 
 # Logs
 logs
