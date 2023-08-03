@@ -1,9 +1,9 @@
 {
   "name": "site-o-matic",
-  "version": "0.1.0",
+  "version": "0.0.2",
   "description": "Automatic website cloud deployment tool",
   "author": "Konrad Markus <konker@iki.fi>",
-  "main": "./dist/bin/index.js",
+  "main": "./bin/index.js",
   "bin": {
     "site-o-matic": "./bin/index.js",
     "som": "./bin/index.js"
@@ -68,8 +68,6 @@
   },
   "scripts": {
     "build": "tsc",
-    "prepare": "npm run build",
-    "watch": "tsc -w",
     "test": "jest",
     "lint": "npx eslint --ignore-path=.gitignore .",
     "lint-updated": "pipe-git-updated --base=main --ext=js --ext=ts -- eslint --ignore-pattern '!*'",
