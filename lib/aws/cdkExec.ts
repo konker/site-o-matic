@@ -2,12 +2,14 @@ import { spawn } from 'child_process';
 import path from 'path';
 import type Vorpal from 'vorpal';
 
-async function cdkExec(
+export type CdkExecResponse = [number, Array<string>];
+
+async function cdkExecProc(
   vorpal: Vorpal,
   command: string,
   args: Array<string>,
   plumbing = false
-): Promise<[number, Array<string>]> {
+): Promise<CdkExecResponse> {
   const log: Array<string> = [];
   return new Promise((resolve, reject) => {
     const proc = spawn(command, args, {
@@ -28,17 +30,20 @@ async function cdkExec(
   });
 }
 
-export async function cdkSynth(
+export async function cdkExec(
   vorpal: Vorpal,
-  somId?: string,
-  params: Record<string, string> | undefined = {},
-  plumbing = false
-): Promise<[number, Array<string>]> {
+  somId: string,
+  params: Record<string, string>,
+  plumbing: boolean,
+  cdkCmd: string
+): Promise<CdkExecResponse> {
   if (!somId || !params.iamUsername) return [1, []];
-  return cdkExec(
+  return cdkExecProc(
     vorpal,
     'npx',
-    ['cdk', 'synth', `${somId}*`]
+    ['cdk', cdkCmd /*,`${somId}*`*/]
+      .concat(['--all'])
+      .concat(['--ci', '--no-color'])
       .concat(['--app', `npx node system/aws/bin/site-o-matic`])
       .concat(['--output', `system/aws/.cdk-${somId}.out`])
       .concat(['--context', `paramsKeys=${JSON.stringify(Object.keys(params))}`])
@@ -47,23 +52,22 @@ export async function cdkSynth(
   );
 }
 
-export async function cdkDeploy(
+export async function cdkSynth(
   vorpal: Vorpal,
-  somId?: string,
+  somId: string,
   params: Record<string, string> | undefined = {},
   plumbing = false
-): Promise<[number, Array<string>]> {
-  if (!somId || !params.iamUsername) return [1, []];
-  return cdkExec(
-    vorpal,
-    'npx',
-    ['cdk', 'deploy', `${somId}*`]
-      .concat(['--app', `npx node system/aws/bin/site-o-matic`])
-      .concat(['--output', `system/aws/.cdk-${somId}.out`])
-      .concat(['--context', `paramsKeys=${JSON.stringify(Object.keys(params))}`])
-      .concat(...Object.entries(params).map(([k, v]) => ['---context', `${k}=${v}`])),
-    plumbing
-  );
+): Promise<CdkExecResponse> {
+  return cdkExec(vorpal, somId, params, plumbing, 'ls');
+}
+
+export async function cdkDeploy(
+  vorpal: Vorpal,
+  somId: string,
+  params: Record<string, string> | undefined = {},
+  plumbing = false
+): Promise<CdkExecResponse> {
+  return cdkExec(vorpal, somId, params, plumbing, 'deploy');
 }
 
 export async function cdkDestroy(
@@ -71,16 +75,7 @@ export async function cdkDestroy(
   somId?: string,
   params: Record<string, string> | undefined = {},
   plumbing = false
-): Promise<[number, Array<string>]> {
+): Promise<CdkExecResponse> {
   if (!somId) return [1, []];
-  return cdkExec(
-    vorpal,
-    'npx',
-    ['cdk', 'destroy', `${somId}*`, '--force']
-      .concat(['--app', `npx node system/aws/bin/site-o-matic`])
-      .concat(['--output', `system/aws/.cdk-${somId}.out`])
-      .concat(['--context', `paramsKeys=${JSON.stringify(Object.keys(params))}`])
-      .concat(...Object.entries(params).map(([k, v]) => ['---context', `${k}=${v}`])),
-    plumbing
-  );
+  return cdkExec(vorpal, somId, params, plumbing, 'destroy');
 }
