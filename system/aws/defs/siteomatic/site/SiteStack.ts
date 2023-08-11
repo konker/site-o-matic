@@ -29,11 +29,10 @@ import type {
   WebHostingResources,
 } from '../../../../../lib/types';
 import { _id, _somMeta, _somTag } from '../../../../../lib/utils';
-import { SiteCertificateCloneSubStack } from './substacks/SiteCertificateCloneSubStack';
-import { SiteCertificateSubStack } from './substacks/SiteCertificateSubStack';
-import { SiteDnsSubStack } from './substacks/SiteDnsSubStack';
-import { SitePipelineSubStack } from './substacks/SitePipelineSubStack';
-import { SiteWebHostingSubStack } from './substacks/SiteWebHostingSubStack';
+import { SiteCertificateNestedStack } from './nested/SiteCertificateNestedStack';
+import { SiteDnsNestedStack } from './nested/SiteDnsNestedStack';
+import { SitePipelineNestedStack } from './nested/SitePipelineNestedStack';
+import { SiteWebHostingNestedStack } from './nested/SiteWebHostingNestedStack';
 
 export class SiteStack extends cdk.Stack {
   public readonly config: SomConfig;
@@ -52,16 +51,14 @@ export class SiteStack extends cdk.Stack {
   public sitePipelineResources?: PipelineResources | undefined;
 
   constructor(scope: Construct, props: SiteStackProps) {
-    super(
-      scope,
-      props.context.somId,
-      Object.assign({}, DEFAULT_STACK_PROPS(props.config, props.context.somId, props), props)
-    );
+    const stackId = props.context.somId;
+    super(scope, stackId, Object.assign({}, DEFAULT_STACK_PROPS(props.config, props.context.somId, props), props));
 
     this.config = cloneDeep(props.config);
     this.siteProps = cloneDeep(props);
     this.somId = props.context.somId;
-    console.log('Created SiteStack');
+
+    console.log(`Created SiteStack [${stackId}]`);
   }
 
   async build() {
@@ -132,15 +129,6 @@ export class SiteStack extends cdk.Stack {
     this.notificationsSnsTopic.grantPublish(this.domainUser);
     _somMeta(this.config, this.notificationsSnsTopic, this.somId, this.siteProps.protected);
 
-    if (this.siteProps.context.webmasterEmail && this.siteProps.facts.shouldSubscribeEmailToNotificationsSnsTopic) {
-      const snsTopicSubscription = new sns.Subscription(this, 'NotificationsSnsTopicSubscription', {
-        topic: this.notificationsSnsTopic,
-        protocol: sns.SubscriptionProtocol.EMAIL,
-        endpoint: this.siteProps.context.webmasterEmail,
-      });
-      _somMeta(this.config, snsTopicSubscription, this.somId, this.siteProps.protected);
-    }
-
     const res6 = new ssm.StringParameter(this, 'SsmSnsTopicName', {
       parameterName: toSsmParamName(this.somId, SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_NAME),
       stringValue: this.notificationsSnsTopic.topicName,
@@ -157,60 +145,53 @@ export class SiteStack extends cdk.Stack {
 
     // ----------------------------------------------------------------------
     // DNS / HostedZone
-    const dnsSubStack = new SiteDnsSubStack(this, {
+    const dnsNestedStack = new SiteDnsNestedStack(this, {
       description: `Site-o-Matic DNS sub-stack for ${this.siteProps.context.rootDomainName}`,
     });
-    await dnsSubStack.build();
-    _somTag(this.config, dnsSubStack, this.somId);
+    await dnsNestedStack.build();
+    _somTag(this.config, dnsNestedStack, this.somId);
 
     // Check to see if DNS has been configured correctly,
     // including that the nameservers have been set with the registrar
     if (this.siteProps.facts.isAwsRoute53RegisteredDomain || this.siteProps.facts.hostedZoneVerified) {
       // ----------------------------------------------------------------------
-      // SSL Certificates
-      const certificateSubStack = new SiteCertificateSubStack(this, {
-        description: `Site-o-Matic certificate sub-stack for ${this.siteProps.context.rootDomainName}`,
-      });
-      await certificateSubStack.build();
-      certificateSubStack.addDependency(dnsSubStack);
-      _somTag(this.config, certificateSubStack, this.somId);
-
-      // ----------------------------------------------------------------------
-      // Certificate clones, if any
-      const certificateClones = this.siteProps.context.manifest.certificate?.clones ?? [];
-      if (certificateClones.length > 0) {
-        for (const certificateClone of certificateClones) {
-          const certificateCloneSubStack = new SiteCertificateCloneSubStack(this, {
-            description: `Site-o-Matic certificate clone sub-stack for ${this.siteProps.context.rootDomainName}`,
-            env: {
-              account: certificateClone.account,
-              region: certificateClone.region,
-            },
-          });
-          await certificateCloneSubStack.build();
-          certificateCloneSubStack.addDependency(certificateSubStack);
-          _somTag(this.config, certificateCloneSubStack, this.somId);
-        }
+      // SNS topic subscription
+      if (this.siteProps.context.webmasterEmail && this.siteProps.facts.shouldSubscribeEmailToNotificationsSnsTopic) {
+        const snsTopicSubscription = new sns.Subscription(this, 'NotificationsSnsTopicSubscription', {
+          topic: this.notificationsSnsTopic,
+          protocol: sns.SubscriptionProtocol.EMAIL,
+          endpoint: this.siteProps.context.webmasterEmail,
+        });
+        _somMeta(this.config, snsTopicSubscription, this.somId, this.siteProps.protected);
       }
 
       // ----------------------------------------------------------------------
+      // SSL Certificates
+      const certificateNestedStack = new SiteCertificateNestedStack(this, {
+        description: `Site-o-Matic certificate sub-stack for ${this.siteProps.context.rootDomainName}`,
+      });
+      await certificateNestedStack.build();
+      certificateNestedStack.addDependency(dnsNestedStack);
+      _somTag(this.config, certificateNestedStack, this.somId);
+
+      // ----------------------------------------------------------------------
       // Web Hosting
-      const webHostingSubStack = new SiteWebHostingSubStack(this, {
+      const webHostingNestedStack = new SiteWebHostingNestedStack(this, {
         description: `Site-o-Matic web hosting sub-stack for ${this.siteProps.context.rootDomainName}`,
       });
-      await webHostingSubStack.build();
-      webHostingSubStack.addDependency(certificateSubStack);
-      _somTag(this.config, webHostingSubStack, this.somId);
+      await webHostingNestedStack.build();
+      webHostingNestedStack.addDependency(certificateNestedStack);
+      _somTag(this.config, webHostingNestedStack, this.somId);
 
       // ----------------------------------------------------------------------
       // Pipeline for the site
       if (this.siteProps.context.manifest.pipeline) {
-        const pipelineSubStack = new SitePipelineSubStack(this, {
-          description: `Site-o-Matic pipeline sub-stack for ${this.siteProps.context.rootDomainName}`,
+        const pipelineNestedStack = new SitePipelineNestedStack(this, {
+          description: `Site-o-Matic pipeline nested stack for ${this.siteProps.context.rootDomainName}`,
         });
-        await pipelineSubStack.build();
-        pipelineSubStack.addDependency(webHostingSubStack);
-        _somTag(this.config, pipelineSubStack, this.somId);
+        await pipelineNestedStack.build();
+        pipelineNestedStack.addDependency(webHostingNestedStack);
+        _somTag(this.config, pipelineNestedStack, this.somId);
       }
 
       // ----------------------------------------------------------------------

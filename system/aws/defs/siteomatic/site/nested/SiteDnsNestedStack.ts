@@ -5,7 +5,7 @@ import type { SiteNestedStackProps } from '../../../../../../lib/types';
 import * as HostedZoneBuilder from '../../hostedzone/HostedZoneBuilder';
 import type { SiteStack } from '../SiteStack';
 
-export class SiteDnsSubStack extends cdk.NestedStack {
+export class SiteDnsNestedStack extends cdk.NestedStack {
   public siteStack: SiteStack;
 
   constructor(scope: SiteStack, props: SiteNestedStackProps) {
@@ -15,15 +15,18 @@ export class SiteDnsSubStack extends cdk.NestedStack {
       Object.assign({}, DEFAULT_STACK_PROPS(scope.config, scope.somId, scope.siteProps), props)
     );
     this.siteStack = scope;
-    console.log('\t⮡ Created SiteDnsSubStack');
+    console.log('\t⮡ Created SiteDnsNestedStack');
   }
 
   async build() {
-    this.siteStack.hostedZoneResources = await HostedZoneBuilder.build(this, this.siteStack.config, {
-      siteStack: this.siteStack,
-      domainName: this.siteStack.siteProps.context.rootDomainName,
-      extraDnsConfig: this.siteStack.siteProps.context.manifest.dns?.extraDnsConfig ?? [],
-      subdomains: this.siteStack.siteProps.context.manifest.dns?.subdomains ?? [],
-    });
+    this.siteStack.hostedZoneResources = await HostedZoneBuilder.build(
+      this,
+      this.siteStack.config,
+      {
+        siteStack: this.siteStack,
+        rootDomainName: this.siteStack.siteProps.context.rootDomainName,
+      },
+      this.siteStack.siteProps.context.manifest.dns
+    );
   }
 }

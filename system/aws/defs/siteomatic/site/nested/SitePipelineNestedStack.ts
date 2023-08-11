@@ -17,7 +17,7 @@ import * as CodeStarCustomSitePipelineBuilder from '../../pipeline/codestar/Code
 import * as CodeStarS3SitePipelineBuilder from '../../pipeline/codestar/CodeStarS3PipelineBuilder';
 import type { SiteStack } from '../SiteStack';
 
-export class SitePipelineSubStack extends cdk.NestedStack {
+export class SitePipelineNestedStack extends cdk.NestedStack {
   public siteStack: SiteStack;
 
   constructor(scope: SiteStack, props: SiteNestedStackProps) {
@@ -27,7 +27,7 @@ export class SitePipelineSubStack extends cdk.NestedStack {
       Object.assign({}, DEFAULT_STACK_PROPS(scope.config, scope.somId, scope.siteProps), props)
     );
     this.siteStack = scope;
-    console.log('\t⮡ Created SitePipelineSubStack');
+    console.log('\t⮡ Created SitePipelineNestedStack');
   }
 
   async build() {

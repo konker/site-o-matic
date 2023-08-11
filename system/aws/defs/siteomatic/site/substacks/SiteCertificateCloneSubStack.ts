@@ -1,15 +1,15 @@
 import * as cdk from 'aws-cdk-lib';
 
 import { DEFAULT_STACK_PROPS } from '../../../../../../lib/consts';
-import type { SiteNestedStackProps } from '../../../../../../lib/types';
 import * as CertificateBuilder from '../../hosting/CertificateBuilder';
 import type { SiteStack } from '../SiteStack';
 
-export class SiteCertificateCloneSubStack extends cdk.NestedStack {
-  public siteStack: SiteStack;
-  public props: SiteNestedStackProps;
+// NOTE: This is _not_ a NestedStack
+export class SiteCertificateCloneSubStack extends cdk.Stack {
+  readonly siteStack: SiteStack;
+  readonly props: cdk.StackProps;
 
-  constructor(scope: SiteStack, props: SiteNestedStackProps) {
+  constructor(scope: SiteStack, props: cdk.StackProps) {
     if (!props.env?.account) {
       throw new Error(`[CertificateCloneStack] No account given`);
     }
@@ -17,22 +17,16 @@ export class SiteCertificateCloneSubStack extends cdk.NestedStack {
       throw new Error(`[CertificateCloneStack] No region given`);
     }
 
-    super(
-      scope,
-      `${scope.somId}-certificate-clones-nested-${props.env.account}-${props.env.region}`,
-      Object.assign({}, DEFAULT_STACK_PROPS(scope.config, scope.somId, scope.siteProps), props)
-    );
-    this.siteStack = scope;
-    this.props = Object.assign({}, DEFAULT_STACK_PROPS(scope.config, scope.somId, scope.siteProps), props);
+    const stackId = `${scope.somId}-certificate-clones-substack-${props.env.account}-${props.env.region}`;
+    super(scope, stackId, Object.assign({}, DEFAULT_STACK_PROPS(scope.config, scope.somId, scope.siteProps), props));
 
-    console.log(`\t⮡ Created SiteCertificateCloneSubStack: ${props.env.account} / ${props.env.region}`);
+    this.siteStack = scope;
+    this.props = props;
+
+    console.log(`⮡ Created SiteCertificateCloneSubStack: [${stackId}]`);
   }
 
   async build() {
-    if (!this.props.env?.region) {
-      throw new Error(`[CertificateCloneStack] No region given`);
-    }
-
     const hostedZoneId = this.siteStack?.hostedZoneResources?.hostedZone?.hostedZoneId;
     if (!hostedZoneId) {
       throw new Error(`[CertificateCloneStack] Could not find hostedZoneId`);
@@ -40,12 +34,15 @@ export class SiteCertificateCloneSubStack extends cdk.NestedStack {
 
     // ----------------------------------------------------------------------
     // SSL Certificates
-    await CertificateBuilder.buildManualValidation(this, this.siteStack.config, {
-      siteStack: this.siteStack,
-      region: this.props.env.region,
-      domainName: this.siteStack.siteProps.context.rootDomainName,
-      hostedZoneId: hostedZoneId,
-      subdomains: this.siteStack.siteProps.context.manifest.dns?.subdomains ?? [],
-    });
+    await CertificateBuilder.buildManualValidation(
+      this,
+      this.siteStack.config,
+      {
+        siteStack: this.siteStack,
+        rootDomainName: this.siteStack.siteProps.context.rootDomainName,
+        hostedZoneId: hostedZoneId,
+      },
+      this.siteStack.siteProps.context.manifest.dns
+    );
   }
 }

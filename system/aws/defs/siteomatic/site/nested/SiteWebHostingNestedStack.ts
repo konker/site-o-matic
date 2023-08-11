@@ -5,7 +5,7 @@ import type { SiteNestedStackProps } from '../../../../../../lib/types';
 import * as SiteWebHostingBuilder from '../../hosting/WebHostingBuilder';
 import type { SiteStack } from '../SiteStack';
 
-export class SiteWebHostingSubStack extends cdk.NestedStack {
+export class SiteWebHostingNestedStack extends cdk.NestedStack {
   public siteStack: SiteStack;
 
   constructor(scope: SiteStack, props: SiteNestedStackProps) {
@@ -15,7 +15,7 @@ export class SiteWebHostingSubStack extends cdk.NestedStack {
       Object.assign({}, DEFAULT_STACK_PROPS(scope.config, scope.somId, scope.siteProps), props)
     );
     this.siteStack = scope;
-    console.log('\t⮡ Created SiteWebHostingSubStack');
+    console.log('\t⮡ Created SiteWebHostingNestedStack');
   }
 
   async build() {

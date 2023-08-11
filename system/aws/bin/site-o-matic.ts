@@ -19,7 +19,9 @@ import { loadContext } from '../../../lib/context';
 import { getFunctionProducer } from '../../../lib/edge';
 import { loadManifest } from '../../../lib/manifest';
 import { siteOMaticRules } from '../../../lib/rules/site-o-matic.rules';
+import { _somTag } from '../../../lib/utils';
 import { SiteStack } from '../defs/siteomatic/site/SiteStack';
+import { SiteCertificateCloneSubStack } from '../defs/siteomatic/site/substacks/SiteCertificateCloneSubStack';
 
 async function main(): Promise<void> {
   const app = new cdk.App();
@@ -98,7 +100,8 @@ async function main(): Promise<void> {
   })();
 
   // ----------------------------------------------------------------------
-  const stack = new SiteStack(app, {
+  // Main site stack
+  const siteStack = new SiteStack(app, {
     config,
     context,
     facts,
@@ -116,7 +119,30 @@ async function main(): Promise<void> {
     ],
     description: `Site-o-Matic Stack for ${manifest.rootDomainName}`,
   });
-  await stack.build();
+  await siteStack.build();
+  _somTag(config, siteStack, context.somId);
+
+  // ----------------------------------------------------------------------
+  // Certificate clone sub-stack(s), if needed
+  if (facts.shouldDeployCertificateClones) {
+    const certificateClones = context.manifest.certificate?.clones ?? [];
+
+    for (const certificateClone of certificateClones) {
+      const certificateCloneSubStack = new SiteCertificateCloneSubStack(siteStack, {
+        description: `Site-o-Matic certificate clone sub-stack for ${context.rootDomainName}`,
+        env: {
+          account: certificateClone.account,
+          region: certificateClone.region,
+        },
+      });
+      await certificateCloneSubStack.build();
+      certificateCloneSubStack.addDependency(siteStack);
+      _somTag(config, certificateCloneSubStack, context.somId);
+    }
+  }
 }
 
-main().catch(console.error);
+main().catch((err) => {
+  console.error(err);
+  process.exitCode = 1;
+});
