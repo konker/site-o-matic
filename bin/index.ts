@@ -124,7 +124,7 @@ async function main() {
   vorpal
     .command('set nameservers', 'Set the nameservers automatically with the registrar, if configured')
     .action(actionSetNameServersWithRegistrar(vorpal, config, globalState));
-  vorpal.command('destroy', 'Destroy the site').action(actionDestroy(vorpal, config, globalState));
+  vorpal.command('destroy [username]', 'Destroy the site').action(actionDestroy(vorpal, config, globalState));
 
   const app = vorpal.delimiter(globalState.plumbing ? '' : `site-o-matic ${VERSION}>`);
   if (!globalState.plumbing) {

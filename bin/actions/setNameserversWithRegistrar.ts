@@ -3,6 +3,7 @@ import type Vorpal from 'vorpal';
 
 import * as secretsmanager from '../../lib/aws/secretsmanager';
 import { DEFAULT_AWS_REGION, SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS } from '../../lib/consts';
+import { hasManifest, refreshContext } from '../../lib/context';
 import { getRegistrarConnector } from '../../lib/registrar';
 import type { SomConfig } from '../../lib/types';
 import { verror, vlog } from '../../lib/ui/logging';
@@ -11,6 +12,12 @@ import type { SomGlobalState } from '../SomGlobalState';
 
 export function actionSetNameServersWithRegistrar(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
   return async (_: Vorpal.Args): Promise<void> => {
+    if (!hasManifest(state.context)) {
+      const errorMessage = 'ERROR: no manifest loaded';
+      verror(vorpal, state, errorMessage);
+      return;
+    }
+
     if (!state.context.registrar) {
       const errorMessage = 'ERROR: no registrar specified in manifest';
       verror(vorpal, state, errorMessage);
@@ -51,6 +58,8 @@ export function actionSetNameServersWithRegistrar(vorpal: Vorpal, config: SomCon
           nameservers
         );
         vlog(vorpal, state, `Set nameservers: ${result}`);
+
+        state.updateContext(await refreshContext(config, state.context));
       } catch (ex: any) {
         verror(vorpal, state, ex);
       } finally {

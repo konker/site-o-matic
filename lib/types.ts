@@ -54,12 +54,14 @@ export type HostedZoneDnsConfig = DnsConfigMx | DnsConfigCname | DnsConfigTxt;
 export type HostedZoneConfig = {
   readonly domainName: string;
   readonly extraDnsConfig?: Array<HostedZoneDnsConfig> | undefined;
+  readonly subdomains?: undefined | Array<HostedZoneConfig>;
 };
 
 // ----------------------------------------------------------------------
 export type HostedZoneResources = {
   readonly hostedZone: route53.IHostedZone;
 };
+
 export type HostedZoneAttributes = {
   zoneName: string;
   hostedZoneId: string;
@@ -117,9 +119,7 @@ export type PipelineResources =
 // ----------------------------------------------------------------------
 export type HostedZoneBuilderProps = {
   readonly siteStack: SiteStack;
-  readonly domainName: string;
-  readonly extraDnsConfig: Array<HostedZoneDnsConfig>;
-  readonly subdomains?: Array<HostedZoneConfig> | undefined;
+  readonly rootDomainName: string;
 };
 
 // ----------------------------------------------------------------------
@@ -143,6 +143,7 @@ export type WafAwsManagedRule = {
 export type SomManifest = {
   readonly rootDomainName: string;
   readonly protected: boolean;
+  readonly dns: HostedZoneConfig;
   readonly webHosting: {
     readonly type: typeof WEB_HOSTING_TYPE_CLOUDFRONT_S3;
     readonly originPath?: string;
@@ -161,9 +162,6 @@ export type SomManifest = {
         readonly target: string;
       };
   readonly title?: string;
-  readonly dns?: HostedZoneConfig & {
-    readonly subdomains?: undefined | Array<HostedZoneConfig>;
-  };
   readonly webmasterEmail?: string;
   readonly registrar?: string | undefined;
   readonly certificate?:
@@ -208,6 +206,12 @@ export type SomManifest = {
       };
 };
 
+export type FromValidation<T extends SomManifest> = Omit<T, 'protected' | 'dns' | 'webHosting'> & {
+  readonly protected?: T['protected'];
+  readonly dns?: T['dns'];
+  readonly webHosting?: T['webHosting'];
+};
+
 // ----------------------------------------------------------------------
 export type SiteStackProps = cdk.StackProps & {
   readonly config: SomConfig;
@@ -231,10 +235,8 @@ export type SiteNestedStackProps = cdk.StackProps & {
 // ----------------------------------------------------------------------
 export type CertificateBuilderProps = {
   readonly siteStack: SiteStack;
-  readonly region: string;
-  readonly domainName: string;
+  readonly rootDomainName: string;
   readonly hostedZoneId: string;
-  readonly subdomains: Array<HostedZoneConfig>;
 };
 
 // ----------------------------------------------------------------------
@@ -290,6 +292,7 @@ export type SomContext = {
   registrarNameservers?: Array<string>;
   dnsResolvedNameserverRecords?: Array<string>;
   dnsVerificationTxtRecord?: string | undefined;
+  certificateStatus?: boolean;
   connectionStatus?: WwwConnectionStatus;
   isS3BucketEmpty?: boolean;
 

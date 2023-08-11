@@ -7,6 +7,7 @@ import {
 
 import { DEFAULT_AWS_REGION } from '../consts';
 import type { HostedZoneAttributes, SomConfig } from '../types';
+import { nsRecordValueToHost } from '../utils';
 import { assumeSomRole } from './sts';
 
 export async function findHostedZoneAttributes(
@@ -92,7 +93,7 @@ export async function getRecordsForHostedZoneId(
   config: SomConfig,
   hostedZoneId: string,
   recordType: string
-): Promise<Array<string> | undefined> {
+): Promise<Record<string, Array<string>> | undefined> {
   const somRoleCredentials = await assumeSomRole(config, DEFAULT_AWS_REGION);
   const client = new Route53Client({
     region: DEFAULT_AWS_REGION,
@@ -103,42 +104,40 @@ export async function getRecordsForHostedZoneId(
       HostedZoneId: hostedZoneId,
     });
     const result1 = await client.send(cmd1);
-    const nsRecords =
+    const recordsOfType =
       result1.ResourceRecordSets?.filter((i) => {
         return i.Type === recordType;
       }) ?? [];
 
-    return nsRecords.map((i) => i.ResourceRecords?.map((j) => j.Value ?? '') ?? []).flat();
+    return recordsOfType.reduce((acc, i) => {
+      const name = i.Name;
+      if (!name) return acc;
+      acc[nsRecordValueToHost(name)] = i.ResourceRecords?.map((j) => j.Value ?? '') ?? [];
+      return acc;
+    }, {} as Record<string, Array<string>>);
   } catch (ex) {
     console.log('FAILED: ', ex);
   }
   return undefined;
 }
 
-export async function getRecordsForHostedZone(
+export async function getRecordsForDomainName(
   config: SomConfig,
   domainName: string,
   recordType: string
-): Promise<Array<string> | undefined> {
+): Promise<Record<string, Array<string>> | undefined> {
   const hostedZoneAttributes = await findHostedZoneAttributes(config, domainName);
   if (!hostedZoneAttributes) return undefined;
 
   return getRecordsForHostedZoneId(config, hostedZoneAttributes.hostedZoneId, recordType);
 }
 
-export async function getNsRecordsForHostedZone(
+export async function getNsRecordValuesForDomainName(
   config: SomConfig,
   domainName: string
 ): Promise<Array<string> | undefined> {
-  const ret = await getRecordsForHostedZone(config, domainName, 'NS');
-  return ret?.map((i) => i.replace(/\.$/, ''));
-}
-
-export async function getSoaRecordForHostedZone(
-  config: SomConfig,
-  domainName: string
-): Promise<Array<string> | undefined> {
-  return getRecordsForHostedZone(config, domainName, 'SOA');
+  const ret = await getRecordsForDomainName(config, domainName, 'NS');
+  return ret?.[domainName]?.map(nsRecordValueToHost);
 }
 
 export function parseHostedZoneId(hostedZoneId: string): string | undefined {

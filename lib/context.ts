@@ -1,4 +1,4 @@
-import { findHostedZoneAttributes, getNsRecordsForHostedZone } from './aws/route53';
+import { findHostedZoneAttributes, getNsRecordValuesForDomainName } from './aws/route53';
 import { getIsS3BucketEmpty } from './aws/s3';
 import * as secretsmanager from './aws/secretsmanager';
 import * as ssm from './aws/ssm';
@@ -37,8 +37,8 @@ export function hasNetworkDerived(context: SomContext): context is HasNetworkDer
     context.hostedZoneNameservers !== undefined &&
     context.registrarNameservers !== undefined &&
     context.dnsResolvedNameserverRecords !== undefined &&
-    context.dnsVerificationTxtRecord !== undefined &&
     context.connectionStatus !== undefined
+    // context.dnsVerificationTxtRecord !== undefined && -- can be undefined
     // context.hostedZoneAttributes !== undefined && -- can be undefined
   );
 }
@@ -81,7 +81,7 @@ export async function loadNetworkDerivedContext(
   ] = await Promise.all([
     ssm.getSsmParams(config, DEFAULT_AWS_REGION, context.somId),
     findHostedZoneAttributes(config, context.rootDomainName),
-    getNsRecordsForHostedZone(config, context.rootDomainName),
+    getNsRecordValuesForDomainName(config, context.rootDomainName),
     resolveDnsNameserverRecords(context.rootDomainName),
     getRegistrarNameservers(config, context),
     resolveDnsSomTxtRecord(context.rootDomainName),

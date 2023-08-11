@@ -9,7 +9,7 @@ import {
   SSM_PARAM_NAME_HOSTED_ZONE_ID,
   SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN,
 } from '../../lib/consts';
-import { hasNetworkDerived } from '../../lib/context';
+import { hasNetworkDerived, refreshContext } from '../../lib/context';
 import { siteOMaticRules } from '../../lib/rules/site-o-matic.rules';
 import type { SomConfig } from '../../lib/types';
 import { verror } from '../../lib/ui/logging';
@@ -25,7 +25,13 @@ export function actionDestroy(vorpal: Vorpal, config: SomConfig, state: SomGloba
     }
 
     const facts = await siteOMaticRules(state.context);
-    const username = getContextParam(state.context, SSM_PARAM_NAME_DOMAIN_USER_NAME);
+    const username = args.username ?? getContextParam(state.context, SSM_PARAM_NAME_DOMAIN_USER_NAME);
+    if (!username) {
+      const errorMessage = `ERROR: no username was resolved`;
+      verror(vorpal, state, errorMessage);
+      return;
+    }
+
     const response = state.yes
       ? { confirm: 'y' }
       : await vorpal.activeCommand.prompt({
@@ -54,10 +60,12 @@ export function actionDestroy(vorpal: Vorpal, config: SomConfig, state: SomGloba
           },
           state.plumbing
         );
+
+        state.updateContext(await refreshContext(config, state.context));
+
         if (state.plumbing) {
           vorpal.log(JSON.stringify({ context: state.context, code, log }));
         }
-
         if (facts.hasNotificationsSnsTopic && facts.isSnsNotificationsEnabled) {
           await postToSnsTopic(getContextParam(state.context, SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN) as string, {
             somId: state.context.somId,

@@ -13,6 +13,10 @@ export function isNot(x: unknown): boolean {
   return !is(x);
 }
 
+export function isNonZero(x: number | undefined): boolean {
+  return is(x ?? 0 > 0);
+}
+
 export function rulesEngineFactory<F extends ReadonlyArray<string>, C>(
   rules: Record<FactName<F>, RulePredicate<F, C>>
 ): RulesEngine<F, C> {

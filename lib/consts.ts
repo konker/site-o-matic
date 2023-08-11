@@ -26,6 +26,7 @@ export const SSM_PARAM_NAME_WEBMASTER_EMAIL = 'webmaster-email';
 export const SSM_PARAM_NAME_PROTECTED_STATUS = 'protected-status';
 export const SSM_PARAM_NAME_HOSTED_ZONE_ID = 'hosted-zone-id';
 export const SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS = 'hosted-zone-name-servers';
+export const SSM_PARAM_NAME_DOMAIN_CERTIFICATE_ARN = 'domain-certificate-arn';
 export const SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_NAME = 'notifications-sns-topic-name';
 export const SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN = 'notifications-sns-topic-arn';
 export const SSM_PARAM_NAME_DOMAIN_BUCKET_NAME = 'domain-bucket-name';
@@ -47,6 +48,8 @@ export const WEB_HOSTING_DEFAULT_ERROR_RESPONSES: Array<ErrorResponse> = [
     responsePagePath: '/404.html',
   },
 ];
+
+export const DEFAULT_NS_RECORD_TTL_MINS = 5; // 2880;
 
 export const REDIRECT_TYPE_EDGE_CF_FUNCTION = 'edge-cf-function';
 

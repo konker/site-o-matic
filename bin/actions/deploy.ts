@@ -5,6 +5,7 @@ import type Vorpal from 'vorpal';
 import * as cdkExec from '../../lib/aws/cdkExec';
 import { postToSnsTopic } from '../../lib/aws/sns';
 import { SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN } from '../../lib/consts';
+import { hasManifest, refreshContext } from '../../lib/context';
 import { preDeploymentCheck } from '../../lib/deployment';
 import { siteOMaticRules } from '../../lib/rules/site-o-matic.rules';
 import type { SomConfig } from '../../lib/types';
@@ -38,6 +39,7 @@ export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomGlobal
     }
 
     // Assert not-null for types, even though these have been checked
+    assert(hasManifest(state.context), 'absurd');
     assert(state.context.manifest, 'absurd');
     assert(state.context.pathToManifestFile, 'absurd');
     const facts = await siteOMaticRules(state.context);
@@ -60,13 +62,20 @@ export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomGlobal
       return;
     }
 
-    if (state.context.certificateCloneNames?.length ?? 0 > 0) {
+    if (facts.shouldDeployCertificateClones) {
       const response2 = state.yes
         ? { confirm: 'y' }
         : await vorpal.activeCommand.prompt({
             type: 'input',
             name: 'confirm',
             message: chalk.yellow(
+              // [FIXME: what is this again? approve on the target account? Could have better explanation, and/or link to eventual docs here?]
+              // No footprint in target account
+              // Certificate clones are pending validation in som-production account
+              // Need to click `Create DNS records in Amazon Route 53` button in the AWS Certificate Manager console
+              //
+              // [FIXME: this should also inform that the tool basically hangs until the certificate clones are validated]
+              // [TODD: is it possible for the tool to detect this kind of hanging, and periodically prompt the user to perform validation?]
               `WARNING!: Manual action needed to clone certificates into ${state.context.certificateCloneNames?.join(
                 ','
               )}. Proceed? [y/N] `
@@ -90,6 +99,8 @@ export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomGlobal
         },
         state.plumbing
       );
+
+      state.updateContext(await refreshContext(config, state.context));
 
       if (state.plumbing) {
         vorpal.log(JSON.stringify({ context: state.context, code, log }));

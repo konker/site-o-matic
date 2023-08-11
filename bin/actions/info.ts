@@ -98,7 +98,7 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomGlobalSt
           : undefined,
         hostedZoneVerified: facts.hostedZoneVerified,
         verificationTxtRecordViaDns: context.dnsVerificationTxtRecord,
-        nameserversSet: facts.nameserversSetButNotPropagated,
+        nameserversSet: facts.registrarNameserversMatchHostedZoneNameServers,
         registrarNameservers: context.registrarNameservers,
         params: context.params,
       };

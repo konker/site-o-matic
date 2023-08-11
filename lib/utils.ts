@@ -8,6 +8,10 @@ export function getParam(params: Array<SomParam> | undefined, name: string): str
   return params?.find((i: any) => i.Param === name)?.Value;
 }
 
+export function nsRecordValueToHost(value: string): string {
+  return value.endsWith('.') ? value.slice(0, -1) : value;
+}
+
 export function getContextParam(context: SomContext, name: string): string | undefined {
   return getParam(context?.params, name);
 }

@@ -3,6 +3,7 @@ import {
   SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID,
   SSM_PARAM_NAME_CODE_PIPELINE_ARN,
   SSM_PARAM_NAME_DOMAIN_BUCKET_NAME,
+  SSM_PARAM_NAME_DOMAIN_CERTIFICATE_ARN,
   SSM_PARAM_NAME_HOSTED_ZONE_ID,
   SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS,
   SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN,
@@ -12,7 +13,7 @@ import { CONTENT_PRODUCER_ID_NONE } from '../content';
 import type { SomContext } from '../types';
 import { getContextParam } from '../utils';
 import type { Facts } from './index';
-import { is, isNot, rulesEngineFactory } from './index';
+import { is, isNonZero, isNot, rulesEngineFactory } from './index';
 
 export const SOM_FACTS_NAMES = [
   'protectedManifest',
@@ -22,6 +23,7 @@ export const SOM_FACTS_NAMES = [
   'hasHostedZoneAttributes',
   'hasDnsResolvedNameservers',
   'hasDnsResolvedTxtRecord',
+  'hasDomainCertificateArnParam',
   'hasRegistrarConfig',
   'hasNotificationsSnsTopic',
   'isSnsNotificationsEnabled',
@@ -31,6 +33,7 @@ export const SOM_FACTS_NAMES = [
   'hasContentBucket',
   'isContentBucketEmpty',
   'shouldDeployS3Content',
+  'hasCertificateClones',
   'hasRegistrarNameservers',
   'has200ConnectionStatus',
   'hasAwsRoute53RegistrarConfig',
@@ -41,6 +44,7 @@ export const SOM_FACTS_NAMES = [
   'hostedZoneAttributesMatch',
   'hostedZoneDnsTxtRecordMatch',
   'hostedZoneVerified',
+  'shouldDeployCertificateClones',
   'needsCloudfrontDist',
   'hasCloudfrontDistId',
   'needsCodePipeline',
@@ -58,11 +62,14 @@ export const siteOMaticRules = rulesEngineFactory<SomFactNames, SomContext>({
   protectedSsm: async (_facts, context) => getContextParam(context, SSM_PARAM_NAME_PROTECTED_STATUS) === 'true',
   hasHostedZoneIdParam: async (_facts, context) =>
     is(getContextParam(context, SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS)),
+  hasCertificateClones: async (_facts, context) => isNonZero(context.manifest?.certificate?.clones?.length),
   hasHostedZoneNameServers: async (_facts, context) => is(context.hostedZoneNameservers),
   hasHostedZoneAttributes: async (_facts, context) => is(context.hostedZoneAttributes),
   hasDnsResolvedNameservers: async (_facts, context) => is(context.dnsResolvedNameserverRecords),
   hasRegistrarNameservers: async (_facts, context) => is(context.registrarNameservers),
   hasDnsResolvedTxtRecord: async (_facts, context) => is(context.dnsVerificationTxtRecord),
+  hasDomainCertificateArnParam: async (_facts, context) =>
+    is(getContextParam(context, SSM_PARAM_NAME_DOMAIN_CERTIFICATE_ARN)),
   hasNoneContentProducerConfig: async (_facts, context) =>
     is(context.manifest?.content?.producerId === CONTENT_PRODUCER_ID_NONE),
   hasContentBucket: async (_facts, context) => is(getContextParam(context, SSM_PARAM_NAME_DOMAIN_BUCKET_NAME)),
@@ -84,14 +91,15 @@ export const siteOMaticRules = rulesEngineFactory<SomFactNames, SomContext>({
   dnsResolvedNameserversMatchHostedZoneNameServers: async (facts, context) =>
     is(facts.hasDnsResolvedNameservers) &&
     is(facts.hasHostedZoneNameServers) &&
+    isNonZero(context.dnsResolvedNameserverRecords?.length) &&
     is(context.hostedZoneNameservers?.every((ns) => context.dnsResolvedNameserverRecords?.includes(ns))) &&
     context.hostedZoneNameservers?.length === context.dnsResolvedNameserverRecords?.length,
-
   registrarNameserversMatchHostedZoneNameServers: async (facts, context) =>
     is(facts.hasRegistrarNameservers) &&
     is(facts.hasHostedZoneNameServers) &&
-    is(context.hostedZoneNameservers?.every((ns) => context.registrarNameservers?.includes(ns))) &&
-    context.hostedZoneNameservers?.length === context.registrarNameservers?.length,
+    isNonZero(context.registrarNameservers?.length) &&
+    context.hostedZoneNameservers?.length === context.registrarNameservers?.length &&
+    is(context.hostedZoneNameservers?.every((ns) => context.registrarNameservers?.includes(ns))),
 
   hostedZoneAttributesMatch: async (facts, context) =>
     is(facts.hasHostedZoneIdParam) &&
@@ -116,8 +124,14 @@ export const siteOMaticRules = rulesEngineFactory<SomFactNames, SomContext>({
 
   hasAwsRoute53RegistrarConfig: async (_facts, context) => context.manifest?.registrar === REGISTRAR_ID_AWS_ROUTE53,
   isAwsRoute53RegisteredDomain: async (facts, _context) =>
+    //[FIXME: require explicit AwsRoute53 registrar config, rather than trying to guess?]
     is(facts.hasAwsRoute53RegistrarConfig) ||
-    (isNot(facts.hasHostedZoneIdParam) && is(facts.dnsResolvedNameserversMatchHostedZoneNameServers)),
+    (isNot(facts.hasHostedZoneIdParam) &&
+      isNot(facts.hasRegistrarConfig) &&
+      is(facts.dnsResolvedNameserversMatchHostedZoneNameServers)),
+
+  shouldDeployCertificateClones: async (facts, _context) =>
+    is(facts.hasCertificateClones) && (is(facts.isAwsRoute53RegisteredDomain) || is(facts.hostedZoneVerified)),
 
   needsCloudfrontDist: async (_facts, context) => is(context.manifest?.webHosting),
   hasCloudfrontDistId: async (_facts, context) =>
@@ -135,7 +149,7 @@ export const siteOMaticRules = rulesEngineFactory<SomFactNames, SomContext>({
 
   // SOM_STATUS_HOSTED_ZONE_OK
   isStatusHostedZoneOk: async (facts, _context) =>
-    is(facts.hostedZoneVerified) && is(facts.dnsResolvedNameserversMatchHostedZoneNameServers),
+    is(facts.hostedZoneVerified) && isNot(facts.isStatusHostedZoneAwaitingNsConfig),
 
   // SOM_STATUS_SITE_FUNCTIONAL
   isStatusSiteFunctional: async (facts, _context) => is(facts.isStatusHostedZoneOk) && is(facts.has200ConnectionStatus),
