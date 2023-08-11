@@ -1,6 +1,7 @@
 import path from 'path';
 import type Vorpal from 'vorpal';
 
+import { VERSION } from '../../lib/consts';
 import { manifestDerivedProps } from '../../lib/context';
 import { loadManifest } from '../../lib/manifest';
 import type { SomConfig } from '../../lib/types';
@@ -22,6 +23,7 @@ export function actionLoadManifest(vorpal: Vorpal, config: SomConfig, state: Som
 
     if (!state.plumbing) {
       vorpal.log(`Loaded manifest for: ${context.rootDomainName}`);
+      vorpal.delimiter(`site-o-matic ${VERSION}: ${context.somId}>`);
       await actionInfo(vorpal, config, state)({ options: {} });
     }
   };

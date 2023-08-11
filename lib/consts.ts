@@ -49,8 +49,6 @@ export const WEB_HOSTING_DEFAULT_ERROR_RESPONSES: Array<ErrorResponse> = [
   },
 ];
 
-export const DEFAULT_NS_RECORD_TTL_MINS = 5; // 2880;
-
 export const REDIRECT_TYPE_EDGE_CF_FUNCTION = 'edge-cf-function';
 
 export const WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID = 'cf-functions-viewer-request';
