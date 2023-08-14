@@ -89,7 +89,7 @@ export function renderInfoSpec(infoSpec: SomInfoSpec): string {
       },
       {
         Param: chalk.bold(chalk.white('certificate clones')),
-        Value: infoSpec.certificateCloneNames?.join('\n'),
+        Value: infoSpec.certificateClones?.join('\n'),
       },
       {
         Param: chalk.bold(chalk.white('cross account access')),

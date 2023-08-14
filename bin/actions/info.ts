@@ -41,7 +41,7 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomGlobalSt
         webmasterEmail: context.webmasterEmail,
         registrar: context.registrar,
         subdomains: context.subdomains,
-        certificateCloneNames: context.certificateCloneNames,
+        certificateClones: context.manifest.certificate?.clones?.map((i) => `${i.name} / ${i.region}`),
         webHosting: {
           type: context.manifest.webHosting?.type,
           originPath: context.manifest.webHosting?.originPath ?? WEB_HOSTING_DEFAULT_ORIGIN_PATH,

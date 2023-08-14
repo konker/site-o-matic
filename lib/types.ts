@@ -336,7 +336,7 @@ export type SomInfoSpec = {
   readonly webmasterEmail: string | undefined;
   readonly registrar: string | undefined;
   readonly subdomains: Array<string> | undefined;
-  readonly certificateCloneNames: Array<string> | undefined;
+  readonly certificateClones: Array<string> | undefined;
   readonly webHosting:
     | (Required<Omit<SomManifest['webHosting'], 'errorResponses' | 'waf'>> & {
         errorResponses: Array<string>;
