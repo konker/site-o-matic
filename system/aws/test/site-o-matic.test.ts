@@ -33,7 +33,6 @@ test('Empty Stack', async () => {
       domainHash: 'abc123',
       siteUrl: 'https://example.com',
       subdomains: [],
-      serviceNames: [],
       certificateCloneNames: [],
       crossAccountAccessNames: [],
       registrar: undefined,

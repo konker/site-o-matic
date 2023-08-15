@@ -33,14 +33,14 @@ export function renderInfoSpec(infoSpec: SomInfoSpec): string {
               [
                 {
                   Hosting:
-                    `${chalk.bold(chalk.white('type'))}:\n↪ ${infoSpec.webHosting.type}` +
-                    `\n${chalk.bold(chalk.white('originPath'))}:\n↪ ${infoSpec.webHosting.originPath}` +
-                    `\n${chalk.bold(chalk.white('defaultRootObject'))}:\n↪ ${infoSpec.webHosting.defaultRootObject}`,
+                    `${chalk.bold(chalk.white('type'))}:\n ↪ ${infoSpec.webHosting.type}` +
+                    `\n${chalk.bold(chalk.white('originPath'))}:\n ↪ ${infoSpec.webHosting.originPath}` +
+                    `\n${chalk.bold(chalk.white('defaultRootObject'))}:\n ↪ ${infoSpec.webHosting.defaultRootObject}`,
                   ErrorResponses: infoSpec.webHosting.errorResponses.join('\n'),
                   WAF: infoSpec.webHosting?.waf
-                    ? `${chalk.bold(chalk.white('WAF enabled'))}:\n↪ ${infoSpec.webHosting.waf.enabled}\n${chalk.bold(
+                    ? `${chalk.bold(chalk.white('WAF enabled'))}:\n ↪ ${infoSpec.webHosting.waf.enabled}\n${chalk.bold(
                         chalk.white('WAF managed rules')
-                      )}: ${infoSpec.webHosting.waf.AWSManagedRules?.map((rule: string) => `\n↪ ${rule}`)}\n`
+                      )}: ${infoSpec.webHosting.waf.AWSManagedRules?.map((rule: string) => `\n ↪ ${rule}`)}\n`
                     : undefined,
                 },
               ],
@@ -54,22 +54,26 @@ export function renderInfoSpec(infoSpec: SomInfoSpec): string {
       {
         Param: chalk.bold(chalk.white('pipeline')),
         Value: infoSpec.pipeline
-          ? `${chalk.bold(chalk.white('type'))}:\n↪ ${infoSpec.pipeline.type}` +
+          ? `${chalk.bold(chalk.white('type'))}:\n ↪ ${infoSpec.pipeline.type}` +
             ('codestarConnectionArn' in infoSpec.pipeline
-              ? `\n${chalk.bold(chalk.white('codestarConnectionArn'))}:\n↪ ${infoSpec.pipeline.codestarConnectionArn}`
+              ? `\n${chalk.bold(chalk.white('codestarConnectionArn'))}:\n ↪ ${infoSpec.pipeline.codestarConnectionArn}`
               : '') +
             ('owner' in infoSpec.pipeline
-              ? `\n${chalk.bold(chalk.white('owner'))}:\n↪ ${infoSpec.pipeline.owner}`
+              ? `\n${chalk.bold(chalk.white('owner'))}:\n ↪ ${infoSpec.pipeline.owner}`
               : '') +
-            ('repo' in infoSpec.pipeline ? `\n${chalk.bold(chalk.white('repo'))}:\n↪ ${infoSpec.pipeline?.repo}` : '')
+            ('repo' in infoSpec.pipeline ? `\n${chalk.bold(chalk.white('repo'))}:\n ↪ ${infoSpec.pipeline?.repo}` : '')
           : undefined,
       },
       {
         Param: chalk.bold(chalk.white('redirect')),
         Value: infoSpec.redirect
-          ? `${chalk.bold(chalk.white('type'))}:\n↪ ${infoSpec.redirect.type}` +
+          ? `${chalk.bold(chalk.white('type'))}:\n ↪ ${infoSpec.redirect.type}` +
             `\n${chalk.bold(chalk.white('action'))}:\n ${infoSpec.redirect.action}`
           : undefined,
+      },
+      {
+        Param: chalk.bold(chalk.white('services')),
+        Value: infoSpec.services?.map(([a, b]) => `${chalk.bold(a)}\n ↪ ${b}`)?.join('\n'),
       },
       {
         Param: chalk.bold(chalk.white('notifications')),

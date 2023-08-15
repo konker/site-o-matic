@@ -65,6 +65,7 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomGlobalSt
               action: `${context.manifest.redirect.source} ⟶ ${context.manifest.redirect.target}`,
             }
           : undefined,
+        services: context.manifest.services?.map((i) => [i.domainName, i.url]) ?? [],
         crossAccountAccessNames: context.crossAccountAccessNames,
         notifications: {
           disabled: context.manifest.notifications?.disabled ?? false,
