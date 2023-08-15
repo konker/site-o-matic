@@ -4,7 +4,8 @@ import type { SomConfig, SomParam } from '../types';
 import { assumeSomRole } from './sts';
 
 export function toSsmParamName(somId: string, name: string, ...extra: Array<string>) {
-  return `/som/${somId}/${name}` + (extra.length > 0 ? '/' + extra.join('/') : '');
+  const extra_ = extra.filter((i) => i !== undefined && i !== null && i !== '');
+  return `/som/${somId}/${name}` + (extra_.length > 0 ? '/' + extra_.join('/') : '');
 }
 
 export async function getSsmParams(config: SomConfig, region: string, somId?: string): Promise<Array<SomParam>> {

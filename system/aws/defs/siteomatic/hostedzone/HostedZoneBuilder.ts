@@ -134,7 +134,7 @@ export async function build(
 
         return ret;
       } else {
-        const ret = new route53.PublicHostedZone(scope, 'HostedZone', {
+        const ret = new route53.PublicHostedZone(scope, _id('HostedZone', hostedZoneConfig.domainName, isRoot), {
           zoneName: props.rootDomainName,
         });
         _somMeta(config, ret, props.siteStack.somId, props.siteStack.siteProps.protected);
@@ -177,15 +177,23 @@ export async function build(
   // ----------------------------------------------------------------------
   // SSM Params, only create for the top level
   if (isRoot) {
-    const res1 = new ssm.StringParameter(scope, 'SsmHostedZoneId', {
-      parameterName: toSsmParamName(props.siteStack.somId, SSM_PARAM_NAME_HOSTED_ZONE_ID),
+    const res1 = new ssm.StringParameter(scope, _id('SsmHostedZoneId', hostedZoneConfig.domainName, isRoot), {
+      parameterName: toSsmParamName(
+        props.siteStack.somId,
+        SSM_PARAM_NAME_HOSTED_ZONE_ID,
+        isRoot ? '' : hostedZoneConfig.domainName
+      ),
       stringValue: hostedZone.hostedZoneId,
       tier: ssm.ParameterTier.STANDARD,
     });
     _somMeta(config, res1, props.siteStack.somId, props.siteStack.siteProps.protected);
 
-    const res2 = new ssm.StringParameter(scope, 'SsmHostedZoneNameServers', {
-      parameterName: toSsmParamName(props.siteStack.somId, SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS),
+    const res2 = new ssm.StringParameter(scope, _id('SsmHostedZoneNameServers', hostedZoneConfig.domainName, isRoot), {
+      parameterName: toSsmParamName(
+        props.siteStack.somId,
+        SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS,
+        isRoot ? '' : hostedZoneConfig.domainName
+      ),
       stringValue: cdk.Fn.join(',', hostedZone.hostedZoneNameServers ?? []),
       tier: ssm.ParameterTier.STANDARD,
     });

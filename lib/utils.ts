@@ -16,8 +16,8 @@ export function getContextParam(context: SomContext, name: string): string | und
   return getParam(context?.params, name);
 }
 
-export function _id(prefix: string, domainName: string, isRoot: boolean): string {
-  return isRoot ? prefix : `${prefix}-${domainName}`;
+export function _id(prefix: string, postfix: string, isRoot: boolean): string {
+  return isRoot ? prefix : `${prefix}-${postfix}`;
 }
 
 export function _removalPolicyFromBoolean(protect: boolean): RemovalPolicy {
