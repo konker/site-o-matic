@@ -104,7 +104,8 @@ export async function build(
   const res3 = new ssm.StringParameter(scope, 'SsmCloudfrontDistributionId', {
     parameterName: toSsmParamName(
       props.siteStack.somId,
-      SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID(props.service.domainName)
+      SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID,
+      props.service.domainName
     ),
     stringValue: cloudFrontDistribution.distributionId,
     tier: ssm.ParameterTier.STANDARD,
@@ -114,7 +115,8 @@ export async function build(
   const res4 = new ssm.StringParameter(scope, 'SsmCloudfrontDomainName', {
     parameterName: toSsmParamName(
       props.siteStack.somId,
-      SSM_PARAM_NAME_CLOUDFRONT_DOMAIN_NAME(props.service.domainName)
+      SSM_PARAM_NAME_CLOUDFRONT_DOMAIN_NAME,
+      props.service.domainName
     ),
     stringValue: cloudFrontDistribution.distributionDomainName,
     tier: ssm.ParameterTier.STANDARD,

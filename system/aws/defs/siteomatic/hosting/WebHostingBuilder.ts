@@ -252,14 +252,14 @@ export async function build(
   _somMeta(config, res3, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   const res4 = new ssm.StringParameter(scope, 'SsmCloudfrontDistributionId', {
-    parameterName: toSsmParamName(props.siteStack.somId, SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID()),
+    parameterName: toSsmParamName(props.siteStack.somId, SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID, 'www'),
     stringValue: cloudFrontDistribution.distributionId,
     tier: ssm.ParameterTier.STANDARD,
   });
   _somMeta(config, res4, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   const res5 = new ssm.StringParameter(scope, 'SsmCloudfrontDomainName', {
-    parameterName: toSsmParamName(props.siteStack.somId, SSM_PARAM_NAME_CLOUDFRONT_DOMAIN_NAME()),
+    parameterName: toSsmParamName(props.siteStack.somId, SSM_PARAM_NAME_CLOUDFRONT_DOMAIN_NAME, 'www'),
     stringValue: cloudFrontDistribution.distributionDomainName,
     tier: ssm.ParameterTier.STANDARD,
   });

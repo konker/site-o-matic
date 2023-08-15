@@ -3,8 +3,8 @@ import { GetParameterCommand, GetParametersByPathCommand, SSMClient } from '@aws
 import type { SomConfig, SomParam } from '../types';
 import { assumeSomRole } from './sts';
 
-export function toSsmParamName(somId: string, name: string) {
-  return `/som/${somId}/${name}`;
+export function toSsmParamName(somId: string, name: string, ...extra: Array<string>) {
+  return `/som/${somId}/${name}` + (extra.length > 0 ? '/' + extra.join('/') : '');
 }
 
 export async function getSsmParams(config: SomConfig, region: string, somId?: string): Promise<Array<SomParam>> {
@@ -23,6 +23,7 @@ export async function getSsmParams(config: SomConfig, region: string, somId?: st
         {
           Path: path,
           MaxResults: 10,
+          Recursive: true,
         },
         nextToken ? { NextToken: nextToken } : {}
       )
@@ -35,7 +36,7 @@ export async function getSsmParams(config: SomConfig, region: string, somId?: st
       if (Name)
         return acc.concat({
           Param: Name.slice(path.length + 1),
-          Value: Value || '',
+          Value: Value ?? '',
         });
       return acc;
     }, [] as Array<SomParam>);
@@ -46,7 +47,9 @@ export async function getSsmParams(config: SomConfig, region: string, somId?: st
     return params;
   }
 
-  return _fetchSsmParams();
+  const ret = await _fetchSsmParams();
+
+  return ret.sort((a, b) => a.Param.localeCompare(b.Param));
 }
 
 export async function getSsmParam(region: string, paramName: string): Promise<string | undefined> {
@@ -64,6 +67,11 @@ export async function getSsmParam(region: string, paramName: string): Promise<st
   }
 }
 
-export async function getSomSsmParam(somId: string, region: string, name: string): Promise<string | undefined> {
-  return getSsmParam(region, toSsmParamName(somId, name));
+export async function getSomSsmParam(
+  somId: string,
+  region: string,
+  name: string,
+  ...extra: Array<string>
+): Promise<string | undefined> {
+  return getSsmParam(region, toSsmParamName(somId, name, ...extra));
 }

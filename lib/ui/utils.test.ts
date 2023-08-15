@@ -1,6 +1,6 @@
-import * as unit from './tables';
+import * as unit from './utils';
 
-describe('ui/tables', () => {
+describe('ui/utils', () => {
   describe('maxLenLabel', () => {
     it('should work as expected', () => {
       expect(unit.maxLenLabel('123456789')).toEqual('123456789');
@@ -14,6 +14,15 @@ describe('ui/tables', () => {
       expect(unit.maxLenLabel('123456789', 8)).toEqual('12...789');
       expect(unit.maxLenLabel('123456789', 9)).toEqual('123456789');
       expect(unit.maxLenLabel('123456789', 10)).toEqual('123456789');
+    });
+  });
+
+  describe('ssmParamLabel', () => {
+    it('should work as expected', () => {
+      expect(unit.ssmParamLabel('name')).toEqual('name');
+      expect(unit.ssmParamLabel('name/foo')).toEqual('name\n ↪ foo');
+      expect(unit.ssmParamLabel('name/foo/bar')).toEqual('name\n ↪ foo\n ↪ bar');
+      expect(unit.ssmParamLabel('name/foo/bar/baz')).toEqual('name\n ↪ foo\n ↪ bar\n ↪ baz');
     });
   });
 });

@@ -30,10 +30,8 @@ export const SSM_PARAM_NAME_DOMAIN_CERTIFICATE_ARN = 'domain-certificate-arn';
 export const SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_NAME = 'notifications-sns-topic-name';
 export const SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN = 'notifications-sns-topic-arn';
 export const SSM_PARAM_NAME_DOMAIN_BUCKET_NAME = 'domain-bucket-name';
-export const SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID = (postfix?: string) =>
-  `cloudfront-distribution-id${postfix ? '-' + postfix : ''}`;
-export const SSM_PARAM_NAME_CLOUDFRONT_DOMAIN_NAME = (postfix?: string) =>
-  `cloudfront-domain-name${postfix ? '-' + postfix : ''}`;
+export const SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID = 'cloudfront-distribution-id';
+export const SSM_PARAM_NAME_CLOUDFRONT_DOMAIN_NAME = 'cloudfront-domain-name';
 export const SSM_PARAM_NAME_CODE_PIPELINE_ARN = 'code-pipeline-arn';
 export const SSM_PARAM_NAME_CODE_PIPELINE_NAME = 'code-pipeline-name';
 export const SSM_PARAM_NAME_CODE_PIPELINE_CONSOLE_URL = 'code-pipeline-console-url';

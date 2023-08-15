@@ -141,7 +141,7 @@ export const siteOMaticRules = rulesEngineFactory<SomFactNames, SomContext>({
 
   needsCloudfrontDist: async (_facts, context) => is(context.manifest?.webHosting),
   hasCloudfrontDistId: async (_facts, context) =>
-    is(getContextParam(context, SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID())),
+    is(getContextParam(context, SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID)),
   needsCodePipeline: async (_facts, context) => is(context.manifest?.pipeline),
   hasCodePipelineArn: async (_facts, context) => is(getContextParam(context, SSM_PARAM_NAME_CODE_PIPELINE_ARN)),
 
