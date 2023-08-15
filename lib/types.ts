@@ -316,8 +316,6 @@ export type SomContext = {
   siteUrl?: string;
   webmasterEmail?: string | undefined;
   subdomains?: Array<string>;
-  certificateCloneNames?: Array<string>;
-  crossAccountAccessNames?: Array<string>;
   registrar?: string | undefined;
 
   // Network derived
@@ -343,8 +341,6 @@ export type HasManifest<T extends SomContext> = T & {
   readonly somId: string;
   readonly siteUrl: string;
   readonly subdomains: Array<string>;
-  readonly certificateCloneNames: Array<string>;
-  readonly crossAccountAccessNames: Array<string>;
   readonly registrar: string | undefined;
 };
 
@@ -371,7 +367,6 @@ export type SomInfoSpec = {
   readonly webmasterEmail: string | undefined;
   readonly registrar: string | undefined;
   readonly subdomains: Array<string> | undefined;
-  readonly certificateClones: Array<string> | undefined;
   readonly webHosting:
     | (Required<Omit<SomManifest['webHosting'], 'errorResponses' | 'waf'>> & {
         errorResponses: Array<string>;
@@ -392,6 +387,7 @@ export type SomInfoSpec = {
       }
     | undefined;
   readonly services: Array<[string, string]>;
+  readonly certificateClones: Array<string> | undefined;
   readonly crossAccountAccessNames: Array<string> | undefined;
   readonly notifications: {
     readonly disabled: boolean;

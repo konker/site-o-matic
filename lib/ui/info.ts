@@ -91,29 +91,43 @@ export function renderInfoSpec(infoSpec: SomInfoSpec): string {
           [25, 25, 28]
         ),
       },
-      {
-        Param: chalk.bold(chalk.white('certificate clones')),
-        Value: infoSpec.certificateClones?.join('\n'),
-      },
-      {
-        Param: chalk.bold(chalk.white('cross account access')),
-        Value: infoSpec.crossAccountAccessNames?.join('\n'),
-      },
-      {
-        Param: chalk.bold(chalk.white('protected')),
-        Value: `SSM: ${
-          infoSpec.protected.protectedSsm === infoSpec.protected.protectedManifest
-            ? chalk.green(infoSpec.protected.protectedSsm)
-            : chalk.red(infoSpec.protected.protectedSsm)
-        } / Manifest: ${
-          infoSpec.protected.protectedManifest === infoSpec.protected.protectedSsm
-            ? chalk.green(infoSpec.protected.protectedManifest)
-            : chalk.red(infoSpec.protected.protectedManifest)
-        }`,
-      },
-      infoSpec.pathToManifestFile,
-      infoSpec.somId,
-    ],
+    ]
+      .concat(
+        infoSpec.certificateClones
+          ? [
+              {
+                Param: chalk.bold(chalk.white('certificate clones')),
+                Value: infoSpec.certificateClones?.join('\n'),
+              },
+            ]
+          : []
+      )
+      .concat(
+        infoSpec.crossAccountAccessNames
+          ? [
+              {
+                Param: chalk.bold(chalk.white('cross account access')),
+                Value: infoSpec.crossAccountAccessNames?.join('\n'),
+              },
+            ]
+          : []
+      )
+      .concat([
+        {
+          Param: chalk.bold(chalk.white('protected')),
+          Value: `SSM: ${
+            infoSpec.protected.protectedSsm === infoSpec.protected.protectedManifest
+              ? chalk.green(infoSpec.protected.protectedSsm)
+              : chalk.red(infoSpec.protected.protectedSsm)
+          } / Manifest: ${
+            infoSpec.protected.protectedManifest === infoSpec.protected.protectedSsm
+              ? chalk.green(infoSpec.protected.protectedManifest)
+              : chalk.red(infoSpec.protected.protectedManifest)
+          }`,
+        },
+        infoSpec.pathToManifestFile,
+        infoSpec.somId,
+      ]),
     ['Param', 'Value'],
     ['', 'Manifest']
   );

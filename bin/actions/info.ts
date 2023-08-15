@@ -41,7 +41,6 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomGlobalSt
         webmasterEmail: context.webmasterEmail,
         registrar: context.registrar,
         subdomains: context.subdomains,
-        certificateClones: context.manifest.certificate?.clones?.map((i) => `${i.name} / ${i.region}`),
         webHosting: {
           type: context.manifest.webHosting?.type,
           originPath: context.manifest.webHosting?.originPath ?? WEB_HOSTING_DEFAULT_ORIGIN_PATH,
@@ -66,7 +65,9 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomGlobalSt
             }
           : undefined,
         services: context.manifest.services?.map((i) => [i.domainName, i.url]) ?? [],
-        crossAccountAccessNames: context.crossAccountAccessNames,
+        certificateClones: context.manifest.certificate?.clones?.map((i) => `${i.name} / ${i.region}`),
+        crossAccountAccessNames: context.manifest.crossAccountAccess?.map((i) => i.name),
+
         notifications: {
           disabled: context.manifest.notifications?.disabled ?? false,
           noSubscription: context.manifest.notifications?.noSubscription ?? false,

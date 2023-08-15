@@ -76,9 +76,9 @@ export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomGlobal
               //
               // [FIXME: this should also inform that the tool basically hangs until the certificate clones are validated]
               // [TODD: is it possible for the tool to detect this kind of hanging, and periodically prompt the user to perform validation?]
-              `WARNING!: Manual action needed to clone certificates into ${state.context.certificateCloneNames?.join(
-                ','
-              )}. Proceed? [y/N] `
+              `WARNING!: Manual action needed to clone certificates into ${state.context.manifest?.certificate?.clones
+                ?.map((i) => i.name)
+                ?.join(',')}. Proceed? [y/N] `
             ),
           });
       if (response2.confirm !== 'y') {

@@ -23,9 +23,7 @@ export function hasManifest(context: SomContext): context is HasManifest<SomCont
     context.domainHash !== undefined &&
     context.somId !== undefined &&
     context.siteUrl !== undefined &&
-    context.subdomains !== undefined &&
-    context.certificateCloneNames !== undefined &&
-    context.crossAccountAccessNames !== undefined
+    context.subdomains !== undefined
     // context.registrar !== undefined -- can be undefined
   );
 }
@@ -118,8 +116,6 @@ export function manifestDerivedProps(
     somId: formulateSomId(config, manifest.rootDomainName),
     siteUrl: `https://${manifest.rootDomainName}/`,
     subdomains: manifest.dns?.subdomains?.map((i: any) => i.domainName) ?? [],
-    certificateCloneNames: manifest.certificate?.clones?.map((i: any) => i.name) ?? [],
-    crossAccountAccessNames: manifest.crossAccountAccess?.map((i: any) => i.name) ?? [],
     registrar: manifest.registrar,
   };
   return {
