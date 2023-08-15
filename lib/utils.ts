@@ -2,7 +2,7 @@ import type { Resource, Stack } from 'aws-cdk-lib';
 import { RemovalPolicy, Tags } from 'aws-cdk-lib';
 import Handlebars from 'handlebars';
 
-import type { HasManifest, SomConfig, SomContext, SomParam } from './types';
+import type { CertificateResources, HasManifest, SomConfig, SomContext, SomParam } from './types';
 
 export function getParam(params: Array<SomParam> | undefined, name: string): string | undefined {
   return params?.find((i: any) => i.Param === name)?.Value;
@@ -48,4 +48,16 @@ export function contextTemplateString(s: string | undefined, context: HasManifes
 
   const compliedTemplate = Handlebars.compile(s);
   return compliedTemplate({ context });
+}
+
+export function searchCertificates(
+  certificateResources: CertificateResources | undefined,
+  domainName: string
+): CertificateResources | undefined {
+  if (certificateResources?.domainName === domainName) return certificateResources;
+  for (const subResources of certificateResources?.subdomainResources ?? []) {
+    const res = searchCertificates(subResources, domainName);
+    if (res) return res;
+  }
+  return undefined;
 }

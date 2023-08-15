@@ -65,15 +65,19 @@ export async function build(
 
   // ----------------------------------------------------------------------
   // SSL certificates for subdomains
+  const subdomainResources: Array<CertificateResources> = [];
   if (hostedZoneConfig.subdomains && props.siteStack.siteProps.contextParams.deploySubdomainCerts) {
     // Recurse to create resources for subdomains
     for (const subdomain of hostedZoneConfig.subdomains) {
-      await build(scope, config, props, subdomain);
+      const subResources = await build(scope, config, props, subdomain);
+      subdomainResources.push(subResources);
     }
   }
 
   return {
+    domainName: hostedZoneConfig.domainName,
     domainCertificate,
+    subdomainResources,
   };
 }
 
@@ -94,35 +98,18 @@ export async function buildManualValidation(
 
   // ----------------------------------------------------------------------
   // SSL certificates for subdomains
+  const subdomainResources: Array<CertificateResources> = [];
   if (hostedZoneConfig.subdomains && props.siteStack.siteProps.contextParams.deploySubdomainCerts) {
     // Recurse to create resources for subdomains
     for (const subdomain of hostedZoneConfig.subdomains) {
-      await buildManualValidation(scope, config, props, subdomain);
+      const subResources = await buildManualValidation(scope, config, props, subdomain);
+      subdomainResources.push(subResources);
     }
   }
 
-  /*
-  // ----------------------------------------------------------------------
-  // SSL certificates for subdomains
-  if (
-    props.siteStack.siteProps.context.manifest.dns?.subdomains &&
-    props.siteStack.siteProps.contextParams.deploySubdomainCerts
-  ) {
-    props.siteStack.siteProps.context.manifest.dns.subdomains.forEach((subdomain) => {
-      const subdomainCertificate = new certificatemanager.Certificate(
-        scope,
-        `DomainCertificate-${subdomain.domainName}`,
-        {
-          domainName: subdomain.domainName,
-          subjectAlternativeNames: [`*.${subdomain.domainName}`],
-        }
-      );
-      _somMeta(config, subdomainCertificate, props.siteStack.somId, props.siteStack.siteProps.protected);
-    });
-  }
-  */
-
   return {
+    domainName: hostedZoneConfig.domainName,
     domainCertificate,
+    subdomainResources,
   };
 }

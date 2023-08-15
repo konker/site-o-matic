@@ -33,6 +33,7 @@ export const SOM_FACTS_NAMES = [
   'hasContentBucket',
   'isContentBucketEmpty',
   'shouldDeployS3Content',
+  'hasServices',
   'hasCertificateClones',
   'hasRegistrarNameservers',
   'has200ConnectionStatus',
@@ -44,6 +45,7 @@ export const SOM_FACTS_NAMES = [
   'hostedZoneAttributesMatch',
   'hostedZoneDnsTxtRecordMatch',
   'hostedZoneVerified',
+  'shouldDeployServices',
   'shouldDeployCertificateClones',
   'needsCloudfrontDist',
   'hasCloudfrontDistId',
@@ -62,6 +64,7 @@ export const siteOMaticRules = rulesEngineFactory<SomFactNames, SomContext>({
   protectedSsm: async (_facts, context) => getContextParam(context, SSM_PARAM_NAME_PROTECTED_STATUS) === 'true',
   hasHostedZoneIdParam: async (_facts, context) =>
     is(getContextParam(context, SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS)),
+  hasServices: async (_facts, context) => isNonZero(context.manifest?.services?.length),
   hasCertificateClones: async (_facts, context) => isNonZero(context.manifest?.certificate?.clones?.length),
   hasHostedZoneNameServers: async (_facts, context) => is(context.hostedZoneNameservers),
   hasHostedZoneAttributes: async (_facts, context) => is(context.hostedZoneAttributes),
@@ -130,12 +133,15 @@ export const siteOMaticRules = rulesEngineFactory<SomFactNames, SomContext>({
       isNot(facts.hasRegistrarConfig) &&
       is(facts.dnsResolvedNameserversMatchHostedZoneNameServers)),
 
+  shouldDeployServices: async (facts, _context) =>
+    is(facts.hasServices) && (is(facts.isAwsRoute53RegisteredDomain) || is(facts.hostedZoneVerified)),
+
   shouldDeployCertificateClones: async (facts, _context) =>
     is(facts.hasCertificateClones) && (is(facts.isAwsRoute53RegisteredDomain) || is(facts.hostedZoneVerified)),
 
   needsCloudfrontDist: async (_facts, context) => is(context.manifest?.webHosting),
   hasCloudfrontDistId: async (_facts, context) =>
-    is(getContextParam(context, SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID)),
+    is(getContextParam(context, SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID())),
   needsCodePipeline: async (_facts, context) => is(context.manifest?.pipeline),
   hasCodePipelineArn: async (_facts, context) => is(getContextParam(context, SSM_PARAM_NAME_CODE_PIPELINE_ARN)),
 

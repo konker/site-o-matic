@@ -24,6 +24,7 @@ import type {
   CrossAccountAccessGrantRoleSpec,
   HostedZoneResources,
   PipelineResources,
+  ServiceResources,
   SiteStackProps,
   SomConfig,
   WebHostingResources,
@@ -32,6 +33,7 @@ import { _id, _somMeta, _somTag } from '../../../../../lib/utils';
 import { SiteCertificateNestedStack } from './nested/SiteCertificateNestedStack';
 import { SiteDnsNestedStack } from './nested/SiteDnsNestedStack';
 import { SitePipelineNestedStack } from './nested/SitePipelineNestedStack';
+import { SiteServicesNestedStack } from './nested/SiteServicesNestedStack';
 import { SiteWebHostingNestedStack } from './nested/SiteWebHostingNestedStack';
 
 export class SiteStack extends cdk.Stack {
@@ -49,6 +51,7 @@ export class SiteStack extends cdk.Stack {
   public certificateResources?: CertificateResources | undefined;
   public hostingResources?: WebHostingResources | undefined;
   public sitePipelineResources?: PipelineResources | undefined;
+  public servicesResources?: Array<ServiceResources> | undefined;
 
   constructor(scope: Construct, props: SiteStackProps) {
     const stackId = props.context.somId;
@@ -192,6 +195,19 @@ export class SiteStack extends cdk.Stack {
         await pipelineNestedStack.build();
         pipelineNestedStack.addDependency(webHostingNestedStack);
         _somTag(this.config, pipelineNestedStack, this.somId);
+      }
+
+      // ----------------------------------------------------------------------
+      // Services
+      // [NOTE: currently we assume RestApiServiceSpec as the only option]
+      this.servicesResources = [];
+      if (this.siteProps.facts.shouldDeployServices) {
+        const servicesNestedStack = new SiteServicesNestedStack(this, {
+          description: `Site-o-Matic services nested stack for ${this.siteProps.context.rootDomainName}`,
+        });
+        await servicesNestedStack.build();
+        servicesNestedStack.addDependency(certificateNestedStack);
+        _somTag(this.config, servicesNestedStack, this.somId);
       }
 
       // ----------------------------------------------------------------------

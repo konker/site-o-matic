@@ -46,6 +46,10 @@
       "description": "Pipeline specification",
       "$ref": "#/definitions/pipelineClause"
     },
+    "services": {
+      "description": "Service aliases specification",
+      "$ref": "#/definitions/servicesClause"
+    },
     "crossAccountAccess": {
       "description": "Cross account permissions specification",
       "type": "array",
@@ -407,6 +411,43 @@
         { "$ref": "#/definitions/pipelineClauseCodeStarCustom" }
       ]
     },
+    "restApiServiceSpec": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["rest-api"]
+        },
+        "domainName": {
+          "type": "string",
+          "minLength": 4
+        },
+        "certificate": {
+          "type": "string",
+          "minLength": 4
+        },
+        "url": {
+          "type": "string",
+          "minLength": 8
+        },
+        "originPath": {
+          "type": "string",
+          "minLength": 1,
+          "default": "/"
+        }
+      },
+      "required": ["type", "domainName", "certificate", "url"],
+      "additionalProperties": false
+    },
+    "serviceSpec": {
+      "oneOf": [{ "$ref": "#/definitions/restApiServiceSpec" }]
+    },
+    "servicesClause": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/serviceSpec"
+      }
+    },
     "crossAccountAccessSpec": {
       "type": "object",
       "properties": {
@@ -517,6 +558,12 @@
           }
         }
       },
+      "services": [
+        {
+          "domainName": "sub.dev.example.com",
+          "endpoint": "https://abcdef1234.execute-api.eu-north-1.amazonaws.com"
+        }
+      ],
       "certificate": {
         "clones": [
           {

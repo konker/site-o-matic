@@ -83,10 +83,11 @@ export async function build(
 
   // ----------------------------------------------------------------------
   // WAF ACl
+  const awsManagedRules = props.siteStack.siteProps.context.manifest.webHosting?.waf?.AWSManagedRules;
   const wafEnabled =
     !!props.siteStack.siteProps.context.manifest.webHosting?.waf?.enabled &&
-    props.siteStack.siteProps.context.manifest.webHosting?.waf?.AWSManagedRules &&
-    props.siteStack.siteProps.context.manifest.webHosting?.waf?.AWSManagedRules.length > 0;
+    awsManagedRules &&
+    awsManagedRules.length > 0;
 
   const wafAcl = wafEnabled
     ? new wafv2.CfnWebACL(scope, 'WafAcl', {
@@ -97,7 +98,7 @@ export async function build(
           sampledRequestsEnabled: true,
           metricName: `${props.siteStack.somId}-wafAcl`,
         },
-        rules: props.siteStack.siteProps.context.manifest.webHosting.waf.AWSManagedRules.map((rule) => ({
+        rules: awsManagedRules.map((rule) => ({
           name: rule.name,
           priority: rule.priority,
           statement: {
@@ -251,14 +252,14 @@ export async function build(
   _somMeta(config, res3, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   const res4 = new ssm.StringParameter(scope, 'SsmCloudfrontDistributionId', {
-    parameterName: toSsmParamName(props.siteStack.somId, SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID),
+    parameterName: toSsmParamName(props.siteStack.somId, SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID()),
     stringValue: cloudFrontDistribution.distributionId,
     tier: ssm.ParameterTier.STANDARD,
   });
   _somMeta(config, res4, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   const res5 = new ssm.StringParameter(scope, 'SsmCloudfrontDomainName', {
-    parameterName: toSsmParamName(props.siteStack.somId, SSM_PARAM_NAME_CLOUDFRONT_DOMAIN_NAME),
+    parameterName: toSsmParamName(props.siteStack.somId, SSM_PARAM_NAME_CLOUDFRONT_DOMAIN_NAME()),
     stringValue: cloudFrontDistribution.distributionDomainName,
     tier: ssm.ParameterTier.STANDARD,
   });

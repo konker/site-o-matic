@@ -11,6 +11,7 @@ import type * as s3 from 'aws-cdk-lib/aws-s3';
 import type { SiteStack } from '../system/aws/defs/siteomatic/site/SiteStack';
 import type {
   REDIRECT_TYPE_EDGE_CF_FUNCTION,
+  SERVICE_TYPE_REST_API,
   SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM,
   SITE_PIPELINE_TYPE_CODECOMMIT_S3,
   SITE_PIPELINE_TYPE_CODESTAR_CUSTOM,
@@ -68,7 +69,9 @@ export type HostedZoneAttributes = {
 };
 
 export type CertificateResources = {
+  readonly domainName: string;
   readonly domainCertificate: certificatemanager.ICertificate;
+  readonly subdomainResources: Array<CertificateResources>;
 };
 
 export type WebHostingResources = {
@@ -76,6 +79,18 @@ export type WebHostingResources = {
   readonly originAccessIdentity: cloudfront.OriginAccessIdentity;
   readonly cloudFrontDistribution: cloudfront.Distribution;
 };
+
+export type RestApiServiceResources = {
+  readonly type: typeof SERVICE_TYPE_REST_API;
+  readonly service: RestApiServiceSpec;
+  readonly originAccessIdentity: cloudfront.OriginAccessIdentity;
+  readonly cloudFrontDistribution: cloudfront.Distribution;
+};
+
+// Maybe add some others in the future
+// ...
+
+export type ServiceResources = RestApiServiceResources;
 
 export type PipelineBuildPhase = {
   readonly commands: Array<string>;
@@ -139,6 +154,19 @@ export type WafAwsManagedRule = {
   readonly priority: number;
 };
 
+export type RestApiServiceSpec = {
+  readonly type: typeof SERVICE_TYPE_REST_API;
+  readonly domainName: string;
+  readonly certificate: string;
+  readonly url: string;
+  readonly originPath?: string;
+};
+
+// Maybe add some others in the future
+// ...
+
+export type ServiceSpec = RestApiServiceSpec;
+
 // ----------------------------------------------------------------------
 export type SomManifest = {
   readonly rootDomainName: string;
@@ -191,6 +219,7 @@ export type SomManifest = {
         readonly repo: string;
         readonly buildPhases: Record<string, PipelineBuildPhase>;
       };
+  readonly services?: undefined | Array<ServiceSpec>;
   readonly crossAccountAccess?: undefined | Array<CrossAccountAccessGrantRoleSpec>;
   readonly content?:
     | undefined
@@ -248,6 +277,12 @@ export type WebHostingBuilderProps = {
 };
 
 // ----------------------------------------------------------------------
+export type RestApiServiceBuilderProps = {
+  readonly siteStack: SiteStack;
+  readonly service: RestApiServiceSpec;
+};
+
+// ----------------------------------------------------------------------
 export type PipelineType =
   | typeof SITE_PIPELINE_TYPE_CODECOMMIT_S3
   | typeof SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM
@@ -281,6 +316,7 @@ export type SomContext = {
   siteUrl?: string;
   webmasterEmail?: string | undefined;
   subdomains?: Array<string>;
+  serviceNames?: Array<string>;
   certificateCloneNames?: Array<string>;
   crossAccountAccessNames?: Array<string>;
   registrar?: string | undefined;
@@ -300,7 +336,7 @@ export type SomContext = {
   somVersion: string;
 };
 
-export type HasManifest<T extends SomContext> = Omit<T, 'pathToManifest' | 'manifest'> & {
+export type HasManifest<T extends SomContext> = T & {
   readonly pathToManifestFile: string;
   readonly manifest: SomManifest;
   readonly rootDomainName: string;
@@ -308,6 +344,7 @@ export type HasManifest<T extends SomContext> = Omit<T, 'pathToManifest' | 'mani
   readonly somId: string;
   readonly siteUrl: string;
   readonly subdomains: Array<string>;
+  readonly serviceNames: Array<string>;
   readonly certificateCloneNames: Array<string>;
   readonly crossAccountAccessNames: Array<string>;
   readonly registrar: string | undefined;

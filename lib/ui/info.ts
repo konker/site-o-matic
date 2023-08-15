@@ -4,7 +4,7 @@ import { UNKNOWN } from '../consts';
 import { CONTENT_PRODUCER_ID_DEFAULT } from '../content';
 import { formatStatusBreadCrumbAndMessage } from '../status';
 import type { SomInfoSpec, SomInfoStatus } from '../types';
-import { tabulate } from './tables';
+import { maxLenLabel, tabulate } from './tables';
 
 export function renderInfoSpec(infoSpec: SomInfoSpec): string {
   return tabulate(
@@ -151,7 +151,7 @@ export function renderInfoStatus(infoSpec: SomInfoSpec, infoStatus: SomInfoStatu
           ? chalk.green(infoStatus.registrarNameservers?.join('\n'))
           : infoStatus.registrarNameservers?.join('\n'),
       },
-      ...infoStatus.params.map(({ Param, Value }) => ({ Param: chalk.cyan(Param), Value })),
+      ...infoStatus.params.map(({ Param, Value }) => ({ Param: chalk.cyan(maxLenLabel(Param, 28)), Value })),
     ],
     ['Param', 'Value'],
     ['', 'System Status']
