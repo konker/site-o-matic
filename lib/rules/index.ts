@@ -21,11 +21,14 @@ export function rulesEngineFactory<F extends ReadonlyArray<string>, C>(
   rules: Record<FactName<F>, RulePredicate<F, C>>
 ): RulesEngine<F, C> {
   return async (context: C): Promise<Facts<F>> => {
-    return Object.entries<RulePredicate<F, C>>(rules).reduce(async (acc, [name, predicate]) => {
-      const accAwaited = await acc;
-      // Don't overwrite existing values
-      if (name in acc) return accAwaited;
-      return { ...accAwaited, [name]: await predicate(accAwaited, context) };
-    }, Promise.resolve({}) as Promise<Facts<F>>);
+    return Object.entries<RulePredicate<F, C>>(rules).reduce(
+      async (acc, [name, predicate]) => {
+        const accAwaited = await acc;
+        // Don't overwrite existing values
+        if (name in acc) return accAwaited;
+        return { ...accAwaited, [name]: await predicate(accAwaited, context) };
+      },
+      Promise.resolve({}) as Promise<Facts<F>>
+    );
   };
 }

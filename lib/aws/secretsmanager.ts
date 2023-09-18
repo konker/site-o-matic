@@ -20,11 +20,9 @@ export async function getSomSecrets(
 
   const cmd1 = new ListSecretsCommand({});
   const secrets = await client.send(cmd1);
-  if (!secrets || !secrets.SecretList) return {};
+  if (!secrets?.SecretList) return {};
 
-  const somSecretNames = secrets.SecretList.filter(
-    ({ Tags }) => Tags && Tags.find(({ Key }) => Key === config.SOM_TAG_NAME)
-  )
+  const somSecretNames = secrets.SecretList.filter(({ Tags }) => Tags?.find(({ Key }) => Key === config.SOM_TAG_NAME))
     .map(({ Name }) => Name)
     .filter((Name) => secretNames.includes(Name as string));
 
@@ -36,10 +34,13 @@ export async function getSomSecrets(
     })
   );
 
-  return somSecrets.reduce((acc, val) => {
-    acc[val.Name] = val.Value;
-    return acc;
-  }, {} as Record<string, string>);
+  return somSecrets.reduce(
+    (acc, val) => {
+      acc[val.Name] = val.Value;
+      return acc;
+    },
+    {} as Record<string, string>
+  );
 }
 
 export async function listSomSecrets(config: SomConfig, region: string): Promise<Array<Record<string, string>>> {
@@ -48,9 +49,9 @@ export async function listSomSecrets(config: SomConfig, region: string): Promise
 
   const cmd1 = new ListSecretsCommand({});
   const secrets = await client.send(cmd1);
-  if (!secrets || !secrets.SecretList) return [];
+  if (!secrets?.SecretList) return [];
 
-  return secrets.SecretList.filter(({ Tags }) => Tags && Tags.find(({ Key }) => Key === config.SOM_TAG_NAME)).map(
+  return secrets.SecretList.filter(({ Tags }) => Tags?.find(({ Key }) => Key === config.SOM_TAG_NAME)).map(
     ({ Name }) => ({ Name: Name as string })
   );
 }

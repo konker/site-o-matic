@@ -15,7 +15,7 @@ export async function listCertificateTags(_: SomConfig, region: string, certific
     CertificateArn: certificateArn,
   });
   const result = await client.send(cmd1);
-  if (!result || !result.Tags) return [];
+  if (!result?.Tags) return [];
 
   return result.Tags;
 }
@@ -31,7 +31,7 @@ export async function listSomCertificates(
     CertificateStatuses: [CertificateStatus.ISSUED, CertificateStatus.PENDING_VALIDATION],
   });
   const result = await client.send(cmd1);
-  if (!result || !result.CertificateSummaryList) return [];
+  if (!result?.CertificateSummaryList) return [];
 
   const certificateTags = await Promise.all(
     result.CertificateSummaryList.map(async ({ CertificateArn, DomainName }) => ({
@@ -42,6 +42,6 @@ export async function listSomCertificates(
   );
 
   return certificateTags
-    .filter(({ Tags }) => Tags && Tags.find(({ Key }) => Key === SOM_TAG_NAME))
+    .filter(({ Tags }) => Tags?.find(({ Key }) => Key === SOM_TAG_NAME))
     .map(({ Arn, DomainName }) => ({ Arn, DomainName }));
 }

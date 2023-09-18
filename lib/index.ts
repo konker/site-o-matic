@@ -16,11 +16,8 @@ export function normalizeDomainName(domainName: string, reservedLength: number):
 }
 
 export function formulateSomId(config: SomConfig, domainName: string): string {
-  const domain_name_hash = calculateDomainHash(domainName);
-  const normalized_domain_name = normalizeDomainName(
-    domainName,
-    config.SOM_PREFIX.length + domain_name_hash.length + 4
-  );
+  const domainNameHash = calculateDomainHash(domainName);
+  const normalizedDomainName = normalizeDomainName(domainName, config.SOM_PREFIX.length + domainNameHash.length + 4);
 
-  return `${config.SOM_PREFIX}--${normalized_domain_name}--${domain_name_hash}`;
+  return `${config.SOM_PREFIX}--${normalizedDomainName}--${domainNameHash}`;
 }

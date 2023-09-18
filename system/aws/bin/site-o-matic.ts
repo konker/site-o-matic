@@ -69,6 +69,7 @@ async function main(): Promise<void> {
     }
   );
   if (!viewerRequestFunctionProducer) throw new Error(`Could not get functionProducer for Cloudfront viewer request`);
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   const cfFunctionViewerRequest_TmpFilePath = await viewerRequestFunctionProducer();
 
   // ----------------------------------------------------------------------
@@ -80,6 +81,7 @@ async function main(): Promise<void> {
     manifest
   );
   if (!viewerResponseFunctionProducer) throw new Error(`Could not get functionProducer for Cloudfront viewer response`);
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   const cfFunctionViewerResponse_TmpFilePath = await viewerResponseFunctionProducer();
 
   // ----------------------------------------------------------------------

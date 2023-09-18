@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import got from 'got';
 
 import { UNKNOWN } from './consts';

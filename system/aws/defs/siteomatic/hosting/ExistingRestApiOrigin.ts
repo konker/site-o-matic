@@ -46,7 +46,10 @@ export type ExistingRestApiOriginProps = {
  * An Origin for an API Gateway REST API.
  */
 export class ExistingRestApiOrigin extends cloudfront.OriginBase {
-  constructor(restApiUrl: string, private readonly props: origins.RestApiOriginProps = {}) {
+  constructor(
+    restApiUrl: string,
+    private readonly props: origins.RestApiOriginProps = {}
+  ) {
     // urlForPath() is of the form 'https://<rest-api-id>.execute-api.<region>.amazonaws.com/<stage>'
     // Splitting on '/' gives: ['https', '', '<rest-api-id>.execute-api.<region>.amazonaws.com', '<stage>']
     // The element at index 2 is the domain name, the element at index 3 is the stage name

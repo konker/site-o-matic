@@ -1,14 +1,14 @@
 # Site-o-Matic
 
 ## Productize / Release
+
 - Finish any outstanding small features/polishing
+
   - Have separate build dir, as opposed to src and build in same tree?
     - Issues of invoking CDK?
-    
   - Subdomain hosting?
     a) Cf origin mapped to domain S3 bucket sub-folder?
-      - Cannot be a child of www (root domain folder)
-  
+    - Cannot be a child of www (root domain folder)
   - What is the story with regions?
     - Is it always us-east-1 for everything?
     - Or should infra be deployed to a region of choice where possible?
@@ -17,7 +17,6 @@
       - CodeCommit?
         - CodeStar?
       - Route53?
-      
   - Prolly out of scope, but do we need a domain??
     - Title: string;
     - Provisions:
@@ -36,10 +35,10 @@
       - Info connect check
       - info.ts stuff in general?
       - Probably some assumptions somewhere
-  
   - ???
 
 ### Tests
+
 - Unit:
   - lib
   - lib/aws
@@ -49,33 +48,36 @@
   - lib/ui
   - bin/actions
 - CDK:
-  - system/aws/defs/siteomatic/hostedzone 
-  - system/aws/defs/siteomatic/hosting 
-  - system/aws/defs/siteomatic/pipeline 
+  - system/aws/defs/siteomatic/hostedzone
+  - system/aws/defs/siteomatic/hosting
+  - system/aws/defs/siteomatic/pipeline
   - system/aws/defs/siteomatic/site
-  - system/aws/defs/siteomatic/site/substacks 
+  - system/aws/defs/siteomatic/site/substacks
   - system/aws/bin [?]
-
 
 ### Docs
 
 FM, writing documentation is much harder that I expected!
 w
+
 - README
 
 - Overview / Purpose / Problem-Solution / General tech (CDK)
+
   - Own AWS account
   - S3
   - Cf
   - Route53 for DNS
 
 - Getting started
+
   - Install
   - Credentials
   - Running
   - Manifest
 
 - Concepts
+
   - Manifest
   - Hosting
     - WAF
@@ -97,6 +99,7 @@ w
   - Cross-account access
 
 - CLI reference
+
   - Reference description for all CLI commands/params
 
 - HOWTOs
@@ -122,6 +125,7 @@ w
       - Should we be able to specify:
         - sub-domain maps to sub-folder of domain S3 bucket?
         - sub-domain maps to own sub-domain S3 bucket?
+
 ---
 
 ## IMPORTANT

@@ -109,12 +109,15 @@ export async function getRecordsForHostedZoneId(
         return i.Type === recordType;
       }) ?? [];
 
-    return recordsOfType.reduce((acc, i) => {
-      const name = i.Name;
-      if (!name) return acc;
-      acc[nsRecordValueToHost(name)] = i.ResourceRecords?.map((j) => j.Value ?? '') ?? [];
-      return acc;
-    }, {} as Record<string, Array<string>>);
+    return recordsOfType.reduce(
+      (acc, i) => {
+        const name = i.Name;
+        if (!name) return acc;
+        acc[nsRecordValueToHost(name)] = i.ResourceRecords?.map((j) => j.Value ?? '') ?? [];
+        return acc;
+      },
+      {} as Record<string, Array<string>>
+    );
   } catch (ex) {
     console.log('FAILED: ', ex);
   }

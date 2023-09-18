@@ -18,7 +18,7 @@ export async function listSomUsers(config: SomConfig, region: string): Promise<A
 
   const cmd1 = new ListUsersCommand({});
   const users = await client.send(cmd1);
-  if (!users || !users.Users) return [];
+  if (!users?.Users) return [];
 
   const usersWithTags = await Promise.all(
     users.Users.map(async (user) => {
@@ -32,7 +32,7 @@ export async function listSomUsers(config: SomConfig, region: string): Promise<A
   );
 
   return usersWithTags
-    .filter(({ Tags, UserName }) => UserName && Tags && Tags.find(({ Key }) => Key === config.SOM_TAG_NAME))
+    .filter(({ Tags, UserName }) => UserName && Tags?.find(({ Key }) => Key === config.SOM_TAG_NAME))
     .map(({ UserName }) => ({
       UserName: UserName as string,
     }));
@@ -65,7 +65,7 @@ export async function listPublicKeys(
 
   const cmd1 = new ListSSHPublicKeysCommand({ UserName: userName });
   const result = await client.send(cmd1);
-  if (!result || !result.SSHPublicKeys) return [];
+  if (!result?.SSHPublicKeys) return [];
 
   return result.SSHPublicKeys.filter(({ SSHPublicKeyId, Status }) => !!SSHPublicKeyId && !!Status).map(
     ({ SSHPublicKeyId, Status }) => ({

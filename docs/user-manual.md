@@ -1,14 +1,17 @@
 # Site-O-Matic User Manual
------------------------------------------------------------------------------
+
+---
 
 [*] OSS: could be extended by contributions from open source project
 
 User manual for the Site-O-Matic personal cloud website tool.
 
 ## What is Site-O-Matic?
+
 In a nutshell: A personal tool for provisioning a website on AWS cloud infrastructure.
 
 ### Assumptions
+
 - Quite web savvy [?]
 - Have own AWS account, and are familiar with authorizing a shell session
 - Static or SSG website
@@ -43,13 +46,13 @@ In a nutshell: A personal tool for provisioning a website on AWS cloud infrastru
     - Would be tricky to have something else
       - Leave it to OSS if anything
 
-    
 #### NOTES
+
 - So we need content producers?
   - Can only really be for CodeCommit source repos
     - CONS: various, a hassle to maintain, limited in nature unless OSS kicks in
     - PROS: can properly provide an automated ("-o-matic") flow to provide placeholder WWW content
-- 
+-
 - Should support AWS as domain registrar??
   - Not sure if there is a way to:
     - Put "konkeristhebest.com" in a manifest file
@@ -62,12 +65,13 @@ In a nutshell: A personal tool for provisioning a website on AWS cloud infrastru
 - !!!: Do we need a Cloudwatch alarm when certificate is (threshold < 45 days) from expiry??
   - What to do with this alarm is another question
 - Metrics/Monitoring
+
   - A whole field that has been basically ignored
     - Consult Hammess/Lardee for advice?
   - Logging?
     - Off by default for cost reasons
     - On if needed?
-      - WHat does "On" actually mean for this kind of web hosting? 
+      - WHat does "On" actually mean for this kind of web hosting?
   - Analytics?
     - Based on logging?
     - Left as purely front-end? GA or less intrusive alternatives?
@@ -87,4 +91,3 @@ In a nutshell: A personal tool for provisioning a website on AWS cloud infrastru
     - "Better": Matrix, Telegram, Slack
     - "Unlikely": Whatsapp
     - Pipeline: message on "STARTED", "FINISHED", "FAILED", etc
- 

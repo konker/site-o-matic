@@ -1,5 +1,8 @@
 {
   "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": ["./tsconfig.json"]
+  },
   "plugins": ["@typescript-eslint", "import", "simple-import-sort", "prettier", "fp"],
   "extends": [
     "plugin:@typescript-eslint/eslint-recommended",
@@ -9,6 +12,7 @@
     "plugin:prettier/recommended"
     //    "plugin:fp/recommended"
   ],
+  "ignorePatterns": ["*.json", "jest.config.ts", "*.js"],
   "rules": {
     "@typescript-eslint/array-type": [1, { "default": "generic" }],
     "@typescript-eslint/naming-convention": [
@@ -37,6 +41,7 @@
     "@typescript-eslint/consistent-type-definitions": [1, "type"],
     "@typescript-eslint/prefer-optional-chain": [1],
     "@typescript-eslint/consistent-type-assertions": [1],
+    "@typescript-eslint/no-non-null-assertion": 0,
     "@typescript-eslint/consistent-type-imports": [
       "error",
       {

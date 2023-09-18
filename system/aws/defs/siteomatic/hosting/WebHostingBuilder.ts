@@ -157,18 +157,21 @@ export async function build(
   const cfFunctions = [
     [...props.cfFunctionViewerRequestTmpFilePath, cloudfront.FunctionEventType.VIEWER_REQUEST],
     [...props.cfFunctionViewerResponseTmpFilePath, cloudfront.FunctionEventType.VIEWER_RESPONSE],
-  ].reduce((acc, [cfFunctionId, cfFunctionTmpFilePath, cfFunctionEventType]) => {
-    if (cfFunctionTmpFilePath) {
-      const func = new cloudfront.Function(scope, `CloudFrontFunction-${cfFunctionId}`, {
-        comment: `${cfFunctionId} function for ${props.siteStack.somId}`,
-        code: cloudfront.FunctionCode.fromFile({
-          filePath: cfFunctionTmpFilePath,
-        }),
-      });
-      return [...acc, [func, cfFunctionEventType] as [cloudfront.Function, cloudfront.FunctionEventType]];
-    }
-    return acc;
-  }, [] as Array<[cloudfront.Function, cloudfront.FunctionEventType]>);
+  ].reduce(
+    (acc, [cfFunctionId, cfFunctionTmpFilePath, cfFunctionEventType]) => {
+      if (cfFunctionTmpFilePath) {
+        const func = new cloudfront.Function(scope, `CloudFrontFunction-${cfFunctionId}`, {
+          comment: `${cfFunctionId} function for ${props.siteStack.somId}`,
+          code: cloudfront.FunctionCode.fromFile({
+            filePath: cfFunctionTmpFilePath,
+          }),
+        });
+        return [...acc, [func, cfFunctionEventType] as [cloudfront.Function, cloudfront.FunctionEventType]];
+      }
+      return acc;
+    },
+    [] as Array<[cloudfront.Function, cloudfront.FunctionEventType]>
+  );
 
   cfFunctions.forEach(([cfFunction]) => {
     _somMeta(config, cfFunction, props.siteStack.somId, props.siteStack.siteProps.protected);

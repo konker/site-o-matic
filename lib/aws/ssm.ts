@@ -31,7 +31,7 @@ export async function getSsmParams(config: SomConfig, region: string, somId?: st
     );
 
     const result = await client.send(cmd1);
-    if (!result || !result.Parameters) return [];
+    if (!result?.Parameters) return [];
 
     const params = result.Parameters.reduce((acc, { Name, Value }) => {
       if (Name)

@@ -1,101 +1,102 @@
-html, body {
-    background: #fff;
-    height: 100%;
+html,
+body {
+  background: #fff;
+  height: 100%;
 }
 
 #container {
-    display: flex;
-    flex-direction: column;
-    min-height: 100%;
-    margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  margin-bottom: 0;
 }
 main {
-    flex: 1;
-    padding: 0.5rem 1.5rem;
+  flex: 1;
+  padding: 0.5rem 1.5rem;
 }
 h1 {
-    font-family: "IBM Plex Serif",Georgia,serif;
+  font-family: 'IBM Plex Serif', Georgia, serif;
 }
 a img {
-    border-width: 0;
+  border-width: 0;
 }
 
 /* ----------------------------------------------------------------------- */
 #personal blockquote#blurb {
-    quotes: "\201C""\201D""\2018""\2019";
-    padding-left: 0;
-    font-size: 110%;
-    margin: 0 0 1.6rem 0;
-    padding-left: 1.2rem;
-    text-indent: -1.2rem;
+  quotes: '\201C' '\201D' '\2018' '\2019';
+  padding-left: 0;
+  font-size: 110%;
+  margin: 0 0 1.6rem 0;
+  padding-left: 1.2rem;
+  text-indent: -1.2rem;
 }
 #personal blockquote#blurb .indent {
-    text-indent: 1.0rem;
+  text-indent: 1rem;
 }
 
 #personal blockquote#blurb:before {
-    color: #ccc;
-    content: open-quote;
-    font-size: 2em;
-    line-height: 0.1em;
-    margin-right: 0.1em;
-    vertical-align: -0.4em;
+  color: #ccc;
+  content: open-quote;
+  font-size: 2em;
+  line-height: 0.1em;
+  margin-right: 0.1em;
+  vertical-align: -0.4em;
 }
 #personal blockquote#blurb:after {
-    color: #ccc;
-    content: close-quote;
-    font-size: 2em;
-    line-height: 0.1em;
-    margin-left: 0;
-    vertical-align: -0.4em;
+  color: #ccc;
+  content: close-quote;
+  font-size: 2em;
+  line-height: 0.1em;
+  margin-left: 0;
+  vertical-align: -0.4em;
 }
 #personal blockquote#blurb p {
-    display: inline;
+  display: inline;
 }
 #personal blockquote#blurb p span + span {
-    display: inline-block;
+  display: inline-block;
 }
 #personal blockquote#blurb p span + span {
-    text-indent: 1.8em;
+  text-indent: 1.8em;
 }
 
 /* ----------------------------------------------------------------------- */
 footer {
-    width: 100%;
-    margin-left: 0;
-    margin-right: 0;
-    margin-bottom: 0;
-    background: #ededed;
-    border-top: 2px dotted #aaa;
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  margin-bottom: 0;
+  background: #ededed;
+  border-top: 2px dotted #aaa;
 }
 footer p {
-    font-family: "IBM Plex Sans",Tahoma,sans-serif;
-    font-size: 85%;
-    margin: 0;
-    padding: 0.75em 0.75em 0.75em 3em;
-    text-indent: 0;
+  font-family: 'IBM Plex Sans', Tahoma, sans-serif;
+  font-size: 85%;
+  margin: 0;
+  padding: 0.75em 0.75em 0.75em 3em;
+  text-indent: 0;
 }
 footer a:visited {
-    color: #0820a6;
+  color: #0820a6;
 }
 footer a:active {
-    color: #009933;
+  color: #009933;
 }
 footer a:hover {
-    color: #000;
+  color: #000;
 }
 footer img {
-    vertical-align: middle;
+  vertical-align: middle;
 }
 
 /* ----------------------------------------------------------------------- */
 @media screen and (max-width: 40rem) {
-    #container {
-        max-width: 100%;
-        width: 100%;
-        margin: 0;
-    }
-    h1 {
-        margin-top: 2.8rem;
-    }
+  #container {
+    max-width: 100%;
+    width: 100%;
+    margin: 0;
+  }
+  h1 {
+    margin-top: 2.8rem;
+  }
 }

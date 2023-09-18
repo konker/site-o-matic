@@ -25,7 +25,7 @@ export async function listCodeStarConnections(config: SomConfig, region: string)
   const cmd1 = new ListConnectionsCommand({});
   const response = await client.send(cmd1);
 
-  if (!response || !response.Connections) return [];
+  if (!response?.Connections) return [];
 
   return response.Connections.filter(({ ConnectionName }) => ConnectionName?.startsWith('som-'));
 }

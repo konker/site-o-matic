@@ -1,0 +1,4 @@
+{
+  "SOM_ROLE_ARN": "arn:aws:iam::919976498930:role/OrganizationAccountAccessRole",
+  "DEFAULT_WEBMASTER_EMAIL": "webmaster+{{context.manifest.rootDomainName}}@morningwoodsoftware.com"
+}

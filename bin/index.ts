@@ -71,7 +71,10 @@ async function main() {
     console.log('  A Morningwood Software production\n\n');
   }
 
-  vorpal.command('clear', 'Clear the screen').alias('cls').action(actionClearScreen(vorpal, config, globalState));
+  vorpal
+    .command('clear', 'Clear the screen')
+    .alias('cls')
+    .action(actionClearScreen(vorpal, config, globalState));
   vorpal
     .command('load <pathToManifestFile>', 'Load a manifest file')
     .action(actionLoadManifest(vorpal, config, globalState));
