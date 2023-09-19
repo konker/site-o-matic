@@ -12,7 +12,7 @@
   "registrar": "dynadot",
 
   // Whether to add protection rules to resources created by the tool
-  "protected": true,
+  "protected": false,
 
   // Extra DNS configuration, this is in addition to DNS records required for the website itself
   "dns": {
