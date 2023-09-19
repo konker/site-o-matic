@@ -34,7 +34,7 @@ export class SiteCertificateCloneSubStack extends cdk.Stack {
 
     // ----------------------------------------------------------------------
     // SSL Certificates
-    await CertificateBuilder.buildManualValidation(
+    await CertificateBuilder.build(
       this,
       this.siteStack.config,
       {

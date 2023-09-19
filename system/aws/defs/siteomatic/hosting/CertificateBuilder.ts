@@ -80,36 +80,3 @@ export async function build(
     subdomainResources,
   };
 }
-
-export async function buildManualValidation(
-  scope: Construct,
-  config: SomConfig,
-  props: CertificateBuilderProps,
-  hostedZoneConfig: HostedZoneConfig
-): Promise<CertificateResources> {
-  // ----------------------------------------------------------------------
-  // SSL certificate for apex and wildcard subdomains
-  const localIdPostfix = formulateSomId(config, hostedZoneConfig.domainName);
-  const domainCertificate = new certificatemanager.Certificate(scope, `DomainCertificate-${localIdPostfix}`, {
-    domainName: hostedZoneConfig.domainName,
-    subjectAlternativeNames: [`*.${hostedZoneConfig.domainName}`],
-  });
-  _somMeta(config, domainCertificate, props.siteStack.somId, props.siteStack.siteProps.protected);
-
-  // ----------------------------------------------------------------------
-  // SSL certificates for subdomains
-  const subdomainResources: Array<CertificateResources> = [];
-  if (hostedZoneConfig.subdomains && props.siteStack.siteProps.contextParams.deploySubdomainCerts) {
-    // Recurse to create resources for subdomains
-    for (const subdomain of hostedZoneConfig.subdomains) {
-      const subResources = await buildManualValidation(scope, config, props, subdomain);
-      subdomainResources.push(subResources);
-    }
-  }
-
-  return {
-    domainName: hostedZoneConfig.domainName,
-    domainCertificate,
-    subdomainResources,
-  };
-}
