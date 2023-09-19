@@ -68,7 +68,7 @@ async function main() {
       lineHeight: 1,
       env: 'node',
     });
-    console.log('  A Morningwood Software production\n\n');
+    console.log('  A Lux Velocitas production\n\n');
   }
 
   vorpal
