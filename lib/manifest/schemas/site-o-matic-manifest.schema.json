@@ -349,8 +349,17 @@
           "type": "string",
           "const": "codecommit-custom"
         },
+        "buildImage": {
+          "type": "string"
+        },
         "buildPhases": {
           "$ref": "#/definitions/pipelineBuildPhases"
+        },
+        "buildFiles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "required": ["type", "buildPhases"],
@@ -396,8 +405,17 @@
           "type": "string",
           "minLength": 1
         },
+        "buildImage": {
+          "type": "string"
+        },
         "buildPhases": {
           "$ref": "#/definitions/pipelineBuildPhases"
+        },
+        "buildFiles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "required": ["type", "codestarConnectionArn", "owner", "repo", "buildPhases"],

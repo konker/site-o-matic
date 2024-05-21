@@ -204,6 +204,8 @@ export type SomManifest = {
     | {
         readonly type: typeof SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM;
         readonly buildPhases: Record<string, PipelineBuildPhase>;
+        readonly buildImage?: string;
+        readonly buildFiles?: Array<string>;
       }
     | {
         readonly type: typeof SITE_PIPELINE_TYPE_CODESTAR_S3;
@@ -217,6 +219,8 @@ export type SomManifest = {
         readonly owner: string;
         readonly repo: string;
         readonly buildPhases: Record<string, PipelineBuildPhase>;
+        readonly buildImage?: string;
+        readonly buildFiles?: Array<string>;
       };
   readonly services?: undefined | Array<ServiceSpec>;
   readonly crossAccountAccess?: undefined | Array<CrossAccountAccessGrantRoleSpec>;
@@ -378,7 +382,7 @@ export type SomInfoSpec = {
       })
     | undefined;
   readonly content: string | undefined;
-  readonly pipeline: Required<SomManifest['pipeline']> | undefined;
+  readonly pipeline: SomManifest['pipeline'] | undefined;
   readonly redirect:
     | {
         readonly type: string;

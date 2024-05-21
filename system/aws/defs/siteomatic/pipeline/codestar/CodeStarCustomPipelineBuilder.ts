@@ -8,6 +8,8 @@ import { toSsmParamName } from '../../../../../../lib/aws/ssm';
 import {
   DEFAULT_AWS_REGION,
   SITE_PIPELINE_CODESTAR_BRANCH_NAME,
+  SITE_PIPELINE_DEFAULT_BUILD_FILES,
+  SITE_PIPELINE_DEFAULT_BUILD_IMAGE,
   SITE_PIPELINE_TYPE_CODESTAR_CUSTOM,
   SSM_PARAM_NAME_CODE_PIPELINE_ARN,
   SSM_PARAM_NAME_CODE_PIPELINE_CONSOLE_URL,
@@ -50,9 +52,14 @@ export async function build(
       version: '0.2',
       phases: buildPhases,
       artifacts: {
-        files: ['**/*'],
+        files: props.siteStack?.siteProps?.context?.manifest?.pipeline?.buildFiles ?? SITE_PIPELINE_DEFAULT_BUILD_FILES,
       },
     }),
+    environment: {
+      buildImage: codebuild.LinuxBuildImage.fromCodeBuildImageId(
+        props.siteStack?.siteProps?.context?.manifest?.pipeline?.buildImage ?? SITE_PIPELINE_DEFAULT_BUILD_IMAGE
+      ),
+    },
   });
   _somMeta(config, codeBuildPipelineProject, props.siteStack.somId, props.siteStack.siteProps.protected);
 

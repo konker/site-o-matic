@@ -69,6 +69,9 @@ export const SITE_PIPELINE_TYPES = [...SITE_PIPELINE_TYPES_CODECOMMIT, ...SITE_P
 export const SITE_PIPELINE_CODECOMMIT_BRANCH_NAME = 'main';
 export const SITE_PIPELINE_CODESTAR_BRANCH_NAME = 'main';
 
+export const SITE_PIPELINE_DEFAULT_BUILD_IMAGE = 'aws/codebuild/standard:7.0';
+export const SITE_PIPELINE_DEFAULT_BUILD_FILES = ['**/*'];
+
 export const DEFAULT_STACK_PROPS = (config: SomConfig, somId: string, siteProps?: SiteStackProps): cdk.StackProps => ({
   env: {
     account: siteProps?.env?.account ?? (process.env.CDK_DEFAULT_ACCOUNT as string),
