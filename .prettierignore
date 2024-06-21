@@ -4,3 +4,4 @@ yarn.lock
 tsconfig.json
 dist
 **/.cdk-*.out
+.pytest_cache

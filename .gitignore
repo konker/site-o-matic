@@ -134,3 +134,7 @@ dist
 
 # OS specific
 .DS_Store
+
+# Other
+.pytest_cache
+
