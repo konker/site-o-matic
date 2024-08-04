@@ -8,7 +8,9 @@ import { verror, vtabulate } from '../../lib/ui/logging';
 import type { SomGlobalState } from '../SomGlobalState';
 
 export function actionDeleteCodeStarConnection(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
-  return async (args: Vorpal.Args): Promise<void> => {
+  return async (args: Vorpal.Args | string): Promise<void> => {
+    if (typeof args === 'string') throw new Error('Error: string args to action');
+
     const response = state.yes
       ? { confirm: 'y' }
       : await vorpal.activeCommand.prompt({

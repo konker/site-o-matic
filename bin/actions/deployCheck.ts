@@ -6,7 +6,9 @@ import type { SomConfig } from '../../lib/types';
 import type { SomGlobalState } from '../SomGlobalState';
 
 export function actionDeployCheck(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
-  return async (args: Vorpal.Args): Promise<void> => {
+  return async (args: Vorpal.Args | string): Promise<void> => {
+    if (typeof args === 'string') throw new Error('Error: string args to action');
+
     const checkItems = await preDeploymentCheck(config, state.context, args.username);
     const checksPassed = checkItems.every((checkItem) => checkItem.passed);
 

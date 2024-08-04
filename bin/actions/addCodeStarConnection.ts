@@ -8,7 +8,9 @@ import { verror, vtabulate } from '../../lib/ui/logging';
 import type { SomGlobalState } from '../SomGlobalState';
 
 export function actionAddCodeStarConnection(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
-  return async (args: Vorpal.Args): Promise<void> => {
+  return async (args: Vorpal.Args | string): Promise<void> => {
+    if (typeof args === 'string') throw new Error('Error: string args to action');
+
     if (!CODESTAR_CONNECTION_PROVIDER_TYPES.includes(args.providerType)) {
       const errorMessage = `Invalid provider type: ${
         args.providerType

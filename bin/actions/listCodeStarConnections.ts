@@ -7,7 +7,7 @@ import { tabulate } from '../../lib/ui/tables';
 import type { SomGlobalState } from '../SomGlobalState';
 
 export function actionListCodeStarConnections(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
-  return async (_: Vorpal.Args): Promise<void> => {
+  return async (_: Vorpal.Args | string): Promise<void> => {
     state.spinner.start();
     const data = await codestar.listCodeStarConnections(config, DEFAULT_AWS_REGION);
     state.spinner.stop();

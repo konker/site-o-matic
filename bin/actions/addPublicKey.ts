@@ -8,7 +8,9 @@ import { vtabulate } from '../../lib/ui/logging';
 import type { SomGlobalState } from '../SomGlobalState';
 
 export function actionAddPublicKey(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
-  return async (args: Vorpal.Args): Promise<void> => {
+  return async (args: Vorpal.Args | string): Promise<void> => {
+    if (typeof args === 'string') throw new Error('Error: string args to action');
+
     state.spinner.start();
     const publicKey = await fs.promises.readFile(args['pathToPublicKeyFile']);
     const data = await iam.addPublicKey(config, DEFAULT_AWS_REGION, args.username, publicKey.toString());

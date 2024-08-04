@@ -18,7 +18,7 @@ import { verror } from '../../lib/ui/logging';
 import type { SomGlobalState } from '../SomGlobalState';
 
 export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
-  return async (_: Vorpal.Args): Promise<void> => {
+  return async (_: Vorpal.Args | string): Promise<void> => {
     if (!hasManifest(state.context)) {
       const errorMessage = `ERROR: no manifest loaded`;
       verror(vorpal, state, errorMessage);

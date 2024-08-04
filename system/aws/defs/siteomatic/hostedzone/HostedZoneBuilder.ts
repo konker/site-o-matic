@@ -83,8 +83,6 @@ export function buildExtraDnsConfig(
             );
             _somMeta(siteStack.config, res2, siteStack.somId, siteStack.siteProps.protected);
             break;
-          default:
-            console.log(`WARNING: cannot handle extra dns config with type: ${dnsConfig.type}`);
         }
       });
   }

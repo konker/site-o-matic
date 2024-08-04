@@ -14,7 +14,9 @@ import { getContextParam } from '../../lib/utils';
 import type { SomGlobalState } from '../SomGlobalState';
 
 export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
-  return async (args: Vorpal.Args): Promise<void> => {
+  return async (args: Vorpal.Args | string): Promise<void> => {
+    if (typeof args === 'string') throw new Error('Error: string args to action');
+
     if (!state.plumbing) {
       vorpal.log('Pre-flight checks...');
     }

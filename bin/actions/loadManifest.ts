@@ -10,7 +10,9 @@ import type { SomGlobalState } from '../SomGlobalState';
 import { actionInfo } from './info';
 
 export function actionLoadManifest(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
-  return async (args: Vorpal.Args): Promise<void> => {
+  return async (args: Vorpal.Args | string): Promise<void> => {
+    if (typeof args === 'string') throw new Error('Error: string args to action');
+
     const pathToManifestFile = path.resolve(args.pathToManifestFile);
     const manifest = await loadManifest(pathToManifestFile);
     if (!manifest) {
