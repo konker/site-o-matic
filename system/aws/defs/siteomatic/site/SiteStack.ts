@@ -66,6 +66,20 @@ export class SiteStack extends cdk.Stack {
 
   async build() {
     // ----------------------------------------------------------------------
+    const res0a = new ssm.StringParameter(this, 'SsmSiteEntryRootDomainName', {
+      parameterName: `/som/site/root-domain-name/${this.siteProps.context.rootDomainName}`,
+      stringValue: this.somId,
+      tier: ssm.ParameterTier.STANDARD,
+    });
+    _somMeta(this.config, res0a, this.somId, this.siteProps.protected);
+
+    const res0b = new ssm.StringParameter(this, 'SsmSiteEntrySomId', {
+      parameterName: `/som/site/som-id/${this.somId}`,
+      stringValue: this.siteProps.context.rootDomainName,
+      tier: ssm.ParameterTier.STANDARD,
+    });
+    _somMeta(this.config, res0b, this.somId, this.siteProps.protected);
+
     const res1 = new ssm.StringParameter(this, 'SsmRootDomain', {
       parameterName: toSsmParamName(this.somId, SSM_PARAM_NAME_ROOT_DOMAIN_NAME),
       stringValue: this.siteProps.context.rootDomainName,

@@ -1,14 +1,23 @@
 import type Vorpal from 'vorpal';
 
 import * as cdkExec from '../../lib/aws/cdkExec';
+import { SSM_PARAM_NAME_DOMAIN_USER_NAME } from '../../lib/consts';
 import { hasManifest } from '../../lib/context';
 import type { SomConfig } from '../../lib/types';
 import { verror } from '../../lib/ui/logging';
+import { getContextParam } from '../../lib/utils';
 import type { SomGlobalState } from '../SomGlobalState';
 
 export function actionSynthesize(vorpal: Vorpal, _: SomConfig, state: SomGlobalState) {
   return async (args: Vorpal.Args | string): Promise<void> => {
     if (typeof args === 'string') throw new Error('Error: string args to action');
+
+    const username = args.username ?? getContextParam(state.context, SSM_PARAM_NAME_DOMAIN_USER_NAME);
+    if (!username) {
+      const errorMessage = `ERROR: no username was resolved`;
+      verror(vorpal, state, errorMessage);
+      return;
+    }
 
     if (!hasManifest(state.context)) {
       const errorMessage = `ERROR: no manifest loaded`;
@@ -21,7 +30,7 @@ export function actionSynthesize(vorpal: Vorpal, _: SomConfig, state: SomGlobalS
       state.context.somId,
       {
         pathToManifestFile: state.context.pathToManifestFile,
-        iamUsername: args.username,
+        iamUsername: username,
         deploySubdomainCerts: 'true',
       },
       state.plumbing

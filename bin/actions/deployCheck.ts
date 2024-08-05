@@ -1,15 +1,25 @@
 import chalk from 'chalk';
 import type Vorpal from 'vorpal';
 
+import { SSM_PARAM_NAME_DOMAIN_USER_NAME } from '../../lib/consts';
 import { preDeploymentCheck } from '../../lib/deployment';
 import type { SomConfig } from '../../lib/types';
+import { verror } from '../../lib/ui/logging';
+import { getContextParam } from '../../lib/utils';
 import type { SomGlobalState } from '../SomGlobalState';
 
 export function actionDeployCheck(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
   return async (args: Vorpal.Args | string): Promise<void> => {
     if (typeof args === 'string') throw new Error('Error: string args to action');
 
-    const checkItems = await preDeploymentCheck(config, state.context, args.username);
+    const username = args.username ?? getContextParam(state.context, SSM_PARAM_NAME_DOMAIN_USER_NAME);
+    if (!username) {
+      const errorMessage = `ERROR: no username was resolved`;
+      verror(vorpal, state, errorMessage);
+      return;
+    }
+
+    const checkItems = await preDeploymentCheck(config, state.context, username);
     const checksPassed = checkItems.every((checkItem) => checkItem.passed);
 
     if (state.plumbing) {

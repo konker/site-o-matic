@@ -8,10 +8,11 @@ export function toSsmParamName(somId: string, name: string, ...extra: Array<stri
   return `/som/${somId}/${name}` + (extra_.length > 0 ? '/' + extra_.join('/') : '');
 }
 
-export async function getSsmParams(config: SomConfig, region: string, somId?: string): Promise<Array<SomParam>> {
-  if (!somId) return [];
-  const path = `/som/${somId}`;
+export function ssmBasePath(somId: string): string {
+  return `/som/${somId}`;
+}
 
+export async function getSsmParams(config: SomConfig, region: string, path: string): Promise<Array<SomParam>> {
   const somRoleCredentials = await assumeSomRole(config, region);
   const client = new SSMClient({
     region,

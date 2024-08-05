@@ -2,6 +2,7 @@ import { findHostedZoneAttributes, getNsRecordValuesForDomainName } from './aws/
 import { getIsS3BucketEmpty } from './aws/s3';
 import * as secretsmanager from './aws/secretsmanager';
 import * as ssm from './aws/ssm';
+import { ssmBasePath } from './aws/ssm';
 import { DEFAULT_AWS_REGION, SSM_PARAM_NAME_DOMAIN_BUCKET_NAME, SSM_PARAM_NAME_SOM_VERSION, VERSION } from './consts';
 import { resolveDnsNameserverRecords, resolveDnsSomTxtRecord } from './dns';
 import { getSiteConnectionStatus } from './http';
@@ -77,7 +78,7 @@ export async function loadNetworkDerivedContext(
     dnsVerificationTxtRecord,
     connectionStatus,
   ] = await Promise.all([
-    ssm.getSsmParams(config, DEFAULT_AWS_REGION, context.somId),
+    ssm.getSsmParams(config, DEFAULT_AWS_REGION, ssmBasePath(context.somId)),
     findHostedZoneAttributes(config, context.rootDomainName),
     getNsRecordValuesForDomainName(config, context.rootDomainName),
     resolveDnsNameserverRecords(context.rootDomainName),

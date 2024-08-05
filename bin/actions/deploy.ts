@@ -4,7 +4,7 @@ import type Vorpal from 'vorpal';
 
 import * as cdkExec from '../../lib/aws/cdkExec';
 import { postToSnsTopic } from '../../lib/aws/sns';
-import { SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN } from '../../lib/consts';
+import { SSM_PARAM_NAME_DOMAIN_USER_NAME, SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN } from '../../lib/consts';
 import { hasManifest, refreshContext } from '../../lib/context';
 import { preDeploymentCheck } from '../../lib/deployment';
 import { siteOMaticRules } from '../../lib/rules/site-o-matic.rules';
@@ -17,10 +17,17 @@ export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomGlobal
   return async (args: Vorpal.Args | string): Promise<void> => {
     if (typeof args === 'string') throw new Error('Error: string args to action');
 
+    const username = args.username ?? getContextParam(state.context, SSM_PARAM_NAME_DOMAIN_USER_NAME);
+    if (!username) {
+      const errorMessage = `ERROR: no username was resolved`;
+      verror(vorpal, state, errorMessage);
+      return;
+    }
+
     if (!state.plumbing) {
       vorpal.log('Pre-flight checks...');
     }
-    const checkItems = await preDeploymentCheck(config, state.context, args.username);
+    const checkItems = await preDeploymentCheck(config, state.context, username);
     const checksPassed = checkItems.every((checkItem) => checkItem.passed);
 
     if (!state.plumbing) {
@@ -55,7 +62,7 @@ export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomGlobal
             `${
               facts.shouldDeployS3Content ? chalk.cyan('NOTE: content will be uploaded to the S3 bucket.\n') : ''
             }Are you sure you want to deploy site: ${chalk.bold(state.context.somId)} under user ${chalk.bold(
-              args.username
+              username
             )}? [y/N] `
           ),
         });
@@ -96,7 +103,7 @@ export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomGlobal
         state.context.somId,
         {
           pathToManifestFile: state.context.pathToManifestFile,
-          iamUsername: args.username,
+          iamUsername: username,
           deploySubdomainCerts: 'true',
         },
         state.plumbing

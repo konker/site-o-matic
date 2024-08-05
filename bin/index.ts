@@ -26,6 +26,7 @@ import { actionInfo } from './actions/info';
 import { actionListCodeStarConnections } from './actions/listCodeStarConnections';
 import { actionListPublicKeys } from './actions/listPublicKeys';
 import { actionListSecrets } from './actions/listSecrets';
+import { actionListSites } from './actions/listSites';
 import { actionListUsers } from './actions/listUsers';
 import { actionLoadManifest } from './actions/loadManifest';
 import { actionSetNameServersWithRegistrar } from './actions/setNameserversWithRegistrar';
@@ -75,6 +76,7 @@ async function main() {
     .command('clear', 'Clear the screen')
     .alias('cls')
     .action(actionClearScreen(vorpal, config, globalState));
+  vorpal.command('ls sites', 'List deployed sites').action(actionListSites(vorpal, config, globalState));
   vorpal
     .command('load <pathToManifestFile>', 'Load a manifest file')
     .action(actionLoadManifest(vorpal, config, globalState));
@@ -116,13 +118,13 @@ async function main() {
     .action(actionDeleteCodeStarConnection(vorpal, config, globalState));
 
   vorpal
-    .command('synth <username>', 'Synthesize the CDK stack under the given user')
+    .command('synth [username]', 'Synthesize the CDK stack under the given user')
     .action(actionSynthesize(vorpal, config, globalState));
   vorpal
-    .command('check <username>', 'Perform deployment checks')
+    .command('check [username]', 'Perform deployment checks')
     .action(actionDeployCheck(vorpal, config, globalState));
   vorpal
-    .command('deploy <username>', 'Deploy the site under the given user')
+    .command('deploy [username]', 'Deploy the site under the given user')
     .action(actionDeploy(vorpal, config, globalState));
   vorpal
     .command('set nameservers', 'Set the nameservers automatically with the registrar, if configured')
