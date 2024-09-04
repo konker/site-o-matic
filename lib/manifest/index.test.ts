@@ -1,6 +1,7 @@
 import fs from 'fs';
 
 import * as unit from './index';
+import { sortObjectKeys } from './index';
 
 describe('manifest', () => {
   beforeAll(() => {
@@ -25,6 +26,12 @@ describe('manifest', () => {
     it('should return a valid manifest', async () => {
       const result = await unit.loadManifest('/path/to/manifest.json');
       expect(result).toBeDefined();
+    });
+  });
+
+  describe('sortObjectKeys', () => {
+    it('should work as expected', () => {
+      expect(sortObjectKeys({})).toStrictEqual({});
     });
   });
 });

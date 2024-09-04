@@ -1,6 +1,5 @@
 import { Duration } from 'aws-cdk-lib';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
-import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as targets from 'aws-cdk-lib/aws-route53-targets';
@@ -21,6 +20,7 @@ import {
 } from '../../../../../lib/consts';
 import type { SomConfig, WebHostingBuilderProps, WebHostingResources } from '../../../../../lib/types';
 import { _removalPolicyFromBoolean, _somMeta } from '../../../../../lib/utils';
+import { S3OriginWithOACPatch } from './S3OriginWithOACPatchProps';
 
 export async function build(
   scope: Construct,
@@ -34,11 +34,16 @@ export async function build(
   }
 
   // ----------------------------------------------------------------------
-  // Origin access identity which will be used by the cloudfront distribution
-  const originAccessIdentity = new cloudfront.OriginAccessIdentity(scope, 'OriginAccessIdentity', {
-    comment: `OriginAccessIdentity for ${props.siteStack.somId}`,
+  // Origin Access Control (OAC) which will govern the cloudfront distribution access to the S3 origin bucket
+  const originAccessControl = new cloudfront.CfnOriginAccessControl(scope, 'OriginAccessControl', {
+    originAccessControlConfig: {
+      name: `oac-${props.siteStack.somId}`,
+      originAccessControlOriginType: 's3',
+      signingBehavior: 'always',
+      signingProtocol: 'sigv4',
+      description: 'Origin access control provisioned by site-o-matic',
+    },
   });
-  _somMeta(config, originAccessIdentity, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   // ----------------------------------------------------------------------
   // Domain www content bucket and bucket policy
@@ -46,11 +51,11 @@ export async function build(
   const domainBucket = new s3.Bucket(scope, 'DomainBucket', {
     bucketName,
     blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+    publicReadAccess: false,
     encryption: s3.BucketEncryption.S3_MANAGED,
     versioned: false,
     removalPolicy: _removalPolicyFromBoolean(props.siteStack.siteProps.protected),
     autoDeleteObjects: !props.siteStack.siteProps.protected,
-    publicReadAccess: false,
   });
   _somMeta(config, domainBucket, props.siteStack.somId, props.siteStack.siteProps.protected);
 
@@ -68,7 +73,6 @@ export async function build(
       principals: [props.siteStack.domainUser],
     })
   );
-  domainBucket.grantRead(originAccessIdentity);
 
   // ----------------------------------------------------------------------
   // Add automatically generated content to the bucket if it is empty
@@ -178,6 +182,14 @@ export async function build(
   });
 
   // ----------------------------------------------------------------------
+  // XXX: Remove when there is first-class CDK support
+  const s3OriginWithOacPatch = new S3OriginWithOACPatch(domainBucket, {
+    oacId: originAccessControl.getAtt('Id'),
+    originPath: props.siteStack.siteProps?.context?.manifest?.webHosting?.originPath ?? WEB_HOSTING_DEFAULT_ORIGIN_PATH,
+    originShieldEnabled: false,
+  });
+
+  // ----------------------------------------------------------------------
   // Cloudfront distribution
   const cloudFrontDistribution = new cloudfront.Distribution(
     scope,
@@ -186,11 +198,7 @@ export async function build(
       {
         defaultBehavior: Object.assign(
           {
-            origin: new origins.S3Origin(domainBucket, {
-              originPath:
-                props.siteStack.siteProps?.context?.manifest?.webHosting?.originPath ?? WEB_HOSTING_DEFAULT_ORIGIN_PATH,
-              originAccessIdentity: originAccessIdentity,
-            }),
+            origin: s3OriginWithOacPatch,
             allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
             viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
             cachePolicy: new cloudfront.CachePolicy(scope, 'CloudFrontDistributionCachePolicy', {
@@ -232,6 +240,24 @@ export async function build(
   _somMeta(config, cloudFrontDistribution, props.siteStack.somId, props.siteStack.siteProps.protected);
 
   // ----------------------------------------------------------------------
+  // Stitch together OAC
+  domainBucket.addToResourcePolicy(
+    new iam.PolicyStatement({
+      sid: 'AllowCloudFrontServicePrincipal',
+      effect: iam.Effect.ALLOW,
+      actions: ['s3:GetObject'],
+      principals: [new iam.ServicePrincipal('cloudfront.amazonaws.com') as never],
+      resources: [domainBucket.arnForObjects('*')],
+      conditions: {
+        StringEquals: {
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          'AWS:SourceArn': `arn:aws:cloudfront::${props.siteStack.account}:distribution/${cloudFrontDistribution.distributionId}`,
+        },
+      },
+    })
+  );
+
+  // ----------------------------------------------------------------------
   // DNS records
   const res1 = new route53.ARecord(scope, 'DnsRecordSet_A', {
     zone: props.siteStack.hostedZoneResources.hostedZone,
@@ -270,7 +296,7 @@ export async function build(
 
   return {
     domainBucket,
-    originAccessIdentity,
+    originAccessControl,
     cloudFrontDistribution,
   };
 }

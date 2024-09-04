@@ -21,3 +21,11 @@ export async function loadManifest(pathToManifestFile: string): Promise<SomManif
     },
   };
 }
+
+export function sortObjectKeys(o: object): object {
+  return o;
+}
+
+export function manifestHash(manifest: SomManifest): string {
+  return JSON.stringify(sortObjectKeys(manifest));
+}

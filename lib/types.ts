@@ -75,7 +75,7 @@ export type CertificateResources = {
 
 export type WebHostingResources = {
   readonly domainBucket: s3.Bucket;
-  readonly originAccessIdentity: cloudfront.OriginAccessIdentity;
+  readonly originAccessControl: cloudfront.CfnOriginAccessControl;
   readonly cloudFrontDistribution: cloudfront.Distribution;
 };
 
