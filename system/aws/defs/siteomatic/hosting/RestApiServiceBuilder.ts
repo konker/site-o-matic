@@ -63,16 +63,8 @@ export async function build(
         origin,
         allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        cachePolicy: new cloudfront.CachePolicy(scope, 'CloudFrontDistributionCachePolicy', {
-          queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
-          cookieBehavior: cloudfront.CacheCookieBehavior.none(),
-          enableAcceptEncodingBrotli: true,
-          enableAcceptEncodingGzip: true,
-        }),
-        originRequestPolicy: new cloudfront.OriginRequestPolicy(scope, 'OriginRequestPolicy', {
-          queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.none(),
-          cookieBehavior: cloudfront.OriginRequestCookieBehavior.none(),
-        }),
+        cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+        originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
         compress: true,
       },
       domainNames: [props.service.domainName],
