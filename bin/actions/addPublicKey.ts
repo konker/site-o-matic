@@ -1,4 +1,5 @@
-import fs from 'fs';
+import fs from 'node:fs';
+
 import type Vorpal from 'vorpal';
 
 import * as iam from '../../lib/aws/iam';

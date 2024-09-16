@@ -1,4 +1,3 @@
-import type { ErrorResponse } from 'aws-cdk-lib/aws-cloudfront';
 import type Vorpal from 'vorpal';
 
 import {
@@ -8,11 +7,16 @@ import {
   WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT,
   WEB_HOSTING_DEFAULT_ERROR_RESPONSES,
   WEB_HOSTING_DEFAULT_ORIGIN_PATH,
+  WEB_HOSTING_TYPE_CLOUDFRONT_S3,
 } from '../../lib/consts';
 import { hasManifest, refreshContext } from '../../lib/context';
+import type {
+  WafAwsManagedRule,
+  WebHostingErrorResponse,
+} from '../../lib/manifest/schemas/site-o-matic-manifest-schema';
 import { siteOMaticRules } from '../../lib/rules/site-o-matic.rules';
 import { getStatus, getStatusMessage } from '../../lib/status';
-import type { SomConfig, SomInfoSpec, SomInfoStatus, WafAwsManagedRule } from '../../lib/types';
+import type { SomConfig, SomInfoSpec, SomInfoStatus } from '../../lib/types';
 import { renderInfoSpec, renderInfoStatus } from '../../lib/ui/info';
 import { verror } from '../../lib/ui/logging';
 import type { SomGlobalState } from '../SomGlobalState';
@@ -42,11 +46,11 @@ export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomGlobalSt
         registrar: context.registrar,
         subdomains: context.subdomains,
         webHosting: {
-          type: context.manifest.webHosting?.type,
+          type: context.manifest.webHosting?.type ?? WEB_HOSTING_TYPE_CLOUDFRONT_S3,
           originPath: context.manifest.webHosting?.originPath ?? WEB_HOSTING_DEFAULT_ORIGIN_PATH,
           defaultRootObject: context.manifest.webHosting?.defaultRootObject ?? WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT,
           errorResponses: (context.manifest.webHosting?.errorResponses ?? WEB_HOSTING_DEFAULT_ERROR_RESPONSES).map(
-            (i: ErrorResponse) => `↪ ${i.httpStatus} -> ${i.responsePagePath}`
+            (i: WebHostingErrorResponse) => `↪ ${i.httpStatus} -> ${i.responsePagePath}`
           ),
           waf: context.manifest.webHosting?.waf
             ? {

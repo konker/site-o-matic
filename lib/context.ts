@@ -7,8 +7,9 @@ import { DEFAULT_AWS_REGION, SSM_PARAM_NAME_DOMAIN_BUCKET_NAME, SSM_PARAM_NAME_S
 import { resolveDnsNameserverRecords, resolveDnsSomTxtRecord } from './dns';
 import { getSiteConnectionStatus } from './http';
 import { calculateDomainHash, formulateSomId } from './index';
+import type { SiteOMaticManifest } from './manifest/schemas/site-o-matic-manifest-schema';
 import { getRegistrarConnector } from './registrar';
-import type { HasManifest, HasNetworkDerived, SomConfig, SomContext, SomManifest } from './types';
+import type { HasManifest, HasNetworkDerived, SomConfig, SomContext } from './types';
 import { contextTemplateString, getContextParam, getParam } from './utils';
 
 export const DEFAULT_INITIAL_CONTEXT: SomContext = {
@@ -106,7 +107,7 @@ export function manifestDerivedProps(
   config: SomConfig,
   context: SomContext,
   pathToManifestFile: string,
-  manifest: SomManifest
+  manifest: SiteOMaticManifest
 ): HasManifest<SomContext> {
   const ret: HasManifest<SomContext> = {
     ...context,
@@ -135,7 +136,7 @@ export async function refreshContext(
 export async function loadContext(
   config: SomConfig,
   pathToManifestFile: string,
-  manifest: SomManifest
+  manifest: SiteOMaticManifest
 ): Promise<HasNetworkDerived<SomContext>> {
   return refreshContext(config, manifestDerivedProps(config, DEFAULT_INITIAL_CONTEXT, pathToManifestFile, manifest));
 }

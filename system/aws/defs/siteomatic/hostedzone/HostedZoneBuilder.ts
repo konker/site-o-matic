@@ -11,14 +11,9 @@ import {
   SSM_PARAM_NAME_HOSTED_ZONE_ID,
   SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS,
 } from '../../../../../lib/consts';
+import type { DnsClause, DnsConfigMx } from '../../../../../lib/manifest/schemas/site-o-matic-manifest-schema';
 import * as awsRoute53Registrar from '../../../../../lib/registrar/connectors/aws-route53';
-import type {
-  DnsConfigMx,
-  HostedZoneBuilderProps,
-  HostedZoneConfig,
-  HostedZoneResources,
-  SomConfig,
-} from '../../../../../lib/types';
+import type { HostedZoneBuilderProps, HostedZoneResources, SomConfig } from '../../../../../lib/types';
 import { _id, _somMeta } from '../../../../../lib/utils';
 import type { SiteStack } from '../site/SiteStack';
 
@@ -36,7 +31,7 @@ export function buildExtraDnsConfig(
   scope: Construct,
   siteStack: SiteStack,
   props: HostedZoneBuilderProps,
-  hostedZoneConfig: HostedZoneConfig,
+  hostedZoneConfig: DnsClause,
   hostedZone: route53.IHostedZone
 ) {
   const isRoot = hostedZoneConfig.domainName === props.rootDomainName;
@@ -92,7 +87,7 @@ export async function build(
   scope: Construct,
   config: SomConfig,
   props: HostedZoneBuilderProps,
-  hostedZoneConfig: HostedZoneConfig,
+  hostedZoneConfig: DnsClause,
   parentHostedZone?: route53.IHostedZone
 ): Promise<HostedZoneResources> {
   if (!props.siteStack.domainPolicy) {

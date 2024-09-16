@@ -1,7 +1,8 @@
-import fs from 'fs';
+import fs from 'node:fs';
+
 import Handlebars from 'handlebars';
 
-import type { SomManifest } from '../types';
+import type { SiteOMaticManifest } from '../manifest/schemas/site-o-matic-manifest-schema';
 import * as cfFunctionsViewerRequest from './cf-functions/viewer-request';
 import * as cfFunctionsViewerRequestDirDefault from './cf-functions/viewer-request/dir-default';
 import * as cfFunctionsViewerRequestRedirect from './cf-functions/viewer-request/redirect';
@@ -21,7 +22,7 @@ export function getFunctionProducer(
   id: string,
   subComponentIds: Array<string>,
   somId: string,
-  manifest: SomManifest
+  manifest: SiteOMaticManifest
 ): SomFunctionGenerator {
   switch (id) {
     case cfFunctionsViewerRequest.ID:
@@ -42,7 +43,7 @@ export function createFunctionGenerator(
   functionProducer: SomFunctionProducer,
   subComponentIds: Array<string>,
   somId: string,
-  manifest: SomManifest
+  manifest: SiteOMaticManifest
 ): SomFunctionGenerator {
   return async (): Promise<string | undefined> => {
     const tmpFilePath = getTmpFilePath(somId, functionProducer.ID);

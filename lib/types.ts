@@ -9,7 +9,6 @@ import type * as s3 from 'aws-cdk-lib/aws-s3';
 
 import type { SiteStack } from '../system/aws/defs/siteomatic/site/SiteStack';
 import type {
-  REDIRECT_TYPE_EDGE_CF_FUNCTION,
   SERVICE_TYPE_REST_API,
   SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM,
   SITE_PIPELINE_TYPE_CODECOMMIT_S3,
@@ -20,8 +19,13 @@ import type {
   SOM_STATUS_HOSTED_ZONE_OK,
   SOM_STATUS_NOT_STARTED,
   SOM_STATUS_SITE_FUNCTIONAL,
-  WEB_HOSTING_TYPE_CLOUDFRONT_S3,
 } from './consts';
+import type {
+  PipelineClause,
+  RestApiServiceSpec,
+  SiteOMaticManifest,
+  WebHostingClause,
+} from './manifest/schemas/site-o-matic-manifest-schema';
 import type { SomFacts } from './rules/site-o-matic.rules';
 
 export type WwwConnectionStatus = {
@@ -30,6 +34,83 @@ export type WwwConnectionStatus = {
   readonly timing: number;
 };
 
+// ----------------------------------------------------------------------
+export type HostedZoneResources = {
+  readonly hostedZone: route53.IHostedZone;
+};
+
+export type HostedZoneAttributes = {
+  zoneName: string;
+  hostedZoneId: string;
+};
+
+export type CertificateResources = {
+  readonly domainName: string;
+  readonly domainCertificate: certificatemanager.ICertificate;
+  readonly subdomainResources: Array<CertificateResources>;
+};
+
+export type WebHostingResources = {
+  readonly domainBucket: s3.Bucket;
+  readonly originAccessControl: cloudfront.CfnOriginAccessControl;
+  readonly cloudFrontDistribution: cloudfront.Distribution;
+};
+
+export type RestApiServiceResources = {
+  readonly type: typeof SERVICE_TYPE_REST_API;
+  readonly service: RestApiServiceSpec;
+  readonly originAccessIdentity: cloudfront.OriginAccessIdentity;
+  readonly cloudFrontDistribution: cloudfront.Distribution;
+};
+
+// Maybe add some others in the future
+// ...
+
+export type ServiceResources = RestApiServiceResources;
+
+// ----------------------------------------------------------------------
+export type HostedZoneBuilderProps = {
+  readonly siteStack: SiteStack;
+  readonly rootDomainName: string;
+};
+// ----------------------------------------------------------------------
+export type BaseSitePipelineResources = {
+  readonly invalidateCloudfrontCodeBuildProject: codebuild.PipelineProject;
+};
+export type BaseCodeCommitSitePipelineResources = BaseSitePipelineResources & {
+  readonly codeCommitRepo: codecommit.Repository;
+};
+export type CodeCommitS3SitePipelineResources = BaseCodeCommitSitePipelineResources & {
+  readonly type: typeof SITE_PIPELINE_TYPE_CODECOMMIT_S3;
+  readonly codePipeline: codepipeline.Pipeline;
+};
+export type CodeCommitCustomSitePipelineResources = BaseCodeCommitSitePipelineResources & {
+  readonly type: typeof SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM;
+  readonly codePipeline: codepipeline.Pipeline;
+};
+
+export type CodeStarS3SitePipelineResources = BaseSitePipelineResources & {
+  readonly type: typeof SITE_PIPELINE_TYPE_CODESTAR_S3;
+  readonly codestarConnectionArn: string;
+  readonly owner: string;
+  readonly repo: string;
+  readonly codePipeline: codepipeline.Pipeline;
+};
+export type CodeStarCustomSitePipelineResources = BaseSitePipelineResources & {
+  readonly type: typeof SITE_PIPELINE_TYPE_CODESTAR_CUSTOM;
+  readonly codestarConnectionArn: string;
+  readonly owner: string;
+  readonly repo: string;
+  readonly codePipeline: codepipeline.Pipeline;
+};
+
+export type PipelineResources =
+  | CodeCommitS3SitePipelineResources
+  | CodeCommitCustomSitePipelineResources
+  | CodeStarS3SitePipelineResources
+  | CodeStarCustomSitePipelineResources;
+
+/*[XXX: remove]
 // ----------------------------------------------------------------------
 export type DnsConfigMx = {
   readonly type: 'MX';
@@ -243,6 +324,7 @@ export type FromValidation<T extends SomManifest> = Omit<T, 'protected' | 'dns' 
   readonly dns?: T['dns'];
   readonly webHosting?: T['webHosting'];
 };
+*/
 
 // ----------------------------------------------------------------------
 export type SiteStackProps = cdk.StackProps & {
@@ -312,7 +394,7 @@ export type SomParam = {
 export type SomContext = {
   // Manifest derived
   pathToManifestFile?: string;
-  manifest?: SomManifest;
+  manifest?: SiteOMaticManifest;
   rootDomainName?: string;
   domainHash?: string;
   somId?: string;
@@ -338,7 +420,7 @@ export type SomContext = {
 
 export type HasManifest<T extends SomContext> = T & {
   readonly pathToManifestFile: string;
-  readonly manifest: SomManifest;
+  readonly manifest: SiteOMaticManifest;
   readonly rootDomainName: string;
   readonly domainHash: string;
   readonly somId: string;
@@ -371,7 +453,7 @@ export type SomInfoSpec = {
   readonly registrar: string | undefined;
   readonly subdomains: Array<string> | undefined;
   readonly webHosting:
-    | (Required<Omit<SomManifest['webHosting'], 'errorResponses' | 'waf'>> & {
+    | (Required<Omit<WebHostingClause, 'errorResponses' | 'waf'>> & {
         errorResponses: Array<string>;
         waf:
           | {
@@ -382,7 +464,7 @@ export type SomInfoSpec = {
       })
     | undefined;
   readonly content: string | undefined;
-  readonly pipeline: SomManifest['pipeline'] | undefined;
+  readonly pipeline: PipelineClause | undefined;
   readonly redirect:
     | {
         readonly type: string;

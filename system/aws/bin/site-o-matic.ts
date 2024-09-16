@@ -107,7 +107,7 @@ async function main(): Promise<void> {
     config,
     context,
     facts,
-    protected: context.manifest.protected,
+    protected: context.manifest.protected ?? false,
     username,
     contextParams,
     siteContentTmpDirPath,

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-import fs from 'fs';
+import fs from 'node:fs';
+
 import Handlebars from 'handlebars';
 import Metalsmith from 'metalsmith';
 import os from 'os';

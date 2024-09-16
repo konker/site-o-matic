@@ -1,31 +1,19 @@
-import { WEB_HOSTING_TYPE_CLOUDFRONT_S3 } from '../consts';
 import { loadValidData } from '../json5';
-import type { FromValidation, SomManifest } from '../types';
-import * as schema from './schemas/site-o-matic-manifest.schema.json';
+import type { SiteOMaticManifest } from './schemas/site-o-matic-manifest-schema';
 
-export async function loadManifest(pathToManifestFile: string): Promise<SomManifest | undefined> {
-  const validManifest = await loadValidData<FromValidation<SomManifest>>(schema, pathToManifestFile);
+export async function loadManifest(pathToManifestFile: string): Promise<SiteOMaticManifest | undefined> {
+  const validManifest = await loadValidData(pathToManifestFile);
   if (!validManifest) {
     return undefined;
   }
 
-  // Apply defaults
-  return {
-    ...validManifest,
-    protected: validManifest.protected ?? false,
-    dns: validManifest.dns ?? {
-      domainName: validManifest.rootDomainName,
-    },
-    webHosting: validManifest.webHosting ?? {
-      type: WEB_HOSTING_TYPE_CLOUDFRONT_S3,
-    },
-  };
+  return validManifest;
 }
 
 export function sortObjectKeys(o: object): object {
   return o;
 }
 
-export function manifestHash(manifest: SomManifest): string {
+export function manifestHash(manifest: SiteOMaticManifest): string {
   return JSON.stringify(sortObjectKeys(manifest));
 }

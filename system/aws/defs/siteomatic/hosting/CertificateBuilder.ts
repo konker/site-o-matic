@@ -6,19 +6,15 @@ import type { Construct } from 'constructs';
 import { formulateSomId } from '../../../../../lib';
 import { toSsmParamName } from '../../../../../lib/aws/ssm';
 import { SSM_PARAM_NAME_DOMAIN_CERTIFICATE_ARN } from '../../../../../lib/consts';
-import type {
-  CertificateBuilderProps,
-  CertificateResources,
-  HostedZoneConfig,
-  SomConfig,
-} from '../../../../../lib/types';
+import type { DnsClause } from '../../../../../lib/manifest/schemas/site-o-matic-manifest-schema';
+import type { CertificateBuilderProps, CertificateResources, SomConfig } from '../../../../../lib/types';
 import { _id, _somMeta, _somTag } from '../../../../../lib/utils';
 
 export async function build(
   scope: Construct,
   config: SomConfig,
   props: CertificateBuilderProps,
-  hostedZoneConfig: HostedZoneConfig
+  hostedZoneConfig: DnsClause
 ): Promise<CertificateResources> {
   const isRoot = hostedZoneConfig.domainName === props.rootDomainName;
 

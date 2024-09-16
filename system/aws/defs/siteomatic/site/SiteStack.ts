@@ -19,9 +19,9 @@ import {
   SSM_PARAM_NAME_WEBMASTER_EMAIL,
   VERSION,
 } from '../../../../../lib/consts';
+import type { CrossAccountAccessSpec } from '../../../../../lib/manifest/schemas/site-o-matic-manifest-schema';
 import type {
   CertificateResources,
-  CrossAccountAccessGrantRoleSpec,
   HostedZoneResources,
   PipelineResources,
   ServiceResources,
@@ -131,7 +131,7 @@ export class SiteStack extends cdk.Stack {
     // ----------------------------------------------------------------------
     // Initialize cross account access grant roles, if any
     const crossAccountAccess = this.siteProps.context.manifest.crossAccountAccess ?? [];
-    this.crossAccountGrantRoles = crossAccountAccess.map((spec: CrossAccountAccessGrantRoleSpec) =>
+    this.crossAccountGrantRoles = crossAccountAccess.map((spec: CrossAccountAccessSpec) =>
       iam.Role.fromRoleArn(this, _id('CrossAccountGrantRole', spec.name, false), spec.arn, {
         mutable: true,
       })
