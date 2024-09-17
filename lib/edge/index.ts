@@ -2,7 +2,7 @@ import fs from 'node:fs';
 
 import Handlebars from 'handlebars';
 
-import type { SiteOMaticManifest } from '../manifest/schemas/site-o-matic-manifest-schema';
+import type { SiteOMaticManifest } from '../manifest/schemas/site-o-matic-manifest.schema';
 import * as cfFunctionsViewerRequest from './cf-functions/viewer-request';
 import * as cfFunctionsViewerRequestDirDefault from './cf-functions/viewer-request/dir-default';
 import * as cfFunctionsViewerRequestRedirect from './cf-functions/viewer-request/redirect';

@@ -19,7 +19,7 @@ import {
   SSM_PARAM_NAME_WEBMASTER_EMAIL,
   VERSION,
 } from '../../../../../lib/consts';
-import type { CrossAccountAccessSpec } from '../../../../../lib/manifest/schemas/site-o-matic-manifest-schema';
+import type { CrossAccountAccessSpec } from '../../../../../lib/manifest/schemas/site-o-matic-manifest.schema';
 import type {
   CertificateResources,
   HostedZoneResources,

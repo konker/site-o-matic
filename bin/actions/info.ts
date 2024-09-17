@@ -13,7 +13,7 @@ import { hasManifest, refreshContext } from '../../lib/context';
 import type {
   WafAwsManagedRule,
   WebHostingErrorResponse,
-} from '../../lib/manifest/schemas/site-o-matic-manifest-schema';
+} from '../../lib/manifest/schemas/site-o-matic-manifest.schema';
 import { siteOMaticRules } from '../../lib/rules/site-o-matic.rules';
 import { getStatus, getStatusMessage } from '../../lib/status';
 import type { SomConfig, SomInfoSpec, SomInfoStatus } from '../../lib/types';

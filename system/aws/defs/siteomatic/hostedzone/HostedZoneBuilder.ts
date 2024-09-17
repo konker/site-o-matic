@@ -11,7 +11,7 @@ import {
   SSM_PARAM_NAME_HOSTED_ZONE_ID,
   SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS,
 } from '../../../../../lib/consts';
-import type { DnsClause, DnsConfigMx } from '../../../../../lib/manifest/schemas/site-o-matic-manifest-schema';
+import type { DnsClause, DnsConfigMx } from '../../../../../lib/manifest/schemas/site-o-matic-manifest.schema';
 import * as awsRoute53Registrar from '../../../../../lib/registrar/connectors/aws-route53';
 import type { HostedZoneBuilderProps, HostedZoneResources, SomConfig } from '../../../../../lib/types';
 import { _id, _somMeta } from '../../../../../lib/utils';

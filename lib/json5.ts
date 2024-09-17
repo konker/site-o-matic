@@ -6,7 +6,7 @@ import JSON5 from 'json5';
 import type * as z from 'zod';
 
 import { WEB_HOSTING_TYPE_CLOUDFRONT_S3 } from './consts';
-import { SiteOMaticManifest } from './manifest/schemas/site-o-matic-manifest-schema';
+import { SiteOMaticManifest } from './manifest/schemas/site-o-matic-manifest.schema';
 
 export function applyManifestDefaults<
   T extends { rootDomainName: string; protected?: boolean; dns?: object; webHosting?: object },

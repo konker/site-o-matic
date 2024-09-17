@@ -1,7 +1,7 @@
 import type * as cdk from 'aws-cdk-lib';
 import path from 'path';
 
-import type { WebHostingErrorResponse } from './manifest/schemas/site-o-matic-manifest-schema';
+import type { WebHostingErrorResponse } from './manifest/schemas/site-o-matic-manifest.schema';
 import type { SiteStackProps, SomConfig } from './types';
 
 export const UNKNOWN = 'UNKNOWN' as const;

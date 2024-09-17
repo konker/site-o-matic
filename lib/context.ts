@@ -7,7 +7,7 @@ import { DEFAULT_AWS_REGION, SSM_PARAM_NAME_DOMAIN_BUCKET_NAME, SSM_PARAM_NAME_S
 import { resolveDnsNameserverRecords, resolveDnsSomTxtRecord } from './dns';
 import { getSiteConnectionStatus } from './http';
 import { calculateDomainHash, formulateSomId } from './index';
-import type { SiteOMaticManifest } from './manifest/schemas/site-o-matic-manifest-schema';
+import type { SiteOMaticManifest } from './manifest/schemas/site-o-matic-manifest.schema';
 import { getRegistrarConnector } from './registrar';
 import type { HasManifest, HasNetworkDerived, SomConfig, SomContext } from './types';
 import { contextTemplateString, getContextParam, getParam } from './utils';

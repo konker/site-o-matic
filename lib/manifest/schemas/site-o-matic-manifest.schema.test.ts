@@ -4,7 +4,7 @@ import path from 'node:path';
 import JSON5 from 'json5';
 
 import { applyManifestDefaults } from '../../json5';
-import * as unit from './site-o-matic-manifest-schema';
+import * as unit from './site-o-matic-manifest.schema';
 
 describe('site-o-matic-manifest-schema', () => {
   it('should validate a complete example', async () => {

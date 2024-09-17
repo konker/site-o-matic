@@ -25,7 +25,7 @@ import type {
   RestApiServiceSpec,
   SiteOMaticManifest,
   WebHostingClause,
-} from './manifest/schemas/site-o-matic-manifest-schema';
+} from './manifest/schemas/site-o-matic-manifest.schema';
 import type { SomFacts } from './rules/site-o-matic.rules';
 
 export type WwwConnectionStatus = {
