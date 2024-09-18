@@ -1,4 +1,5 @@
 import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
+import { PipelineType } from 'aws-cdk-lib/aws-codepipeline';
 import * as actions from 'aws-cdk-lib/aws-codepipeline-actions';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import type { Construct } from 'constructs';
@@ -39,6 +40,7 @@ export async function build(
   // Code Pipeline
   const codePipeline = new codepipeline.Pipeline(scope, 'CodePipeline', {
     pipelineName: props.siteStack.somId,
+    pipelineType: PipelineType.V1,
     crossAccountKeys: false,
   });
   _somMeta(config, codePipeline, props.siteStack.somId, props.siteStack.siteProps.protected);
