@@ -6,7 +6,7 @@ import {
   ListConnectionsCommand,
 } from '@aws-sdk/client-codestar-connections';
 
-import type { SomConfig } from '../types';
+import type { SiteOMaticConfig } from '../config/schemas/site-o-matic-config.schema';
 import { assumeSomRole } from './sts';
 
 export const CODESTAR_CONNECTION_PROVIDER_TYPE_GITHUB = 'GitHub';
@@ -22,7 +22,7 @@ export const CODESTAR_CONNECTION_PROVIDER_TYPES = [
   CODESTAR_CONNECTION_PROVIDER_TYPE_GITLAB_SELF_MANAGED,
 ] as const;
 
-export async function listCodeStarConnections(config: SomConfig, region: string): Promise<Array<Connection>> {
+export async function listCodeStarConnections(config: SiteOMaticConfig, region: string): Promise<Array<Connection>> {
   const somRoleCredentials = await assumeSomRole(config, region);
   const client = new CodeStarConnectionsClient({ region, credentials: somRoleCredentials });
 
@@ -35,7 +35,7 @@ export async function listCodeStarConnections(config: SomConfig, region: string)
 }
 
 export async function addCodeStarConnection(
-  config: SomConfig,
+  config: SiteOMaticConfig,
   region: string,
   connectionName: string,
   providerType: ProviderType
@@ -53,7 +53,7 @@ export async function addCodeStarConnection(
   return listCodeStarConnections(config, region);
 }
 
-export async function deleteCodeStarConnection(config: SomConfig, region: string, connectionArn: string) {
+export async function deleteCodeStarConnection(config: SiteOMaticConfig, region: string, connectionArn: string) {
   const somRoleCredentials = await assumeSomRole(config, region);
   const client = new CodeStarConnectionsClient({ region, credentials: somRoleCredentials });
 

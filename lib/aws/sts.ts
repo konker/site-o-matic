@@ -1,8 +1,8 @@
 import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
 
-import type { SomConfig } from '../types';
+import type { SiteOMaticConfig } from '../config/schemas/site-o-matic-config.schema';
 
-export function stsAssumeRoleParams(config: SomConfig) {
+export function stsAssumeRoleParams(config: SiteOMaticConfig) {
   return {
     RoleArn: config.SOM_ROLE_ARN,
     DurationSeconds: 900,
@@ -10,7 +10,7 @@ export function stsAssumeRoleParams(config: SomConfig) {
   };
 }
 
-export async function assumeSomRole(config: SomConfig, region: string) {
+export async function assumeSomRole(config: SiteOMaticConfig, region: string) {
   const client = new STSClient({ region });
   const cmd1 = new AssumeRoleCommand(stsAssumeRoleParams(config));
   const result = await client.send(cmd1);

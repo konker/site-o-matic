@@ -1,11 +1,11 @@
 import { getNsRecordValuesForDomainName } from '../../../aws/route53';
-import type { SomConfig } from '../../../types';
+import type { SiteOMaticConfig } from '../../../config/schemas/site-o-matic-config.schema';
 
 export const ID = 'aws-route53';
 export const SECRETS = [];
 
 export async function getNameServers(
-  config: SomConfig,
+  config: SiteOMaticConfig,
   _secrets: { [key: string]: string },
   domain: string
 ): Promise<Array<string>> {
@@ -15,7 +15,7 @@ export async function getNameServers(
 }
 
 export async function setNameServers(
-  config: SomConfig,
+  config: SiteOMaticConfig,
   secrets: { [key: string]: string },
   domain: string,
   _hosts: Array<string>

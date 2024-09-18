@@ -4,16 +4,16 @@ import type Vorpal from 'vorpal';
 
 import * as cdkExec from '../../lib/aws/cdkExec';
 import { postToSnsTopic } from '../../lib/aws/sns';
+import type { SiteOMaticConfig } from '../../lib/config/schemas/site-o-matic-config.schema';
 import { SSM_PARAM_NAME_DOMAIN_USER_NAME, SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN } from '../../lib/consts';
 import { hasManifest, refreshContext } from '../../lib/context';
 import { preDeploymentCheck } from '../../lib/deployment';
 import { siteOMaticRules } from '../../lib/rules/site-o-matic.rules';
-import type { SomConfig } from '../../lib/types';
 import { verror } from '../../lib/ui/logging';
 import { getContextParam } from '../../lib/utils';
 import type { SomGlobalState } from '../SomGlobalState';
 
-export function actionDeploy(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
+export function actionDeploy(vorpal: Vorpal, config: SiteOMaticConfig, state: SomGlobalState) {
   return async (args: Vorpal.Args | string): Promise<void> => {
     if (typeof args === 'string') throw new Error('Error: string args to action');
 

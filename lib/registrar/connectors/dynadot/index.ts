@@ -1,7 +1,7 @@
 import { XMLParser } from 'fast-xml-parser';
 import got from 'got';
 
-import type { SomConfig } from '../../../types';
+import type { SiteOMaticConfig } from '../../../config/schemas/site-o-matic-config.schema';
 
 export const ID = 'dynadot';
 export const SECRETS = ['DYNADOT_API_KEY'];
@@ -12,7 +12,7 @@ const API_ENDPOINT = 'https://api.dynadot.com/api3.xml';
 const XML_PARSER = new XMLParser();
 
 export async function getNameServers(
-  _config: SomConfig,
+  _config: SiteOMaticConfig,
   secrets: { [key: string]: string },
   domain: string
 ): Promise<Array<string>> {
@@ -34,7 +34,7 @@ export async function getNameServers(
 }
 
 export async function setNameServers(
-  config: SomConfig,
+  config: SiteOMaticConfig,
   secrets: { [key: string]: string },
   domain: string,
   hosts: Array<string>

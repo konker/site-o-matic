@@ -6,11 +6,11 @@ import {
   SecretsManagerClient,
 } from '@aws-sdk/client-secrets-manager';
 
-import type { SomConfig } from '../types';
+import type { SiteOMaticConfig } from '../config/schemas/site-o-matic-config.schema';
 import { assumeSomRole } from './sts';
 
 export async function getSomSecrets(
-  config: SomConfig,
+  config: SiteOMaticConfig,
   region: string,
   secretNames: Array<string>
 ): Promise<Record<string, string>> {
@@ -43,7 +43,7 @@ export async function getSomSecrets(
   );
 }
 
-export async function listSomSecrets(config: SomConfig, region: string): Promise<Array<Record<string, string>>> {
+export async function listSomSecrets(config: SiteOMaticConfig, region: string): Promise<Array<Record<string, string>>> {
   const somRoleCredentials = await assumeSomRole(config, region);
   const client = new SecretsManagerClient({ region, credentials: somRoleCredentials });
 
@@ -57,7 +57,7 @@ export async function listSomSecrets(config: SomConfig, region: string): Promise
 }
 
 export async function addSomSecret(
-  config: SomConfig,
+  config: SiteOMaticConfig,
   region: string,
   name: string,
   value: string
@@ -76,7 +76,7 @@ export async function addSomSecret(
 }
 
 export async function deleteSomSecret(
-  config: SomConfig,
+  config: SiteOMaticConfig,
   region: string,
   name: string
 ): Promise<Array<Record<string, string>>> {

@@ -1,14 +1,14 @@
 import type Vorpal from 'vorpal';
 
 import * as cdkExec from '../../lib/aws/cdkExec';
+import type { SiteOMaticConfig } from '../../lib/config/schemas/site-o-matic-config.schema';
 import { SSM_PARAM_NAME_DOMAIN_USER_NAME } from '../../lib/consts';
 import { hasManifest } from '../../lib/context';
-import type { SomConfig } from '../../lib/types';
 import { verror } from '../../lib/ui/logging';
 import { getContextParam } from '../../lib/utils';
 import type { SomGlobalState } from '../SomGlobalState';
 
-export function actionSynthesize(vorpal: Vorpal, _: SomConfig, state: SomGlobalState) {
+export function actionSynthesize(vorpal: Vorpal, _: SiteOMaticConfig, state: SomGlobalState) {
   return async (args: Vorpal.Args | string): Promise<void> => {
     if (typeof args === 'string') throw new Error('Error: string args to action');
 

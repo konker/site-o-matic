@@ -2,10 +2,15 @@ import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import type { Construct } from 'constructs';
 
-import type { BaseSitePipelineResources, PipelineBuilderProps, SomConfig } from '../../../../../lib/types';
+import type { SiteOMaticConfig } from '../../../../../lib/config/schemas/site-o-matic-config.schema';
+import type { BaseSitePipelineResources, PipelineBuilderProps } from '../../../../../lib/types';
 import { _somMeta } from '../../../../../lib/utils';
 
-export function build(scope: Construct, config: SomConfig, props: PipelineBuilderProps): BaseSitePipelineResources {
+export function build(
+  scope: Construct,
+  config: SiteOMaticConfig,
+  props: PipelineBuilderProps
+): BaseSitePipelineResources {
   if (!props.siteStack.hostingResources) {
     throw new Error(`[site-o-matic] Could not build pipeline sub-stack when hostingResources is missing`);
   }

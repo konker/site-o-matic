@@ -27,6 +27,5 @@
   },
   "required": ["SOM_ROLE_ARN"],
   "additionalProperties": false,
-  "definitions": {},
-  "examples": [{ "rootDomainName": "example.org" }]
+  "definitions": {}
 }

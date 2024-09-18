@@ -1,15 +1,15 @@
 import path from 'path';
 import type Vorpal from 'vorpal';
 
+import type { SiteOMaticConfig } from '../../lib/config/schemas/site-o-matic-config.schema';
 import { VERSION } from '../../lib/consts';
 import { manifestDerivedProps } from '../../lib/context';
 import { loadManifest } from '../../lib/manifest';
-import type { SomConfig } from '../../lib/types';
 import { verror } from '../../lib/ui/logging';
 import type { SomGlobalState } from '../SomGlobalState';
 import { actionInfo } from './info';
 
-export function actionLoadManifest(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
+export function actionLoadManifest(vorpal: Vorpal, config: SiteOMaticConfig, state: SomGlobalState) {
   return async (args: Vorpal.Args | string): Promise<void> => {
     if (typeof args === 'string') throw new Error('Error: string args to action');
 

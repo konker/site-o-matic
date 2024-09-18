@@ -1,8 +1,9 @@
 import type * as cdk from 'aws-cdk-lib';
 import path from 'path';
 
+import type { SiteOMaticConfig } from './config/schemas/site-o-matic-config.schema';
 import type { WebHostingErrorResponse } from './manifest/schemas/site-o-matic-manifest.schema';
-import type { SiteStackProps, SomConfig } from './types';
+import type { SiteStackProps } from './types';
 
 export const UNKNOWN = 'UNKNOWN' as const;
 export const VERSION = '0.0.2' as const;
@@ -79,7 +80,11 @@ export const SITE_PIPELINE_CODESTAR_BRANCH_NAME = 'main' as const;
 export const SITE_PIPELINE_DEFAULT_BUILD_IMAGE = 'aws/codebuild/standard:7.0' as const;
 export const SITE_PIPELINE_DEFAULT_BUILD_FILES = ['**/*'] as const;
 
-export const DEFAULT_STACK_PROPS = (config: SomConfig, somId: string, siteProps?: SiteStackProps): cdk.StackProps => ({
+export const DEFAULT_STACK_PROPS = (
+  config: SiteOMaticConfig,
+  somId: string,
+  siteProps?: SiteStackProps
+): cdk.StackProps => ({
   env: {
     account: siteProps?.env?.account ?? (process.env.CDK_DEFAULT_ACCOUNT as string),
     region: siteProps?.env?.region ?? (process.env.CDK_DEFAULT_REGION as string),

@@ -1,5 +1,6 @@
 import type Vorpal from 'vorpal';
 
+import type { SiteOMaticConfig } from '../../lib/config/schemas/site-o-matic-config.schema';
 import {
   SOM_STATUS_BREADCRUMB,
   UNKNOWN,
@@ -16,12 +17,12 @@ import type {
 } from '../../lib/manifest/schemas/site-o-matic-manifest.schema';
 import { siteOMaticRules } from '../../lib/rules/site-o-matic.rules';
 import { getStatus, getStatusMessage } from '../../lib/status';
-import type { SomConfig, SomInfoSpec, SomInfoStatus } from '../../lib/types';
+import type { SomInfoSpec, SomInfoStatus } from '../../lib/types';
 import { renderInfoSpec, renderInfoStatus } from '../../lib/ui/info';
 import { verror } from '../../lib/ui/logging';
 import type { SomGlobalState } from '../SomGlobalState';
 
-export function actionInfo(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
+export function actionInfo(vorpal: Vorpal, config: SiteOMaticConfig, state: SomGlobalState) {
   return async (_: Vorpal.Args | string): Promise<void> => {
     if (!hasManifest(state.context)) {
       const errorMessage = `ERROR: no manifest loaded`;

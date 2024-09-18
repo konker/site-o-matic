@@ -6,18 +6,19 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 import type { Construct } from 'constructs';
 
 import { toSsmParamName } from '../../../../../lib/aws/ssm';
+import type { SiteOMaticConfig } from '../../../../../lib/config/schemas/site-o-matic-config.schema';
 import {
   SERVICE_TYPE_REST_API,
   SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID,
   SSM_PARAM_NAME_CLOUDFRONT_DOMAIN_NAME,
 } from '../../../../../lib/consts';
-import type { RestApiServiceBuilderProps, RestApiServiceResources, SomConfig } from '../../../../../lib/types';
+import type { RestApiServiceBuilderProps, RestApiServiceResources } from '../../../../../lib/types';
 import { _somMeta, searchCertificates } from '../../../../../lib/utils';
 import { ExistingRestApiOrigin } from './ExistingRestApiOrigin';
 
 export async function build(
   scope: Construct,
-  config: SomConfig,
+  config: SiteOMaticConfig,
   props: RestApiServiceBuilderProps
 ): Promise<RestApiServiceResources> {
   if (!props.siteStack.domainUser || !props.siteStack.hostedZoneResources) {

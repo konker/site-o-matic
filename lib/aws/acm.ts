@@ -6,9 +6,13 @@ import {
 } from '@aws-sdk/client-acm';
 import type { Tag } from '@aws-sdk/client-acm/dist-types/models';
 
-import type { SomConfig } from '../types';
+import type { SiteOMaticConfig } from '../config/schemas/site-o-matic-config.schema';
 
-export async function listCertificateTags(_: SomConfig, region: string, certificateArn: string): Promise<Array<Tag>> {
+export async function listCertificateTags(
+  _: SiteOMaticConfig,
+  region: string,
+  certificateArn: string
+): Promise<Array<Tag>> {
   const client = new ACMClient({ region });
 
   const cmd1 = new ListTagsForCertificateCommand({
@@ -21,7 +25,7 @@ export async function listCertificateTags(_: SomConfig, region: string, certific
 }
 
 export async function listSomCertificates(
-  config: SomConfig,
+  config: SiteOMaticConfig,
   region: string,
   SOM_TAG_NAME: string
 ): Promise<Array<Record<string, string>>> {

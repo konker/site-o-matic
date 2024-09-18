@@ -3,13 +3,14 @@ import { getIsS3BucketEmpty } from './aws/s3';
 import * as secretsmanager from './aws/secretsmanager';
 import * as ssm from './aws/ssm';
 import { ssmBasePath } from './aws/ssm';
+import type { SiteOMaticConfig } from './config/schemas/site-o-matic-config.schema';
 import { DEFAULT_AWS_REGION, SSM_PARAM_NAME_DOMAIN_BUCKET_NAME, SSM_PARAM_NAME_SOM_VERSION, VERSION } from './consts';
 import { resolveDnsNameserverRecords, resolveDnsSomTxtRecord } from './dns';
 import { getSiteConnectionStatus } from './http';
 import { calculateDomainHash, formulateSomId } from './index';
 import type { SiteOMaticManifest } from './manifest/schemas/site-o-matic-manifest.schema';
 import { getRegistrarConnector } from './registrar';
-import type { HasManifest, HasNetworkDerived, SomConfig, SomContext } from './types';
+import type { HasManifest, HasNetworkDerived, SomContext } from './types';
 import { contextTemplateString, getContextParam, getParam } from './utils';
 
 export const DEFAULT_INITIAL_CONTEXT: SomContext = {
@@ -43,7 +44,7 @@ export function hasNetworkDerived(context: SomContext): context is HasNetworkDer
   );
 }
 
-export async function getRegistrarNameservers(config: SomConfig, context: SomContext): Promise<Array<string>> {
+export async function getRegistrarNameservers(config: SiteOMaticConfig, context: SomContext): Promise<Array<string>> {
   if (!context.rootDomainName || !context.registrar) {
     return [];
   }
@@ -67,7 +68,7 @@ export async function loadContextDerivedProps(
 }
 
 export async function loadNetworkDerivedContext(
-  config: SomConfig,
+  config: SiteOMaticConfig,
   context: HasManifest<SomContext>
 ): Promise<HasNetworkDerived<SomContext>> {
   const [
@@ -104,7 +105,7 @@ export async function loadNetworkDerivedContext(
 }
 
 export function manifestDerivedProps(
-  config: SomConfig,
+  config: SiteOMaticConfig,
   context: SomContext,
   pathToManifestFile: string,
   manifest: SiteOMaticManifest
@@ -127,14 +128,14 @@ export function manifestDerivedProps(
 }
 
 export async function refreshContext(
-  config: SomConfig,
+  config: SiteOMaticConfig,
   context: HasManifest<SomContext>
 ): Promise<HasNetworkDerived<SomContext>> {
   return loadContextDerivedProps(await loadNetworkDerivedContext(config, context));
 }
 
 export async function loadContext(
-  config: SomConfig,
+  config: SiteOMaticConfig,
   pathToManifestFile: string,
   manifest: SiteOMaticManifest
 ): Promise<HasNetworkDerived<SomContext>> {

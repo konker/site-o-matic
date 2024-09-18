@@ -1,21 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { SOM_CONFIG_DEFAULT_SOM_PREFIX, SOM_CONFIG_DEFAULT_SOM_TAG_NAME } from '../consts';
-import { loadValidDataJsonSchema } from '../json5';
-import type { SomConfig } from '../types';
-import * as schema from './schemas/site-o-matic-config.schema.json';
+import { loadValidData } from '../json5';
+import { SiteOMaticConfig } from './schemas/site-o-matic-config.schema';
 
-export async function loadConfig(pathToConfig: string): Promise<SomConfig | undefined> {
-  const validConfig = await loadValidDataJsonSchema<SomConfig>(schema, pathToConfig);
-  if (!validConfig) {
-    return undefined;
-  }
-
-  // Apply defaults
-  return {
-    // @ts-ignore
-    SOM_PREFIX: SOM_CONFIG_DEFAULT_SOM_PREFIX,
-    // @ts-ignore
-    SOM_TAG_NAME: SOM_CONFIG_DEFAULT_SOM_TAG_NAME,
-    ...validConfig,
-  };
+export async function loadConfig(pathToConfig: string): Promise<SiteOMaticConfig | undefined> {
+  return loadValidData(pathToConfig, SiteOMaticConfig);
 }

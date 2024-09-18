@@ -1,0 +1,6 @@
+{
+  SOM_ROLE_ARN: 'arn:aws:iam::111111111111:role/OrganizationAccountAccessRole',
+  DEFAULT_WEBMASTER_EMAIL: 'webmaster+{{context.manifest.rootDomainName}}@example.com',
+  SOM_TAG_NAME: 'site-o-matic-tag-name',
+  SOM_PREFIX: 'som-foo',
+}

@@ -5,13 +5,14 @@ import {
   Route53Client,
 } from '@aws-sdk/client-route-53';
 
+import type { SiteOMaticConfig } from '../config/schemas/site-o-matic-config.schema';
 import { DEFAULT_AWS_REGION } from '../consts';
-import type { HostedZoneAttributes, SomConfig } from '../types';
+import type { HostedZoneAttributes } from '../types';
 import { nsRecordValueToHost } from '../utils';
 import { assumeSomRole } from './sts';
 
 export async function findHostedZoneAttributes(
-  config: SomConfig,
+  config: SiteOMaticConfig,
   domainName: string
 ): Promise<HostedZoneAttributes | undefined> {
   const somRoleCredentials = await assumeSomRole(config, DEFAULT_AWS_REGION);
@@ -49,7 +50,7 @@ export async function findHostedZoneAttributes(
   return undefined;
 }
 
-export async function removeVerificationCnameRecords(config: SomConfig, hostedZoneId: string): Promise<void> {
+export async function removeVerificationCnameRecords(config: SiteOMaticConfig, hostedZoneId: string): Promise<void> {
   if (!hostedZoneId) return;
 
   const somRoleCredentials = await assumeSomRole(config, DEFAULT_AWS_REGION);
@@ -90,7 +91,7 @@ export async function removeVerificationCnameRecords(config: SomConfig, hostedZo
 }
 
 export async function getRecordsForHostedZoneId(
-  config: SomConfig,
+  config: SiteOMaticConfig,
   hostedZoneId: string,
   recordType: string
 ): Promise<Record<string, Array<string>> | undefined> {
@@ -125,7 +126,7 @@ export async function getRecordsForHostedZoneId(
 }
 
 export async function getRecordsForDomainName(
-  config: SomConfig,
+  config: SiteOMaticConfig,
   domainName: string,
   recordType: string
 ): Promise<Record<string, Array<string>> | undefined> {
@@ -136,7 +137,7 @@ export async function getRecordsForDomainName(
 }
 
 export async function getNsRecordValuesForDomainName(
-  config: SomConfig,
+  config: SiteOMaticConfig,
   domainName: string
 ): Promise<Array<string> | undefined> {
   const ret = await getRecordsForDomainName(config, domainName, 'NS');

@@ -2,15 +2,15 @@ import chalk from 'chalk';
 import type Vorpal from 'vorpal';
 
 import * as secretsmanager from '../../lib/aws/secretsmanager';
+import type { SiteOMaticConfig } from '../../lib/config/schemas/site-o-matic-config.schema';
 import { DEFAULT_AWS_REGION, SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS } from '../../lib/consts';
 import { hasManifest, refreshContext } from '../../lib/context';
 import { getRegistrarConnector } from '../../lib/registrar';
-import type { SomConfig } from '../../lib/types';
 import { verror, vlog } from '../../lib/ui/logging';
 import { getContextParam } from '../../lib/utils';
 import type { SomGlobalState } from '../SomGlobalState';
 
-export function actionSetNameServersWithRegistrar(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
+export function actionSetNameServersWithRegistrar(vorpal: Vorpal, config: SiteOMaticConfig, state: SomGlobalState) {
   return async (_: Vorpal.Args | string): Promise<void> => {
     if (!hasManifest(state.context)) {
       const errorMessage = 'ERROR: no manifest loaded';

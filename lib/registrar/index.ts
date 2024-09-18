@@ -1,4 +1,4 @@
-import type { SomConfig } from '../types';
+import type { SiteOMaticConfig } from '../config/schemas/site-o-matic-config.schema';
 import * as awsRoute53 from './connectors/aws-route53';
 import * as dynadot from './connectors/dynadot';
 
@@ -6,9 +6,9 @@ export type RegistrarConnector = {
   ID: string;
   SECRETS: Array<string>;
 
-  getNameServers(config: SomConfig, secrets: { [key: string]: string }, domain: string): Promise<Array<string>>;
+  getNameServers(config: SiteOMaticConfig, secrets: { [key: string]: string }, domain: string): Promise<Array<string>>;
   setNameServers(
-    config: SomConfig,
+    config: SiteOMaticConfig,
     secrets: { [key: string]: string },
     domain: string,
     hosts: Array<string>

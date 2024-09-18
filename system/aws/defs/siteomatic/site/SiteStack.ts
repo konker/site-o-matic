@@ -7,6 +7,7 @@ import type { Construct } from 'constructs';
 import cloneDeep from 'lodash.clonedeep';
 
 import { toSsmParamName } from '../../../../../lib/aws/ssm';
+import type { SiteOMaticConfig } from '../../../../../lib/config/schemas/site-o-matic-config.schema';
 import {
   DEFAULT_STACK_PROPS,
   SSM_PARAM_NAME_DOMAIN_ROLE_ARN,
@@ -26,7 +27,6 @@ import type {
   PipelineResources,
   ServiceResources,
   SiteStackProps,
-  SomConfig,
   WebHostingResources,
 } from '../../../../../lib/types';
 import { _id, _somMeta, _somTag } from '../../../../../lib/utils';
@@ -37,7 +37,7 @@ import { SiteServicesNestedStack } from './nested/SiteServicesNestedStack';
 import { SiteWebHostingNestedStack } from './nested/SiteWebHostingNestedStack';
 
 export class SiteStack extends cdk.Stack {
-  public readonly config: SomConfig;
+  public readonly config: SiteOMaticConfig;
   public readonly siteProps: SiteStackProps;
   public readonly somId: string;
 

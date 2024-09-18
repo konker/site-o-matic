@@ -5,6 +5,7 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 import type { Construct } from 'constructs';
 
 import { toSsmParamName } from '../../../../../../lib/aws/ssm';
+import type { SiteOMaticConfig } from '../../../../../../lib/config/schemas/site-o-matic-config.schema';
 import {
   DEFAULT_AWS_REGION,
   SITE_PIPELINE_CODESTAR_BRANCH_NAME,
@@ -15,13 +16,13 @@ import {
   SSM_PARAM_NAME_CODE_PIPELINE_CONSOLE_URL,
   SSM_PARAM_NAME_CODE_PIPELINE_NAME,
 } from '../../../../../../lib/consts';
-import type { CodeStarCustomSitePipelineResources, PipelineBuilderProps, SomConfig } from '../../../../../../lib/types';
+import type { CodeStarCustomSitePipelineResources, PipelineBuilderProps } from '../../../../../../lib/types';
 import { _somMeta } from '../../../../../../lib/utils';
 import * as SitePipelineStack from '../BasePipelineBuilder';
 
 export async function build(
   scope: Construct,
-  config: SomConfig,
+  config: SiteOMaticConfig,
   props: PipelineBuilderProps
 ): Promise<CodeStarCustomSitePipelineResources> {
   if (!props.siteStack.hostingResources) {

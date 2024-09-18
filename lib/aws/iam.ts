@@ -8,10 +8,10 @@ import {
   UploadSSHPublicKeyCommand,
 } from '@aws-sdk/client-iam';
 
-import type { SomConfig } from '../types';
+import type { SiteOMaticConfig } from '../config/schemas/site-o-matic-config.schema';
 import { assumeSomRole } from './sts';
 
-export async function listSomUsers(config: SomConfig, region: string): Promise<Array<Record<string, string>>> {
+export async function listSomUsers(config: SiteOMaticConfig, region: string): Promise<Array<Record<string, string>>> {
   const somRoleCredentials = await assumeSomRole(config, region);
 
   const client = new IAMClient({ region, credentials: somRoleCredentials });
@@ -39,7 +39,7 @@ export async function listSomUsers(config: SomConfig, region: string): Promise<A
 }
 
 export async function addSomUser(
-  config: SomConfig,
+  config: SiteOMaticConfig,
   region: string,
   username: string
 ): Promise<Array<{ [key: string]: string }>> {
@@ -56,7 +56,7 @@ export async function addSomUser(
 }
 
 export async function listPublicKeys(
-  config: SomConfig,
+  config: SiteOMaticConfig,
   region: string,
   userName: string
 ): Promise<Array<Record<string, string>>> {
@@ -76,7 +76,7 @@ export async function listPublicKeys(
 }
 
 export async function addPublicKey(
-  config: SomConfig,
+  config: SiteOMaticConfig,
   region: string,
   userName: string,
   publicKey: string
@@ -91,7 +91,7 @@ export async function addPublicKey(
 }
 
 export async function deletePublicKey(
-  config: SomConfig,
+  config: SiteOMaticConfig,
   region: string,
   userName: string,
   publicKeyId: string
@@ -105,7 +105,7 @@ export async function deletePublicKey(
   return listPublicKeys(config, region, userName);
 }
 
-export async function deleteAllPublicKeys(config: SomConfig, region: string, userName: string): Promise<void> {
+export async function deleteAllPublicKeys(config: SiteOMaticConfig, region: string, userName: string): Promise<void> {
   if (!userName) return;
 
   const somRoleCredentials = await assumeSomRole(config, region);

@@ -1,0 +1,4 @@
+{
+  SOM_ROLE_ARN: 'arn:aws:iam::111111111111:role/OrganizationAccountAccessRole',
+  DEFAULT_WEBMASTER_EMAIL: 'webmaster@example.com',
+}

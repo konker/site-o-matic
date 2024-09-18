@@ -1,13 +1,8 @@
 import { loadValidData } from '../json5';
-import type { SiteOMaticManifest } from './schemas/site-o-matic-manifest.schema';
+import { SiteOMaticManifest } from './schemas/site-o-matic-manifest.schema';
 
 export async function loadManifest(pathToManifestFile: string): Promise<SiteOMaticManifest | undefined> {
-  const validManifest = await loadValidData(pathToManifestFile);
-  if (!validManifest) {
-    return undefined;
-  }
-
-  return validManifest;
+  return loadValidData(pathToManifestFile, SiteOMaticManifest);
 }
 
 export function sortObjectKeys(o: object): object {

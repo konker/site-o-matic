@@ -1,12 +1,12 @@
 import type Vorpal from 'vorpal';
 
 import * as codestar from '../../lib/aws/codestar';
+import type { SiteOMaticConfig } from '../../lib/config/schemas/site-o-matic-config.schema';
 import { DEFAULT_AWS_REGION } from '../../lib/consts';
-import type { SomConfig } from '../../lib/types';
 import { tabulate } from '../../lib/ui/tables';
 import type { SomGlobalState } from '../SomGlobalState';
 
-export function actionListCodeStarConnections(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
+export function actionListCodeStarConnections(vorpal: Vorpal, config: SiteOMaticConfig, state: SomGlobalState) {
   return async (_: Vorpal.Args | string): Promise<void> => {
     state.spinner.start();
     const data = await codestar.listCodeStarConnections(config, DEFAULT_AWS_REGION);

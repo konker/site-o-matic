@@ -10,6 +10,7 @@ import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import type { Construct } from 'constructs';
 
 import { toSsmParamName } from '../../../../../lib/aws/ssm';
+import type { SiteOMaticConfig } from '../../../../../lib/config/schemas/site-o-matic-config.schema';
 import {
   SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID,
   SSM_PARAM_NAME_CLOUDFRONT_DOMAIN_NAME,
@@ -18,13 +19,13 @@ import {
   WEB_HOSTING_DEFAULT_ERROR_RESPONSES,
   WEB_HOSTING_DEFAULT_ORIGIN_PATH,
 } from '../../../../../lib/consts';
-import type { SomConfig, WebHostingBuilderProps, WebHostingResources } from '../../../../../lib/types';
+import type { WebHostingBuilderProps, WebHostingResources } from '../../../../../lib/types';
 import { _removalPolicyFromBoolean, _somMeta } from '../../../../../lib/utils';
 import { S3OriginWithOACPatch } from './S3OriginWithOACPatchProps';
 
 export async function build(
   scope: Construct,
-  config: SomConfig,
+  config: SiteOMaticConfig,
   props: WebHostingBuilderProps
 ): Promise<WebHostingResources> {
   if (!props.siteStack.domainUser || !props.siteStack.hostedZoneResources) {

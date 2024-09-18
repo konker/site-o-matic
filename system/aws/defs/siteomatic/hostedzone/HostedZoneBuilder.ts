@@ -6,6 +6,7 @@ import type { Construct } from 'constructs';
 
 import { findHostedZoneAttributes } from '../../../../../lib/aws/route53';
 import { toSsmParamName } from '../../../../../lib/aws/ssm';
+import type { SiteOMaticConfig } from '../../../../../lib/config/schemas/site-o-matic-config.schema';
 import {
   REGISTRAR_ID_AWS_ROUTE53,
   SSM_PARAM_NAME_HOSTED_ZONE_ID,
@@ -13,7 +14,7 @@ import {
 } from '../../../../../lib/consts';
 import type { DnsClause, DnsConfigMx } from '../../../../../lib/manifest/schemas/site-o-matic-manifest.schema';
 import * as awsRoute53Registrar from '../../../../../lib/registrar/connectors/aws-route53';
-import type { HostedZoneBuilderProps, HostedZoneResources, SomConfig } from '../../../../../lib/types';
+import type { HostedZoneBuilderProps, HostedZoneResources } from '../../../../../lib/types';
 import { _id, _somMeta } from '../../../../../lib/utils';
 import type { SiteStack } from '../site/SiteStack';
 
@@ -85,7 +86,7 @@ export function buildExtraDnsConfig(
 
 export async function build(
   scope: Construct,
-  config: SomConfig,
+  config: SiteOMaticConfig,
   props: HostedZoneBuilderProps,
   hostedZoneConfig: DnsClause,
   parentHostedZone?: route53.IHostedZone

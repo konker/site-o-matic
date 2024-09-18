@@ -5,14 +5,15 @@ import type { Construct } from 'constructs';
 
 import { formulateSomId } from '../../../../../lib';
 import { toSsmParamName } from '../../../../../lib/aws/ssm';
+import type { SiteOMaticConfig } from '../../../../../lib/config/schemas/site-o-matic-config.schema';
 import { SSM_PARAM_NAME_DOMAIN_CERTIFICATE_ARN } from '../../../../../lib/consts';
 import type { DnsClause } from '../../../../../lib/manifest/schemas/site-o-matic-manifest.schema';
-import type { CertificateBuilderProps, CertificateResources, SomConfig } from '../../../../../lib/types';
+import type { CertificateBuilderProps, CertificateResources } from '../../../../../lib/types';
 import { _id, _somMeta, _somTag } from '../../../../../lib/utils';
 
 export async function build(
   scope: Construct,
-  config: SomConfig,
+  config: SiteOMaticConfig,
   props: CertificateBuilderProps,
   hostedZoneConfig: DnsClause
 ): Promise<CertificateResources> {

@@ -1,7 +1,7 @@
 import * as crypto from 'crypto';
 
+import type { SiteOMaticConfig } from './config/schemas/site-o-matic-config.schema';
 import { MAX_SOM_ID_LEN, VERSION } from './consts';
-import type { SomConfig } from './types';
 
 export function calculateDomainHash(domainName: string) {
   return crypto
@@ -15,7 +15,7 @@ export function normalizeDomainName(domainName: string, reservedLength: number):
   return domainName.replace('.', '-dot-').slice(0, MAX_SOM_ID_LEN - reservedLength);
 }
 
-export function formulateSomId(config: SomConfig, domainName: string): string {
+export function formulateSomId(config: SiteOMaticConfig, domainName: string): string {
   const domainNameHash = calculateDomainHash(domainName);
   const normalizedDomainName = normalizeDomainName(domainName, config.SOM_PREFIX.length + domainNameHash.length + 4);
 

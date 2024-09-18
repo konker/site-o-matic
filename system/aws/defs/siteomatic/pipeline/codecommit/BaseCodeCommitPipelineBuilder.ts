@@ -3,14 +3,15 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 import type { Construct } from 'constructs';
 
 import { toSsmParamName } from '../../../../../../lib/aws/ssm';
+import type { SiteOMaticConfig } from '../../../../../../lib/config/schemas/site-o-matic-config.schema';
 import { SSM_PARAM_NAME_CODECOMMIT_CLONE_URL_SSH } from '../../../../../../lib/consts';
-import type { BaseCodeCommitSitePipelineResources, PipelineBuilderProps, SomConfig } from '../../../../../../lib/types';
+import type { BaseCodeCommitSitePipelineResources, PipelineBuilderProps } from '../../../../../../lib/types';
 import { _somMeta } from '../../../../../../lib/utils';
 import * as SitePipelineStack from '../BasePipelineBuilder';
 
 export async function build(
   scope: Construct,
-  config: SomConfig,
+  config: SiteOMaticConfig,
   props: PipelineBuilderProps
 ): Promise<BaseCodeCommitSitePipelineResources> {
   if (!props.siteStack.domainUser) {

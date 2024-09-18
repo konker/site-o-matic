@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import * as codestar from '../lib/aws/codestar';
 import * as iam from './aws/iam';
 import * as secretsmanager from './aws/secretsmanager';
+import type { SiteOMaticConfig } from './config/schemas/site-o-matic-config.schema';
 import {
   DEFAULT_AWS_REGION,
   SITE_PIPELINE_TYPE_CODESTAR_CUSTOM,
@@ -16,7 +17,7 @@ import { hasManifest } from './context';
 import { getRegistrarConnector } from './registrar';
 import { siteOMaticRules } from './rules/site-o-matic.rules';
 import { getStatus } from './status';
-import type { SomConfig, SomContext } from './types';
+import type { SomContext } from './types';
 
 export type DeploymentCheckItem = {
   readonly name: string;
@@ -28,7 +29,7 @@ export const checkPassed = (name: string, message?: string): DeploymentCheckItem
 export const checkFailed = (name: string, message?: string): DeploymentCheckItem => ({ name, passed: false, message });
 
 export async function preDeploymentCheck(
-  config: SomConfig,
+  config: SiteOMaticConfig,
   context: SomContext,
   somUser: string
 ): Promise<Array<DeploymentCheckItem>> {

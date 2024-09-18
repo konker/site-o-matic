@@ -1,6 +1,7 @@
 import { GetParameterCommand, GetParametersByPathCommand, SSMClient } from '@aws-sdk/client-ssm';
 
-import type { SomConfig, SomParam } from '../types';
+import type { SiteOMaticConfig } from '../config/schemas/site-o-matic-config.schema';
+import type { SomParam } from '../types';
 import { assumeSomRole } from './sts';
 
 export function toSsmParamName(somId: string, name: string, ...extra: Array<string>) {
@@ -12,7 +13,7 @@ export function ssmBasePath(somId: string): string {
   return `/som/${somId}`;
 }
 
-export async function getSsmParams(config: SomConfig, region: string, path: string): Promise<Array<SomParam>> {
+export async function getSsmParams(config: SiteOMaticConfig, region: string, path: string): Promise<Array<SomParam>> {
   const somRoleCredentials = await assumeSomRole(config, region);
   const client = new SSMClient({
     region,

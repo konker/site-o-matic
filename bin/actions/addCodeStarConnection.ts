@@ -2,12 +2,12 @@ import type Vorpal from 'vorpal';
 
 import * as codestar from '../../lib/aws/codestar';
 import { CODESTAR_CONNECTION_PROVIDER_TYPES } from '../../lib/aws/codestar';
+import type { SiteOMaticConfig } from '../../lib/config/schemas/site-o-matic-config.schema';
 import { DEFAULT_AWS_REGION } from '../../lib/consts';
-import type { SomConfig } from '../../lib/types';
 import { verror, vtabulate } from '../../lib/ui/logging';
 import type { SomGlobalState } from '../SomGlobalState';
 
-export function actionAddCodeStarConnection(vorpal: Vorpal, config: SomConfig, state: SomGlobalState) {
+export function actionAddCodeStarConnection(vorpal: Vorpal, config: SiteOMaticConfig, state: SomGlobalState) {
   return async (args: Vorpal.Args | string): Promise<void> => {
     if (typeof args === 'string') throw new Error('Error: string args to action');
 

@@ -8,6 +8,7 @@ import type * as route53 from 'aws-cdk-lib/aws-route53';
 import type * as s3 from 'aws-cdk-lib/aws-s3';
 
 import type { SiteStack } from '../system/aws/defs/siteomatic/site/SiteStack';
+import type { SiteOMaticConfig } from './config/schemas/site-o-matic-config.schema';
 import type {
   SERVICE_TYPE_REST_API,
   SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM,
@@ -111,6 +112,14 @@ export type PipelineResources =
   | CodeStarCustomSitePipelineResources;
 
 /*[XXX: remove]
+// ----------------------------------------------------------------------
+export type SomConfig = {
+  readonly SOM_PREFIX: string;
+  readonly SOM_TAG_NAME: string;
+  readonly SOM_ROLE_ARN: string;
+  readonly DEFAULT_WEBMASTER_EMAIL?: string;
+};
+
 // ----------------------------------------------------------------------
 export type DnsConfigMx = {
   readonly type: 'MX';
@@ -328,7 +337,7 @@ export type FromValidation<T extends SomManifest> = Omit<T, 'protected' | 'dns' 
 
 // ----------------------------------------------------------------------
 export type SiteStackProps = cdk.StackProps & {
-  readonly config: SomConfig;
+  readonly config: SiteOMaticConfig;
   readonly context: HasNetworkDerived<SomContext>;
   readonly facts: SomFacts;
   readonly protected: boolean;
@@ -438,13 +447,6 @@ export type HasNetworkDerived<T extends SomContext> = HasManifest<T> & {
   readonly dnsVerificationTxtRecord: string | undefined;
   readonly connectionStatus: WwwConnectionStatus;
   readonly isS3BucketEmpty: boolean;
-};
-
-export type SomConfig = {
-  readonly SOM_PREFIX: string;
-  readonly SOM_TAG_NAME: string;
-  readonly SOM_ROLE_ARN: string;
-  readonly DEFAULT_WEBMASTER_EMAIL?: string;
 };
 
 export type SomInfoSpec = {

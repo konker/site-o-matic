@@ -208,20 +208,32 @@ export const NotificationsClause = z.object({
 export type NotificationsClause = z.TypeOf<typeof NotificationsClause>;
 
 // ----------------------------------------------------------------------
-export const SiteOMaticManifest = z.object({
-  rootDomainName: z.string().min(1),
-  title: z.string().optional(),
-  dns: DnsClause,
-  webmasterEmail: z.string().email().optional(),
-  protected: z.boolean().optional(),
-  webHosting: WebHostingClause,
-  redirect: RedirectClause.optional(),
-  certificate: CertificateClause.optional(),
-  registrar: z.enum(['aws-route53', 'dynadot']).optional(),
-  pipeline: PipelineClause.optional(),
-  services: z.array(ServiceSpec).optional(),
-  crossAccountAccess: z.array(CrossAccountAccessSpec).optional(),
-  content: ContentClause.optional(),
-  notifications: NotificationsClause.optional(),
-});
+export const SiteOMaticManifest = z
+  .object({
+    rootDomainName: z.string().min(1),
+    title: z.string().optional(),
+    dns: DnsClause.optional(),
+    webmasterEmail: z.string().email().optional(),
+    protected: z.boolean().optional(),
+    webHosting: WebHostingClause.optional(),
+    redirect: RedirectClause.optional(),
+    certificate: CertificateClause.optional(),
+    registrar: z.enum(['aws-route53', 'dynadot']).optional(),
+    pipeline: PipelineClause.optional(),
+    services: z.array(ServiceSpec).optional(),
+    crossAccountAccess: z.array(CrossAccountAccessSpec).optional(),
+    content: ContentClause.optional(),
+    notifications: NotificationsClause.optional(),
+  })
+  // Apply defaults
+  .transform((x) => ({
+    ...x,
+    protected: x.protected ?? false,
+    dns: x.dns ?? {
+      domainName: x.rootDomainName,
+    },
+    webHosting: x.webHosting ?? {
+      type: WEB_HOSTING_TYPE_CLOUDFRONT_S3,
+    },
+  }));
 export type SiteOMaticManifest = z.TypeOf<typeof SiteOMaticManifest>;

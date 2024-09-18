@@ -2,7 +2,8 @@ import type { Resource, Stack } from 'aws-cdk-lib';
 import { RemovalPolicy, Tags } from 'aws-cdk-lib';
 import Handlebars from 'handlebars';
 
-import type { CertificateResources, HasManifest, SomConfig, SomContext, SomParam } from './types';
+import type { SiteOMaticConfig } from './config/schemas/site-o-matic-config.schema';
+import type { CertificateResources, HasManifest, SomContext, SomParam } from './types';
 
 export function getParam(params: Array<SomParam> | undefined, name: string): string | undefined {
   return params?.find((i: any) => i.Param === name)?.Value;
@@ -28,11 +29,11 @@ export function _somRemovalPolicy(resource: Resource, protect: boolean) {
   resource.applyRemovalPolicy(_removalPolicyFromBoolean(protect));
 }
 
-export function _somTag(config: SomConfig, resource: Resource | Stack, somId: string) {
+export function _somTag(config: SiteOMaticConfig, resource: Resource | Stack, somId: string) {
   Tags.of(resource).add(config.SOM_TAG_NAME, somId);
 }
 
-export function _somMeta(config: SomConfig, resource: Resource, somId: string, protect: boolean) {
+export function _somMeta(config: SiteOMaticConfig, resource: Resource, somId: string, protect: boolean) {
   _somRemovalPolicy(resource, protect);
   _somTag(config, resource, somId);
 }

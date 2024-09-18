@@ -1,11 +1,11 @@
 import type Vorpal from 'vorpal';
 
+import type { SiteOMaticConfig } from '../../lib/config/schemas/site-o-matic-config.schema';
 import { hasManifest } from '../../lib/context';
-import type { SomConfig } from '../../lib/types';
 import { verror } from '../../lib/ui/logging';
 import type { SomGlobalState } from '../SomGlobalState';
 
-export function actionShowManifest(vorpal: Vorpal, _: SomConfig, state: SomGlobalState) {
+export function actionShowManifest(vorpal: Vorpal, _: SiteOMaticConfig, state: SomGlobalState) {
   return async (_: Vorpal.Args | string): Promise<void> => {
     if (!hasManifest(state.context)) {
       const errorMessage = `ERROR: no manifest loaded`;
