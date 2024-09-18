@@ -55,7 +55,13 @@ test('Empty Stack', async () => {
         webHosting: {
           type: 'cloudfront-s3',
         },
-        pipeline: { type: 'codecommit-s3' },
+        pipeline: {
+          type: 'codestar-s3',
+          codestarConnectionArn:
+            'arn:aws:codestar-connections:us-east-1:111111111111:connection/8ec16bf6-cafe-cafe-cafe-6d7be5df7702',
+          owner: 'exmaple.com',
+          repo: 'website',
+        },
         certificate: { clones: [] },
         crossAccountAccess: [],
       },

@@ -5,8 +5,6 @@ import * as z from 'zod';
 import {
   REDIRECT_TYPE_EDGE_CF_FUNCTION,
   SERVICE_TYPE_REST_API,
-  SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM,
-  SITE_PIPELINE_TYPE_CODECOMMIT_S3,
   SITE_PIPELINE_TYPE_CODESTAR_CUSTOM,
   SITE_PIPELINE_TYPE_CODESTAR_S3,
   WEB_HOSTING_TYPE_CLOUDFRONT_S3,
@@ -121,23 +119,10 @@ export const CertificateClause = z.object({
 export type CertificateClause = z.TypeOf<typeof CertificateClause>;
 
 // ----------------------------------------------------------------------
-export const PipelineClauseCodeCommitS3 = z.object({
-  type: z.literal(SITE_PIPELINE_TYPE_CODECOMMIT_S3),
-});
-export type PipelineClauseCodeCommitS3 = z.TypeOf<typeof PipelineClauseCodeCommitS3>;
-
 export const PipelineBuildPhase = z.object({
   commands: z.array(z.string().min(1)).min(1),
 });
 export type PipelineBuildPhase = z.TypeOf<typeof PipelineBuildPhase>;
-
-export const PipelineClauseCodeCommitCustom = z.object({
-  type: z.literal(SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM),
-  buildImage: z.string().min(1).optional(),
-  buildPhases: z.record(z.string(), PipelineBuildPhase),
-  buildFiles: z.array(z.string().min(1)).optional(),
-});
-export type PipelineClauseCodeCommitCustom = z.TypeOf<typeof PipelineClauseCodeCommitCustom>;
 
 export const CodeStarConnectionArn = z.string().regex(/^arn:aws:codestar-connections:.*/);
 export type CodeStarConnectionArn = z.TypeOf<typeof CodeStarConnectionArn>;
@@ -161,12 +146,7 @@ export const PipelineClauseCodeStarCustom = z.object({
 });
 export type PipelineClauseCodeStarCustom = z.TypeOf<typeof PipelineClauseCodeStarCustom>;
 
-export const PipelineClause = z.union([
-  PipelineClauseCodeCommitS3,
-  PipelineClauseCodeCommitCustom,
-  PipelineClauseCodeStarS3,
-  PipelineClauseCodeStarCustom,
-]);
+export const PipelineClause = z.union([PipelineClauseCodeStarS3, PipelineClauseCodeStarCustom]);
 export type PipelineClause = z.TypeOf<typeof PipelineClause>;
 
 // ----------------------------------------------------------------------

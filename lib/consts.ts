@@ -58,23 +58,15 @@ export const WEB_HOSTING_VIEWER_REQUEST_DIR_DEFAULT_FUNCTION_PRODUCER_ID = 'cf-f
 export const WEB_HOSTING_VIEWER_REQUEST_REDIRECT_FUNCTION_PRODUCER_ID = 'cf-functions-viewer-request-redirect';
 export const WEB_HOSTING_VIEWER_RESPONSE_FUNCTION_PRODUCER_ID = 'cf-functions-viewer-response';
 
-export const SITE_PIPELINE_TYPE_CODECOMMIT_S3 = 'codecommit-s3' as const;
-export const SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM = 'codecommit-custom' as const;
-
 export const SITE_PIPELINE_TYPE_CODESTAR_S3 = 'codestar-s3' as const;
 export const SITE_PIPELINE_TYPE_CODESTAR_CUSTOM = 'codestar-custom' as const;
 
-export const SITE_PIPELINE_TYPES_CODECOMMIT = [
-  SITE_PIPELINE_TYPE_CODECOMMIT_S3,
-  SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM,
-] as const;
 export const SITE_PIPELINE_TYPES_CODESTAR = [
   SITE_PIPELINE_TYPE_CODESTAR_S3,
   SITE_PIPELINE_TYPE_CODESTAR_CUSTOM,
 ] as const;
-export const SITE_PIPELINE_TYPES = [...SITE_PIPELINE_TYPES_CODECOMMIT, ...SITE_PIPELINE_TYPES_CODESTAR] as const;
+export const SITE_PIPELINE_TYPES = [...SITE_PIPELINE_TYPES_CODESTAR] as const;
 
-export const SITE_PIPELINE_CODECOMMIT_BRANCH_NAME = 'main' as const;
 export const SITE_PIPELINE_CODESTAR_BRANCH_NAME = 'main' as const;
 
 export const SITE_PIPELINE_DEFAULT_BUILD_IMAGE = 'aws/codebuild/standard:7.0' as const;

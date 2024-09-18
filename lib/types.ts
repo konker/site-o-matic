@@ -2,7 +2,6 @@ import type * as cdk from 'aws-cdk-lib';
 import type * as certificatemanager from 'aws-cdk-lib/aws-certificatemanager';
 import type * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import type * as codebuild from 'aws-cdk-lib/aws-codebuild';
-import type * as codecommit from 'aws-cdk-lib/aws-codecommit';
 import type * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
 import type * as route53 from 'aws-cdk-lib/aws-route53';
 import type * as s3 from 'aws-cdk-lib/aws-s3';
@@ -11,8 +10,6 @@ import type { SiteStack } from '../system/aws/defs/siteomatic/site/SiteStack';
 import type { SiteOMaticConfig } from './config/schemas/site-o-matic-config.schema';
 import type {
   SERVICE_TYPE_REST_API,
-  SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM,
-  SITE_PIPELINE_TYPE_CODECOMMIT_S3,
   SITE_PIPELINE_TYPE_CODESTAR_CUSTOM,
   SITE_PIPELINE_TYPE_CODESTAR_S3,
   SOM_STATUS_BREADCRUMB,
@@ -74,22 +71,11 @@ export type HostedZoneBuilderProps = {
   readonly siteStack: SiteStack;
   readonly rootDomainName: string;
 };
+
 // ----------------------------------------------------------------------
 export type BaseSitePipelineResources = {
   readonly invalidateCloudfrontCodeBuildProject: codebuild.PipelineProject;
 };
-export type BaseCodeCommitSitePipelineResources = BaseSitePipelineResources & {
-  readonly codeCommitRepo: codecommit.Repository;
-};
-export type CodeCommitS3SitePipelineResources = BaseCodeCommitSitePipelineResources & {
-  readonly type: typeof SITE_PIPELINE_TYPE_CODECOMMIT_S3;
-  readonly codePipeline: codepipeline.Pipeline;
-};
-export type CodeCommitCustomSitePipelineResources = BaseCodeCommitSitePipelineResources & {
-  readonly type: typeof SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM;
-  readonly codePipeline: codepipeline.Pipeline;
-};
-
 export type CodeStarS3SitePipelineResources = BaseSitePipelineResources & {
   readonly type: typeof SITE_PIPELINE_TYPE_CODESTAR_S3;
   readonly codestarConnectionArn: string;
@@ -105,11 +91,7 @@ export type CodeStarCustomSitePipelineResources = BaseSitePipelineResources & {
   readonly codePipeline: codepipeline.Pipeline;
 };
 
-export type PipelineResources =
-  | CodeCommitS3SitePipelineResources
-  | CodeCommitCustomSitePipelineResources
-  | CodeStarS3SitePipelineResources
-  | CodeStarCustomSitePipelineResources;
+export type PipelineResources = CodeStarS3SitePipelineResources | CodeStarCustomSitePipelineResources;
 
 // ----------------------------------------------------------------------
 export type SiteStackProps = cdk.StackProps & {
@@ -153,11 +135,7 @@ export type RestApiServiceBuilderProps = {
 };
 
 // ----------------------------------------------------------------------
-export type PipelineType =
-  | typeof SITE_PIPELINE_TYPE_CODECOMMIT_S3
-  | typeof SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM
-  | typeof SITE_PIPELINE_TYPE_CODESTAR_S3
-  | typeof SITE_PIPELINE_TYPE_CODESTAR_CUSTOM;
+export type PipelineType = typeof SITE_PIPELINE_TYPE_CODESTAR_S3 | typeof SITE_PIPELINE_TYPE_CODESTAR_CUSTOM;
 
 export type PipelineBuilderProps = {
   readonly pipelineType: PipelineType;

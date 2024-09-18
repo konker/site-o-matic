@@ -4,15 +4,11 @@ import * as notifications from 'aws-cdk-lib/aws-codestarnotifications';
 
 import {
   DEFAULT_STACK_PROPS,
-  SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM,
-  SITE_PIPELINE_TYPE_CODECOMMIT_S3,
   SITE_PIPELINE_TYPE_CODESTAR_CUSTOM,
   SITE_PIPELINE_TYPE_CODESTAR_S3,
 } from '../../../../../../lib/consts';
 import type { SiteNestedStackProps } from '../../../../../../lib/types';
 import { _somMeta } from '../../../../../../lib/utils';
-import * as CodeCommitCustomSitePipelineBuilder from '../../pipeline/codecommit/CodeCommitCustomPipelineBuilder';
-import * as CodeCommitS3SitePipelineBuilder from '../../pipeline/codecommit/CodeCommitS3PipelineBuilder';
 import * as CodeStarCustomSitePipelineBuilder from '../../pipeline/codestar/CodeStarCustomPipelineBuilder';
 import * as CodeStarS3SitePipelineBuilder from '../../pipeline/codestar/CodeStarS3PipelineBuilder';
 import type { SiteStack } from '../SiteStack';
@@ -33,28 +29,6 @@ export class SitePipelineNestedStack extends cdk.NestedStack {
   async build() {
     const pipelineType = this.siteStack.siteProps.context.manifest.pipeline?.type;
     switch (pipelineType) {
-      case SITE_PIPELINE_TYPE_CODECOMMIT_S3: {
-        this.siteStack.sitePipelineResources = await CodeCommitS3SitePipelineBuilder.build(
-          this,
-          this.siteStack.config,
-          {
-            siteStack: this.siteStack,
-            pipelineType: SITE_PIPELINE_TYPE_CODECOMMIT_S3,
-          }
-        );
-        break;
-      }
-      case SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM: {
-        this.siteStack.sitePipelineResources = await CodeCommitCustomSitePipelineBuilder.build(
-          this,
-          this.siteStack.config,
-          {
-            siteStack: this.siteStack,
-            pipelineType: SITE_PIPELINE_TYPE_CODECOMMIT_CUSTOM,
-          }
-        );
-        break;
-      }
       case SITE_PIPELINE_TYPE_CODESTAR_S3: {
         this.siteStack.sitePipelineResources = await CodeStarS3SitePipelineBuilder.build(this, this.siteStack.config, {
           siteStack: this.siteStack,
