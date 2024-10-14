@@ -6,17 +6,25 @@ import Metalsmith from 'metalsmith';
 import os from 'os';
 import path from 'path';
 
+import type { WebHostingClauseWithResources } from '../../manifest/schemas/site-o-matic-manifest.schema';
 import type { HasNetworkDerived, SomContext } from '../../types';
 
 const MetalsmithInPlace = require('@metalsmith/in-place');
 const MetalsmithRenamer = require('metalsmith-renamer');
 
-export function getTmpDirPath(somId: string, contentProducerId?: string | undefined): string | undefined {
-  return contentProducerId ? path.join(os.tmpdir(), `${somId}-${contentProducerId}`) : undefined;
+export function getTmpDirPath(
+  somId: string,
+  webHostingSpec: WebHostingClauseWithResources,
+  contentProducerId?: string | undefined
+): string | undefined {
+  return contentProducerId
+    ? path.join(os.tmpdir(), `${somId}-${webHostingSpec.domainName}-${contentProducerId}`)
+    : undefined;
 }
 
 export async function processContentDirectory(
   somId: string,
+  webHostingSpec: WebHostingClauseWithResources,
   context: HasNetworkDerived<SomContext>,
   contentDirPath: string,
   tmpDirPath: string
@@ -38,7 +46,7 @@ export async function processContentDirectory(
     Metalsmith(contentDirPath)
       .source('.')
       .destination(tmpDirPath)
-      .metadata({ somId, context })
+      .metadata({ somId, context, webHostingSpec })
       .use(
         MetalsmithInPlace({
           suppressNoFilesError: true,

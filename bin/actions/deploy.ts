@@ -6,7 +6,7 @@ import * as cdkExec from '../../lib/aws/cdkExec';
 import { postToSnsTopic } from '../../lib/aws/sns';
 import type { SiteOMaticConfig } from '../../lib/config/schemas/site-o-matic-config.schema';
 import { SSM_PARAM_NAME_DOMAIN_USER_NAME, SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN } from '../../lib/consts';
-import { hasManifest, refreshContext } from '../../lib/context';
+import { hasManifest, refreshContextPass1, refreshContextPass2 } from '../../lib/context';
 import { preDeploymentCheck } from '../../lib/deployment';
 import { siteOMaticRules } from '../../lib/rules/site-o-matic.rules';
 import { verror } from '../../lib/ui/logging';
@@ -71,13 +71,14 @@ export function actionDeploy(vorpal: Vorpal, config: SiteOMaticConfig, state: So
       return;
     }
 
-    if (facts.shouldDeployCertificateClones) {
+    if (false /*[XXX]facts.shouldDeployCertificateClones*/) {
       const response2 = state.yes
         ? { confirm: 'y' }
         : await vorpal.activeCommand.prompt({
             type: 'input',
             name: 'confirm',
-            message: chalk.yellow(
+            message: chalk
+              .yellow
               // [FIXME: what is this again? approve on the target account? Could have better explanation, and/or link to eventual docs here?]
               // No footprint in target account
               // Certificate clones are pending validation in som-production account
@@ -85,10 +86,12 @@ export function actionDeploy(vorpal: Vorpal, config: SiteOMaticConfig, state: So
               //
               // [FIXME: this should also inform that the tool basically hangs until the certificate clones are validated]
               // [TODD: is it possible for the tool to detect this kind of hanging, and periodically prompt the user to perform validation?]
+              /*[XXX]
               `WARNING!: Manual action needed to clone certificates into ${state.context.manifest?.certificate?.clones
                 ?.map((i) => i.name)
                 ?.join(',')}. Proceed? [y/N] `
-            ),
+               */
+              (),
           });
       if (response2.confirm !== 'y') {
         verror(vorpal, state, 'Aborted');
@@ -109,7 +112,10 @@ export function actionDeploy(vorpal: Vorpal, config: SiteOMaticConfig, state: So
         state.plumbing
       );
 
-      state.updateContext(await refreshContext(config, state.context));
+      const contextPass1 = await refreshContextPass1(config, state.context);
+      const facts = await siteOMaticRules(contextPass1);
+      const context = await refreshContextPass2(contextPass1, facts);
+      state.updateContext(context);
 
       if (state.plumbing) {
         vorpal.log(JSON.stringify({ context: state.context, code, log }));

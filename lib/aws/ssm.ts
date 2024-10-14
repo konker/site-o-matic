@@ -4,15 +4,17 @@ import type { SiteOMaticConfig } from '../config/schemas/site-o-matic-config.sch
 import type { SomParam } from '../types';
 import { assumeSomRole } from './sts';
 
-export function toSsmParamName(somId: string, name: string, ...extra: Array<string>) {
-  const extra_ = extra.filter((i) => i !== undefined && i !== null && i !== '');
-  return `/som/${somId}/${name}` + (extra_.length > 0 ? '/' + extra_.join('/') : '');
-}
-
+// ----------------------------------------------------------------------
 export function ssmBasePath(somId: string): string {
   return `/som/${somId}`;
 }
 
+export function toSsmParamName(somId: string, name: string, ...extra: Array<string>) {
+  const extra_ = extra.filter((i) => i !== undefined && i !== null && i !== '');
+  return `${ssmBasePath(somId)}/${name}` + (extra_.length > 0 ? '/' + extra_.join('/') : '');
+}
+
+// ----------------------------------------------------------------------
 export async function getSsmParams(config: SiteOMaticConfig, region: string, path: string): Promise<Array<SomParam>> {
   const somRoleCredentials = await assumeSomRole(config, region);
   const client = new SSMClient({
@@ -55,6 +57,7 @@ export async function getSsmParams(config: SiteOMaticConfig, region: string, pat
   return ret.sort((a, b) => a.Param.localeCompare(b.Param));
 }
 
+// ----------------------------------------------------------------------
 export async function getSsmParam(region: string, paramName: string): Promise<string | undefined> {
   const client = new SSMClient({ region });
   try {
@@ -68,13 +71,4 @@ export async function getSsmParam(region: string, paramName: string): Promise<st
   } catch (ex: any) {
     return undefined;
   }
-}
-
-export async function getSomSsmParam(
-  somId: string,
-  region: string,
-  name: string,
-  ...extra: Array<string>
-): Promise<string | undefined> {
-  return getSsmParam(region, toSsmParamName(somId, name, ...extra));
 }

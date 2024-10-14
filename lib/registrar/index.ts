@@ -1,4 +1,5 @@
 import type { SiteOMaticConfig } from '../config/schemas/site-o-matic-config.schema';
+import type { SecretsSetCollection } from '../secrets/types';
 import * as awsRoute53 from './connectors/aws-route53';
 import * as dynadot from './connectors/dynadot';
 
@@ -6,10 +7,10 @@ export type RegistrarConnector = {
   ID: string;
   SECRETS: Array<string>;
 
-  getNameServers(config: SiteOMaticConfig, secrets: { [key: string]: string }, domain: string): Promise<Array<string>>;
+  getNameServers(config: SiteOMaticConfig, secrets: SecretsSetCollection, domain: string): Promise<Array<string>>;
   setNameServers(
     config: SiteOMaticConfig,
-    secrets: { [key: string]: string },
+    secrets: SecretsSetCollection,
     domain: string,
     hosts: Array<string>
   ): Promise<Array<string> | undefined>;

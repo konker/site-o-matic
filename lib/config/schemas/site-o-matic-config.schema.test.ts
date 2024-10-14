@@ -13,7 +13,7 @@ describe('site-o-matic-config-schema', () => {
     expect(validation.success).toEqual(true);
     expect(validation.data).toStrictEqual({
       SOM_ROLE_ARN: 'arn:aws:iam::111111111111:role/OrganizationAccountAccessRole',
-      DEFAULT_WEBMASTER_EMAIL: 'webmaster+{{context.manifest.rootDomainName}}@example.com',
+      DEFAULT_WEBMASTER_EMAIL: 'webmaster+{{context.manifest.domainName}}@example.com',
       SOM_TAG_NAME: 'site-o-matic-tag-name',
       SOM_PREFIX: 'som-foo',
     });

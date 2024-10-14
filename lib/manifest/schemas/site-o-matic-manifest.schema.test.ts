@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -9,9 +10,9 @@ describe('site-o-matic-manifest-schema', () => {
   it('should validate a complete example', async () => {
     const json = await fs.promises.readFile(path.join(__dirname, '../../../docs/site-o-matic.manifest.example.json5'));
     const data = JSON5.parse(json.toString());
-    const validation = unit.SiteOMaticManifest.safeParse(data);
-    expect(validation.success).toEqual(true);
-    expect(validation.data).toMatchSnapshot();
+    const validation = unit.SiteOMaticManifest.parse(data);
+    // expect(validation.success).toEqual(true);
+    expect(validation).toMatchSnapshot();
   });
 
   it('should validate a minimal example', async () => {
@@ -19,16 +20,46 @@ describe('site-o-matic-manifest-schema', () => {
       path.join(__dirname, '../../../docs/site-o-matic.manifest.example.minimal.json5')
     );
     const data = JSON5.parse(json.toString());
-    const validation = unit.SiteOMaticManifest.safeParse(data);
-    expect(validation.success).toEqual(true);
-    expect(validation.data).toStrictEqual({
-      dns: {
-        domainName: 'minimal-example.com',
-      },
-      protected: false,
-      rootDomainName: 'minimal-example.com',
-      webHosting: {
-        type: 'cloudfront-s3',
+    const validation = unit.SiteOMaticManifest.parse(data);
+    // expect(validation.success).toEqual(true);
+    expect(validation).toStrictEqual({
+      domainName: 'minimal-example.com',
+      locked: false,
+      webHosting: [
+        {
+          defaultRootObject: 'index.html',
+          domainName: 'minimal-example.com',
+          errorResponses: [
+            {
+              httpStatus: 403,
+              responsePagePath: '/403.html',
+            },
+            {
+              httpStatus: 404,
+              responsePagePath: '/404.html',
+            },
+          ],
+          type: 'cloudfront-s3',
+        },
+      ],
+      webHostingDefaults: {
+        'cloudfront-https': {
+          originPath: '/',
+        },
+        'cloudfront-s3': {
+          defaultRootObject: 'index.html',
+          errorResponses: [
+            {
+              httpStatus: 403,
+              responsePagePath: '/403.html',
+            },
+            {
+              httpStatus: 404,
+              responsePagePath: '/404.html',
+            },
+          ],
+        },
+        none: {},
       },
     });
   });

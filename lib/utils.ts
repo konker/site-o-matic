@@ -2,8 +2,9 @@ import type { Resource, Stack } from 'aws-cdk-lib';
 import { RemovalPolicy, Tags } from 'aws-cdk-lib';
 import Handlebars from 'handlebars';
 
+import type { CertificateResources } from '../system/aws/defs/siteomatic/WebHostingBuilder/CertificateBuilder';
 import type { SiteOMaticConfig } from './config/schemas/site-o-matic-config.schema';
-import type { CertificateResources, HasManifest, SomContext, SomParam } from './types';
+import type { HasManifest, SomContext, SomParam } from './types';
 
 export function getParam(params: Array<SomParam> | undefined, name: string): string | undefined {
   return params?.find((i: any) => i.Param === name)?.Value;
@@ -17,7 +18,7 @@ export function getContextParam(context: SomContext, name: string): string | und
   return getParam(context?.params, name);
 }
 
-export function _id(prefix: string, postfix: string, isRoot: boolean): string {
+export function _id(prefix: string, postfix: string, isRoot = true): string {
   return isRoot ? prefix : `${prefix}-${postfix}`;
 }
 
@@ -56,9 +57,5 @@ export function searchCertificates(
   domainName: string
 ): CertificateResources | undefined {
   if (certificateResources?.domainName === domainName) return certificateResources;
-  for (const subResources of certificateResources?.subdomainResources ?? []) {
-    const res = searchCertificates(subResources, domainName);
-    if (res) return res;
-  }
   return undefined;
 }

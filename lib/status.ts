@@ -38,16 +38,13 @@ export function getStatusMessage(_context: SomContext, facts: SomFacts, status: 
     )} property below.`;
   }
   if (status === SOM_STATUS_HOSTED_ZONE_OK) {
-    if (facts.needsCodePipeline && facts.hasCodePipelineArn && !facts.has200ConnectionStatus) {
-      return 'Make sure that content has been pushed to the site git repo';
-    }
     if (facts.needsCloudfrontDist && facts.hasCloudfrontDistId && !facts.has200ConnectionStatus) {
       return 'Make sure that content has been pushed to your S3 bucket www folder';
     }
     return 'Deploy the site to create the resources which are still needed.';
   }
-  if (facts.protectedSsm !== facts.protectedManifest) {
-    return 'The protected flag differs in the manifest. Deploy the site to make this take effect.';
+  if (facts.lockedSsm !== facts.lockedManifest) {
+    return 'The locked flag differs in the manifest. Deploy the site to make this take effect.';
   }
   if (status === SOM_STATUS_SITE_FUNCTIONAL) {
     return 'Cowabunga!';

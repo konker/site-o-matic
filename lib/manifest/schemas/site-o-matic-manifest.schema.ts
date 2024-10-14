@@ -3,12 +3,23 @@ import type { ErrorResponse } from 'aws-cdk-lib/aws-cloudfront';
 import * as z from 'zod';
 
 import {
-  REDIRECT_TYPE_EDGE_CF_FUNCTION,
-  SERVICE_TYPE_REST_API,
+  AUTH_IMPL_EDGE_CF_FUNCTION,
+  AUTH_TYPE_BASIC_AUTH,
+  DEFAULT_CONTENT_CLAUSE,
+  REDIRECT_IMPL_EDGE_CF_FUNCTION,
   SITE_PIPELINE_TYPE_CODESTAR_CUSTOM,
   SITE_PIPELINE_TYPE_CODESTAR_S3,
+  WEB_HOSTING_DEFAULT,
+  WEB_HOSTING_DEFAULT_ORIGIN_PATH,
+  WEB_HOSTING_DEFAULTS_DEFAULT,
+  WEB_HOSTING_TYPE_CLOUDFRONT_HTTPS,
+  WEB_HOSTING_TYPE_CLOUDFRONT_HTTPS_DEFAULTS_DEFAULT,
   WEB_HOSTING_TYPE_CLOUDFRONT_S3,
+  WEB_HOSTING_TYPE_CLOUDFRONT_S3_DEFAULTS_DEFAULT,
+  WEB_HOSTING_TYPE_NONE,
+  WEB_HOSTING_TYPE_NONE_DEFAULTS_DEFAULT,
 } from '../../consts';
+
 // ----------------------------------------------------------------------
 export const DnsConfigMx = z.object({
   type: z.literal('MX'),
@@ -34,18 +45,32 @@ export type DnsConfigTxt = z.TypeOf<typeof DnsConfigTxt>;
 export const DnsRecordSpec = z.union([DnsConfigMx, DnsConfigCname, DnsConfigTxt]);
 export type DnsRecordSpec = z.TypeOf<typeof DnsRecordSpec>;
 
-export const SubdomainsClause = z.object({
-  domainName: z.string().min(1),
-  extraDnsConfig: z.array(DnsRecordSpec).optional(),
-});
-export type SubdomainsClause = z.TypeOf<typeof SubdomainsClause>;
+export const ExtraDnsClause = z.array(DnsRecordSpec);
+export type ExtraDnsClause = z.TypeOf<typeof ExtraDnsClause>;
 
-export const DnsClause = z.object({
-  domainName: z.string().min(1),
-  extraDnsConfig: z.array(DnsRecordSpec).optional(),
-  subdomains: z.array(SubdomainsClause).optional(),
+// ----------------------------------------------------------------------
+export const RedirectClauseEdgeCfFunction = z.object({
+  implementation: z.literal(REDIRECT_IMPL_EDGE_CF_FUNCTION),
+  source: z.string().min(1),
+  target: z.string().min(4),
 });
-export type DnsClause = z.TypeOf<typeof DnsClause>;
+export type RedirectClauseEdgeCfFunction = z.TypeOf<typeof RedirectClauseEdgeCfFunction>;
+
+// XXX: change to union if we add more than one kind of redirect
+export const RedirectClause = RedirectClauseEdgeCfFunction;
+export type RedirectClause = RedirectClauseEdgeCfFunction;
+
+// ----------------------------------------------------------------------
+export const AuthClauseBasicEdgeCfFunction = z.object({
+  type: z.literal(AUTH_TYPE_BASIC_AUTH),
+  implementation: z.literal(AUTH_IMPL_EDGE_CF_FUNCTION),
+  secretName: z.string().min(1),
+});
+export type AuthClauseBasicEdgeCfFunction = z.TypeOf<typeof AuthClauseBasicEdgeCfFunction>;
+
+// XXX: change to union if we add more than one kind of auth
+export const AuthClause = AuthClauseBasicEdgeCfFunction;
+export type AuthClause = AuthClauseBasicEdgeCfFunction;
 
 // ----------------------------------------------------------------------
 export const WafAwsManagedRule = z.object({
@@ -54,6 +79,19 @@ export const WafAwsManagedRule = z.object({
 });
 export type WafAwsManagedRule = z.TypeOf<typeof WafAwsManagedRule>;
 
+export const WafClause = z.object({
+  enabled: z.boolean().default(false),
+  AWSManagedRules: z.array(WafAwsManagedRule).optional().default([]),
+});
+export type WafClause = z.TypeOf<typeof WafClause>;
+
+// ----------------------------------------------------------------------
+export const ContentClause = z.object({
+  producerId: z.enum(['none', 'default']),
+});
+export type ContentClause = z.TypeOf<typeof ContentClause>;
+
+// ----------------------------------------------------------------------
 export const WebHostingErrorResponse = z
   .object({
     ttl: z
@@ -68,42 +106,97 @@ export const WebHostingErrorResponse = z
   .transform((x) => x as ErrorResponse);
 export type WebHostingErrorResponse = z.TypeOf<typeof WebHostingErrorResponse>;
 
-export const WebHostingClauseCloudfrontS3 = z.object({
-  type: z.literal(WEB_HOSTING_TYPE_CLOUDFRONT_S3),
-  originPath: z.string().min(1).default('/www').optional(),
-  defaultRootObject: z.string().min(1).default('index.html').optional(),
-  errorResponses: z.array(WebHostingErrorResponse).optional(),
+// ----------------------------------------------------------------------
+export const WebHostingDefaultsClauseCloudfrontS3 = z.object({
+  defaultRootObject: z
+    .string()
+    .min(1)
+    .default('index.html')
+    .optional()
+    .default(WEB_HOSTING_TYPE_CLOUDFRONT_S3_DEFAULTS_DEFAULT.defaultRootObject),
+  errorResponses: z
+    .array(WebHostingErrorResponse)
+    .optional()
+    .default(WEB_HOSTING_TYPE_CLOUDFRONT_S3_DEFAULTS_DEFAULT.errorResponses),
+  originPath: z.string().min(1).optional().default(WEB_HOSTING_DEFAULT_ORIGIN_PATH),
+  content: ContentClause.default(DEFAULT_CONTENT_CLAUSE),
   waf: z
     .object({
-      enabled: z.boolean(),
-      AWSManagedRules: z.array(WafAwsManagedRule).optional(),
+      enabled: z.boolean().default(false),
+      AWSManagedRules: z.array(WafAwsManagedRule).optional().default([]),
     })
     .optional(),
 });
-export type WebHostingClauseCloudfrontS3 = z.TypeOf<typeof WebHostingClauseCloudfrontS3>;
+export type WebHostingDefaultsClauseCloudfrontS3 = z.TypeOf<typeof WebHostingDefaultsClauseCloudfrontS3>;
 
-/* [TODO]
-export const WebHostingClauseNone = z.object({
-  type: z.literal(WEB_HOSTING_TYPE_NONE),
+export const WebHostingDefaultsClauseCloudfrontHttps = z.object({
+  originPath: z.string(),
 });
-export type WebHostingClauseNone = z.TypeOf<typeof WebHostingClauseNone>;
-*/
+export type WebHostingDefaultsClauseCloudfrontHttps = z.TypeOf<typeof WebHostingDefaultsClauseCloudfrontHttps>;
 
-// XXX: change to union if we add more than one kind of web hosting
-export const WebHostingClause = WebHostingClauseCloudfrontS3;
-export type WebHostingClause = WebHostingClauseCloudfrontS3;
+export const WebHostingDefaultsClauseNone = z.object({});
+export type WebHostingDefaultsClauseNone = z.TypeOf<typeof WebHostingDefaultsClauseNone>;
+
+export const WebHostingDefaultsClause = z.object({
+  [WEB_HOSTING_TYPE_CLOUDFRONT_S3]: WebHostingDefaultsClauseCloudfrontS3.optional().default(
+    WEB_HOSTING_TYPE_CLOUDFRONT_S3_DEFAULTS_DEFAULT
+  ),
+  [WEB_HOSTING_TYPE_CLOUDFRONT_HTTPS]: WebHostingDefaultsClauseCloudfrontHttps.optional().default(
+    WEB_HOSTING_TYPE_CLOUDFRONT_HTTPS_DEFAULTS_DEFAULT
+  ),
+  [WEB_HOSTING_TYPE_NONE]: WebHostingDefaultsClauseNone.optional().default(WEB_HOSTING_TYPE_NONE_DEFAULTS_DEFAULT),
+});
+export type WebHostingDefaultsClause = z.TypeOf<typeof WebHostingDefaultsClause>;
 
 // ----------------------------------------------------------------------
-export const RedirectClauseEdgeCfFunction = z.object({
-  type: z.literal(REDIRECT_TYPE_EDGE_CF_FUNCTION),
-  source: z.string().min(1),
-  target: z.string().min(4),
-});
-export type RedirectClauseEdgeCfFunction = z.TypeOf<typeof RedirectClauseEdgeCfFunction>;
+export const WebHostingTypeCloudFrontS3 = z.literal(WEB_HOSTING_TYPE_CLOUDFRONT_S3);
+export type WebHostingTypeCloudFrontS3 = z.TypeOf<typeof WebHostingTypeCloudFrontS3>;
 
-// XXX: change to union if we add more than one kind of redirect
-export const RedirectClause = RedirectClauseEdgeCfFunction;
-export type RedirectClause = RedirectClauseEdgeCfFunction;
+export const WebHostingClauseCloudfrontS3 = z.object({
+  type: WebHostingTypeCloudFrontS3,
+  domainName: z.string().min(1),
+  originPath: z.string().min(1).default(WEB_HOSTING_DEFAULT_ORIGIN_PATH).optional(),
+  defaultRootObject: z.string().min(1).default('index.html').optional(),
+  errorResponses: z.array(WebHostingErrorResponse).optional(),
+  waf: WafClause.optional(),
+  redirect: RedirectClause.optional(),
+  auth: AuthClause.optional(),
+  content: ContentClause.optional(),
+});
+export type WebHostingClauseCloudfrontS3 = z.TypeOf<typeof WebHostingClauseCloudfrontS3>;
+
+export const WebHostingTypeCloudfrontHttps = z.literal(WEB_HOSTING_TYPE_CLOUDFRONT_HTTPS);
+export type WebHostingTypeCloudfrontHttps = z.TypeOf<typeof WebHostingTypeCloudfrontHttps>;
+
+export const WebHostingClauseCloudfrontHttps = z.object({
+  type: WebHostingTypeCloudfrontHttps,
+  domainName: z.string().min(1),
+  url: z.string().min(1),
+  originPath: z.string().min(1).default('/').optional(),
+  waf: WafClause.optional(),
+});
+export type WebHostingClauseCloudfrontHttps = z.TypeOf<typeof WebHostingClauseCloudfrontHttps>;
+
+export const WebHostingTypeNone = z.literal(WEB_HOSTING_TYPE_NONE);
+export type WebHostingTypeNone = z.TypeOf<typeof WebHostingTypeNone>;
+
+export const WebHostingClauseNone = z.object({
+  type: WebHostingTypeNone,
+});
+export type WebHostingClauseNone = z.TypeOf<typeof WebHostingClauseNone>;
+
+export const WebHostingType = z.union([WebHostingTypeCloudFrontS3, WebHostingTypeCloudfrontHttps, WebHostingTypeNone]);
+export type WebHostingType = z.TypeOf<typeof WebHostingType>;
+
+export const WebHostingClause = z.union([
+  WebHostingClauseCloudfrontS3,
+  WebHostingClauseCloudfrontHttps,
+  WebHostingClauseNone,
+]);
+export type WebHostingClause = z.TypeOf<typeof WebHostingClause>;
+
+export const WebHostingClauseWithResources = z.union([WebHostingClauseCloudfrontS3, WebHostingClauseCloudfrontHttps]);
+export type WebHostingClauseWithResources = z.TypeOf<typeof WebHostingClauseWithResources>;
 
 // ----------------------------------------------------------------------
 export const CertificateCloneSpec = z.object({
@@ -150,31 +243,11 @@ export const PipelineClause = z.union([PipelineClauseCodeStarS3, PipelineClauseC
 export type PipelineClause = z.TypeOf<typeof PipelineClause>;
 
 // ----------------------------------------------------------------------
-export const RestApiServiceSpec = z.object({
-  type: z.literal(SERVICE_TYPE_REST_API),
-  domainName: z.string().min(1),
-  certificate: z.string().min(1),
-  url: z.string().min(8),
-  originPath: z.string().min(1).default('/').optional(),
-});
-export type RestApiServiceSpec = z.TypeOf<typeof RestApiServiceSpec>;
-
-// XXX: change to union if we add more than one kind of service
-export const ServiceSpec = RestApiServiceSpec;
-export type ServiceSpec = RestApiServiceSpec;
-
-// ----------------------------------------------------------------------
 export const CrossAccountAccessSpec = z.object({
   name: z.string().min(1),
   arn: z.string().regex(/^arn.+/),
 });
 export type CrossAccountAccessSpec = z.TypeOf<typeof CrossAccountAccessSpec>;
-
-// ----------------------------------------------------------------------
-export const ContentClause = z.object({
-  producerId: z.enum(['none', 'default']),
-});
-export type ContentClause = z.TypeOf<typeof ContentClause>;
 
 // ----------------------------------------------------------------------
 export const NotificationsClause = z.object({
@@ -190,30 +263,38 @@ export type NotificationsClause = z.TypeOf<typeof NotificationsClause>;
 // ----------------------------------------------------------------------
 export const SiteOMaticManifest = z
   .object({
-    rootDomainName: z.string().min(1),
+    domainName: z.string().min(1),
     title: z.string().optional(),
-    dns: DnsClause.optional(),
+    extraDnsConfig: ExtraDnsClause.optional(),
     webmasterEmail: z.string().email().optional(),
-    protected: z.boolean().optional(),
-    webHosting: WebHostingClause.optional(),
-    redirect: RedirectClause.optional(),
-    certificate: CertificateClause.optional(),
     registrar: z.enum(['aws-route53', 'dynadot']).optional(),
-    pipeline: PipelineClause.optional(),
-    services: z.array(ServiceSpec).optional(),
-    crossAccountAccess: z.array(CrossAccountAccessSpec).optional(),
-    content: ContentClause.optional(),
+    locked: z.boolean().optional(),
+
+    webHostingDefaults: WebHostingDefaultsClause.optional(),
+    webHosting: z.array(WebHostingClause).optional(),
+
     notifications: NotificationsClause.optional(),
+
+    // pipeline: PipelineClause.optional(),
+    // certificate: CertificateClause.optional(),
+    // crossAccountAccess: z.array(CrossAccountAccessSpec).optional(),
   })
   // Apply defaults
-  .transform((x) => ({
-    ...x,
-    protected: x.protected ?? false,
-    dns: x.dns ?? {
-      domainName: x.rootDomainName,
-    },
-    webHosting: x.webHosting ?? {
-      type: WEB_HOSTING_TYPE_CLOUDFRONT_S3,
-    },
-  }));
+  .transform((x) => {
+    const webHostingDefaults = x.webHostingDefaults ?? WEB_HOSTING_DEFAULTS_DEFAULT;
+    const applyWebHostingDefaults = (x: WebHostingClause) => ({
+      ...webHostingDefaults[x.type],
+      ...x,
+    });
+
+    return {
+      ...x,
+      locked: x.locked ?? false,
+      webHostingDefaults,
+      webHosting: (x.webHosting && x.webHosting.length > 0
+        ? x.webHosting.map(applyWebHostingDefaults)
+        : [WEB_HOSTING_DEFAULT(x.domainName)]
+      ).map(applyWebHostingDefaults),
+    };
+  });
 export type SiteOMaticManifest = z.TypeOf<typeof SiteOMaticManifest>;

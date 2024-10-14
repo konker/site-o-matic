@@ -1,11 +1,12 @@
 import chalk from 'chalk';
 import type Vorpal from 'vorpal';
 
-import * as secretsmanager from '../../lib/aws/secretsmanager';
 import type { SiteOMaticConfig } from '../../lib/config/schemas/site-o-matic-config.schema';
 import { DEFAULT_AWS_REGION, SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS } from '../../lib/consts';
-import { hasManifest, refreshContext } from '../../lib/context';
+import { hasManifest, refreshContextPass1, refreshContextPass2 } from '../../lib/context';
 import { getRegistrarConnector } from '../../lib/registrar';
+import { siteOMaticRules } from '../../lib/rules/site-o-matic.rules';
+import * as secrets from '../../lib/secrets';
 import { verror, vlog } from '../../lib/ui/logging';
 import { getContextParam } from '../../lib/utils';
 import type { SomGlobalState } from '../SomGlobalState';
@@ -44,8 +45,8 @@ export function actionSetNameServersWithRegistrar(vorpal: Vorpal, config: SiteOM
       state.spinner.start();
       try {
         const registrarConnector = getRegistrarConnector(state.context.registrar);
-        const somSecrets = await secretsmanager.getSomSecrets(config, DEFAULT_AWS_REGION, registrarConnector.SECRETS);
-        if (!registrarConnector.SECRETS.every((secretName) => somSecrets[secretName])) {
+        const somSecrets = await secrets.getAllSomSecrets(config, DEFAULT_AWS_REGION, state.context.somId);
+        if (!registrarConnector.SECRETS.every((secretName) => somSecrets.lookup[secretName])) {
           const errorMessage = `ERROR: secrets required by registrar connector missing: ${registrarConnector.SECRETS}`;
           verror(vorpal, state, errorMessage);
           return;
@@ -59,7 +60,10 @@ export function actionSetNameServersWithRegistrar(vorpal: Vorpal, config: SiteOM
         );
         vlog(vorpal, state, `Set nameservers: ${result}`);
 
-        state.updateContext(await refreshContext(config, state.context));
+        const contextPass1 = await refreshContextPass1(config, state.context);
+        const facts = await siteOMaticRules(contextPass1);
+        const context = await refreshContextPass2(contextPass1, facts);
+        state.updateContext(context);
       } catch (ex: any) {
         verror(vorpal, state, ex);
       } finally {

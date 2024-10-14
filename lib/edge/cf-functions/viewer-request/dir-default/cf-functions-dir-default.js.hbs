@@ -1,10 +1,16 @@
-  var DEFAULT_OBJECT = '{{ manifest.webHosting.defaultRootObject }}';
+  var DEFAULT_OBJECT = '{{ webHostingSpec.defaultRootObject }}';
   var DIR_URI_RE = new RegExp(/\/$/);
   var FILE_URI_RE = new RegExp(/\/.+\..+$/);
 
+  // If the uri is a dir path with trailing slash, re-write to default object
+  // E.g. /foo/bar/ -> /foo/bar/index.html
   if (request.uri.match(DIR_URI_RE)) {
     request.uri = request.uri + DEFAULT_OBJECT;
   }
+
+  // If the url does not have a trailing slash, but also is not a `filename.ext` path
+  // Assume that this is a directory uri, and redirect to add a trailing slash
+  // E.g. /foo/bar -> /foo/bar/
   if (!request.uri.match(FILE_URI_RE)) {
     return {
       statusCode: 301,

@@ -2,6 +2,7 @@ import { XMLParser } from 'fast-xml-parser';
 import got from 'got';
 
 import type { SiteOMaticConfig } from '../../../config/schemas/site-o-matic-config.schema';
+import type { SecretsSetCollection } from '../../../secrets/types';
 
 export const ID = 'dynadot';
 export const SECRETS = ['DYNADOT_API_KEY'];
@@ -13,11 +14,11 @@ const XML_PARSER = new XMLParser();
 
 export async function getNameServers(
   _config: SiteOMaticConfig,
-  secrets: { [key: string]: string },
+  secrets: SecretsSetCollection,
   domain: string
 ): Promise<Array<string>> {
   try {
-    const apiUrl = `${API_ENDPOINT}?key=${secrets.DYNADOT_API_KEY}&command=get_ns&domain=${domain}`;
+    const apiUrl = `${API_ENDPOINT}?key=${secrets.lookup.DYNADOT_API_KEY}&command=get_ns&domain=${domain}`;
     const result = await got.get(apiUrl);
 
     const data = XML_PARSER.parse(result.body);
@@ -35,13 +36,13 @@ export async function getNameServers(
 
 export async function setNameServers(
   config: SiteOMaticConfig,
-  secrets: { [key: string]: string },
+  secrets: SecretsSetCollection,
   domain: string,
   hosts: Array<string>
 ): Promise<Array<string> | undefined> {
   try {
     const hostsForUrl = hosts.map((host, i) => `ns${i}=${host}`).join('&');
-    const apiUrl = `${API_ENDPOINT}?key=${secrets.DYNADOT_API_KEY}&command=set_ns&domain=${domain}&${hostsForUrl}`;
+    const apiUrl = `${API_ENDPOINT}?key=${secrets.lookup.DYNADOT_API_KEY}&command=set_ns&domain=${domain}&${hostsForUrl}`;
     const result = await got.get(apiUrl);
 
     const data = XML_PARSER.parse(result.body);

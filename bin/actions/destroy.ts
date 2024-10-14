@@ -10,7 +10,7 @@ import {
   SSM_PARAM_NAME_HOSTED_ZONE_ID,
   SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN,
 } from '../../lib/consts';
-import { hasNetworkDerived, refreshContext } from '../../lib/context';
+import { hasNetworkDerived, refreshContextPass1, refreshContextPass2 } from '../../lib/context';
 import { siteOMaticRules } from '../../lib/rules/site-o-matic.rules';
 import { verror } from '../../lib/ui/logging';
 import { getContextParam } from '../../lib/utils';
@@ -46,8 +46,8 @@ export function actionDestroy(vorpal: Vorpal, config: SiteOMaticConfig, state: S
           ),
         });
     if (response.confirm === 'y') {
-      // Check that the SSM protected status is set to 'false'
-      if (!facts.protectedSsm) {
+      // Check that the SSM locked status is set to 'false'
+      if (!facts.lockedSsm) {
         await removeVerificationCnameRecords(
           config,
           getContextParam(state.context, SSM_PARAM_NAME_HOSTED_ZONE_ID) as string
@@ -57,13 +57,16 @@ export function actionDestroy(vorpal: Vorpal, config: SiteOMaticConfig, state: S
           state.context.somId,
           {
             pathToManifestFile: state.context.pathToManifestFile,
-            iamUsername: args.username,
+            iamUsername: username,
             deploySubdomainCerts: 'true',
           },
           state.plumbing
         );
 
-        state.updateContext(await refreshContext(config, state.context));
+        const contextPass1 = await refreshContextPass1(config, state.context);
+        const facts = await siteOMaticRules(contextPass1);
+        const context = await refreshContextPass2(contextPass1, facts);
+        state.updateContext(context);
 
         if (state.plumbing) {
           vorpal.log(JSON.stringify({ context: state.context, code, log }));
@@ -77,7 +80,7 @@ export function actionDestroy(vorpal: Vorpal, config: SiteOMaticConfig, state: S
         }
       } else {
         const errorMessage =
-          "Deployed protected status is not set to 'false', cannot proceed.\nSet the protected property to `true` in the manifest and re-deploy.";
+          "Deployed locked status is not set to 'false', cannot proceed.\nSet the protected property to `true` in the manifest and re-deploy.";
         verror(vorpal, state, errorMessage);
       }
     } else {

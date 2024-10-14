@@ -1,6 +1,6 @@
-  var SOURCE_URI = '{{ manifest.redirect.source }}';
+  var SOURCE_URI = '{{ webHostingSpec.redirect.source }}';
   var SOURCE_URI_RE = new RegExp(SOURCE_URI);
-  var TARGET_URI = '{{ manifest.redirect.target }}';
+  var TARGET_URI = '{{ webHostingSpec.redirect.target }}';
 
   if (request.uri.match(SOURCE_URI_RE)) {
     return {

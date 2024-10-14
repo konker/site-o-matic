@@ -26,33 +26,27 @@ exports[`site-o-matic-manifest-schema should validate a complete example 1`] = `
       "name": "eg-production",
     },
   ],
-  "dns": {
-    "domainName": "example.com",
-    "extraDnsConfig": [
-      {
-        "hostName": "in1-smtp.example.com",
-        "priority": 10,
-        "type": "MX",
-      },
-      {
-        "domainName": "fm1.example.com.dkim.example.com",
-        "recordName": "fm1._domainkey.example.com",
-        "type": "CNAME",
-      },
-      {
-        "recordName": "",
-        "type": "TXT",
-        "values": [
-          "v=spf1 include:spf.example.com ?all",
-        ],
-      },
-    ],
-    "subdomains": [
-      {
-        "domainName": "dev.example.com",
-      },
-    ],
-  },
+  "domainName": "example.com",
+  "extraDnsConfig": [
+    {
+      "hostName": "in1-smtp.example.com",
+      "priority": 10,
+      "type": "MX",
+    },
+    {
+      "domainName": "fm1.example.com.dkim.example.com",
+      "recordName": "fm1._domainkey.example.com",
+      "type": "CNAME",
+    },
+    {
+      "recordName": "",
+      "type": "TXT",
+      "values": [
+        "v=spf1 include:spf.example.com ?all",
+      ],
+    },
+  ],
+  "locked": false,
   "notifications": {
     "noSubscription": false,
     "subscriptionEmail": "webmaster+{{context.manifest.rootDomainName}}@example.com",
@@ -79,42 +73,87 @@ exports[`site-o-matic-manifest-schema should validate a complete example 1`] = `
     "repo": "example.com",
     "type": "codestar-custom",
   },
-  "protected": false,
   "redirect": {
     "source": ".",
     "target": "https://www.example.org/",
     "type": "edge-cf-function",
   },
   "registrar": "dynadot",
-  "rootDomainName": "example.com",
   "title": "example.com",
-  "webHosting": {
-    "defaultRootObject": "index.html",
-    "errorResponses": [
-      {
-        "httpStatus": 403,
-        "responsePagePath": "/403.html",
-      },
-      {
-        "httpStatus": 404,
-        "responsePagePath": "/404.html",
-      },
-    ],
-    "originPath": "/www",
-    "type": "cloudfront-s3",
-    "waf": {
-      "AWSManagedRules": [
+  "webHosting": [
+    {
+      "branch": "main",
+      "defaultRootObject": "index.html",
+      "domainName": "example.com",
+      "errorResponses": [
         {
-          "name": "AWSManagedRulesCommonRuleSet",
-          "priority": 10,
+          "httpStatus": 403,
+          "responsePagePath": "/403.html",
         },
         {
-          "name": "AWSManagedRulesBotControlRuleSet",
-          "priority": 20,
+          "httpStatus": 404,
+          "responsePagePath": "/404.html",
         },
       ],
-      "enabled": true,
+      "type": "cloudfront-s3",
     },
+    {
+      "branch": "main",
+      "defaultRootObject": "index.html",
+      "domainName": "www.example.com",
+      "errorResponses": [
+        {
+          "httpStatus": 403,
+          "responsePagePath": "/403.html",
+        },
+        {
+          "httpStatus": 404,
+          "responsePagePath": "/404.html",
+        },
+      ],
+      "type": "cloudfront-s3",
+    },
+    {
+      "branch": "dev",
+      "defaultRootObject": "index.html",
+      "domainName": "dev.example.com",
+      "errorResponses": [
+        {
+          "httpStatus": 403,
+          "responsePagePath": "/403.html",
+        },
+        {
+          "httpStatus": 404,
+          "responsePagePath": "/404.html",
+        },
+      ],
+      "type": "cloudfront-s3",
+    },
+    {
+      "domainName": "api.bp-o-matic.development.konker.dev",
+      "originPath": "/",
+      "type": "cloudfront-https",
+      "url": "https://8r3xuheel8.execute-api.eu-west-1.amazonaws.com/",
+    },
+  ],
+  "webHostingDefaults": {
+    "cloudfront-https": {
+      "originPath": "/",
+    },
+    "cloudfront-s3": {
+      "defaultRootObject": "index.html",
+      "errorResponses": [
+        {
+          "httpStatus": 403,
+          "responsePagePath": "/403.html",
+        },
+        {
+          "httpStatus": 404,
+          "responsePagePath": "/404.html",
+        },
+      ],
+    },
+    "none": {},
   },
   "webmasterEmail": "webmaster@example.com",
 }

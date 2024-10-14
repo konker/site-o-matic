@@ -1,23 +1,22 @@
 import {
   REGISTRAR_ID_AWS_ROUTE53,
   SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID,
-  SSM_PARAM_NAME_CODE_PIPELINE_ARN,
   SSM_PARAM_NAME_DOMAIN_BUCKET_NAME,
   SSM_PARAM_NAME_DOMAIN_CERTIFICATE_ARN,
   SSM_PARAM_NAME_HOSTED_ZONE_ID,
   SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS,
+  SSM_PARAM_NAME_IS_AWS_ROUTE53_REGISTERED_DOMAIN,
   SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN,
   SSM_PARAM_NAME_PROTECTED_STATUS,
 } from '../consts';
-import { CONTENT_PRODUCER_ID_NONE } from '../content';
 import type { SomContext } from '../types';
 import { getContextParam } from '../utils';
 import type { Facts } from './index';
 import { is, isNonZero, isNot, rulesEngineFactory } from './index';
 
 export const SOM_FACTS_NAMES = [
-  'protectedManifest',
-  'protectedSsm',
+  'lockedManifest',
+  'lockedSsm',
   'hasHostedZoneIdParam',
   'hasHostedZoneNameServers',
   'hasHostedZoneAttributes',
@@ -29,15 +28,13 @@ export const SOM_FACTS_NAMES = [
   'isSnsNotificationsEnabled',
   'hasWebmasterEmail',
   'shouldSubscribeEmailToNotificationsSnsTopic',
-  'hasNoneContentProducerConfig',
   'hasContentBucket',
   'isContentBucketEmpty',
   'shouldDeployS3Content',
-  'hasServices',
-  'hasCertificateClones',
   'hasRegistrarNameservers',
   'has200ConnectionStatus',
   'hasAwsRoute53RegistrarConfig',
+  'hasAwsRoute53RegisteredDomainParam',
   'isAwsRoute53RegisteredDomain',
   'registrarNameserversMatchHostedZoneNameServers',
   'dnsResolvedNameserversMatchHostedZoneNameServers',
@@ -45,12 +42,10 @@ export const SOM_FACTS_NAMES = [
   'hostedZoneAttributesMatch',
   'hostedZoneDnsTxtRecordMatch',
   'hostedZoneVerified',
-  'shouldDeployServices',
-  'shouldDeployCertificateClones',
+  // 'hasCertificateClones',
+  // 'shouldDeployCertificateClones',
   'needsCloudfrontDist',
   'hasCloudfrontDistId',
-  'needsCodePipeline',
-  'hasCodePipelineArn',
   'isStatusNotStarted',
   'isStatusHostedZoneAwaitingNsConfig',
   'isStatusHostedZoneOk',
@@ -60,12 +55,10 @@ export type SomFactNames = typeof SOM_FACTS_NAMES;
 export type SomFacts = Facts<SomFactNames>;
 
 export const siteOMaticRules = rulesEngineFactory<SomFactNames, SomContext>({
-  protectedManifest: async (_facts, context) => context.manifest?.protected === true,
-  protectedSsm: async (_facts, context) => getContextParam(context, SSM_PARAM_NAME_PROTECTED_STATUS) === 'true',
+  lockedManifest: async (_facts, context) => context.manifest?.locked === true,
+  lockedSsm: async (_facts, context) => getContextParam(context, SSM_PARAM_NAME_PROTECTED_STATUS) === 'true',
   hasHostedZoneIdParam: async (_facts, context) =>
     is(getContextParam(context, SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS)),
-  hasServices: async (_facts, context) => isNonZero(context.manifest?.services?.length),
-  hasCertificateClones: async (_facts, context) => isNonZero(context.manifest?.certificate?.clones?.length),
   hasHostedZoneNameServers: async (_facts, context) => is(context.hostedZoneNameservers),
   hasHostedZoneAttributes: async (_facts, context) => is(context.hostedZoneAttributes),
   hasDnsResolvedNameservers: async (_facts, context) => is(context.dnsResolvedNameserverRecords),
@@ -73,12 +66,9 @@ export const siteOMaticRules = rulesEngineFactory<SomFactNames, SomContext>({
   hasDnsResolvedTxtRecord: async (_facts, context) => is(context.dnsVerificationTxtRecord),
   hasDomainCertificateArnParam: async (_facts, context) =>
     is(getContextParam(context, SSM_PARAM_NAME_DOMAIN_CERTIFICATE_ARN)),
-  hasNoneContentProducerConfig: async (_facts, context) =>
-    is(context.manifest?.content?.producerId === CONTENT_PRODUCER_ID_NONE),
   hasContentBucket: async (_facts, context) => is(getContextParam(context, SSM_PARAM_NAME_DOMAIN_BUCKET_NAME)),
   isContentBucketEmpty: async (_facts, context) => is(context.isS3BucketEmpty),
-  shouldDeployS3Content: async (facts, _context) =>
-    isNot(facts.hasNoneContentProducerConfig) && (isNot(facts.hasContentBucket) || is(facts.isContentBucketEmpty)),
+  shouldDeployS3Content: async (facts, _context) => isNot(facts.hasContentBucket) || is(facts.isContentBucketEmpty),
 
   hasNotificationsSnsTopic: async (_facts, context) =>
     is(getContextParam(context, SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN)),
@@ -126,24 +116,24 @@ export const siteOMaticRules = rulesEngineFactory<SomFactNames, SomContext>({
     isNot(facts.dnsResolvedNameserversMatchHostedZoneNameServers),
 
   hasAwsRoute53RegistrarConfig: async (_facts, context) => context.manifest?.registrar === REGISTRAR_ID_AWS_ROUTE53,
+  hasAwsRoute53RegisteredDomainParam: async (_facts, context) =>
+    getContextParam(context, SSM_PARAM_NAME_IS_AWS_ROUTE53_REGISTERED_DOMAIN) === 'true',
   isAwsRoute53RegisteredDomain: async (facts, _context) =>
     //[FIXME: require explicit AwsRoute53 registrar config, rather than trying to guess?]
     is(facts.hasAwsRoute53RegistrarConfig) ||
+    is(facts.hasAwsRoute53RegisteredDomainParam) ||
     (isNot(facts.hasHostedZoneIdParam) &&
       isNot(facts.hasRegistrarConfig) &&
       is(facts.dnsResolvedNameserversMatchHostedZoneNameServers)),
 
-  shouldDeployServices: async (facts, _context) =>
-    is(facts.hasServices) && (is(facts.isAwsRoute53RegisteredDomain) || is(facts.hostedZoneVerified)),
+  // hasCertificateClones: async (_facts, context) => isNonZero(context.manifest?.certificate?.clones?.length),
+  // shouldDeployCertificateClones: async (facts, _context) =>
+  //   is(facts.hasCertificateClones) && (is(facts.isAwsRoute53RegisteredDomain) || is(facts.hostedZoneVerified)),
 
-  shouldDeployCertificateClones: async (facts, _context) =>
-    is(facts.hasCertificateClones) && (is(facts.isAwsRoute53RegisteredDomain) || is(facts.hostedZoneVerified)),
-
+  // TODO: Only used for status messages
   needsCloudfrontDist: async (_facts, context) => is(context.manifest?.webHosting),
   hasCloudfrontDistId: async (_facts, context) =>
     is(getContextParam(context, SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID)),
-  needsCodePipeline: async (_facts, context) => is(context.manifest?.pipeline),
-  hasCodePipelineArn: async (_facts, context) => is(getContextParam(context, SSM_PARAM_NAME_CODE_PIPELINE_ARN)),
 
   // SOM_STATUS_NOT_STARTED
   isStatusNotStarted: async (facts, _context) => isNot(facts.hasHostedZoneIdParam),

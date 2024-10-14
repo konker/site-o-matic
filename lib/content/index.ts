@@ -1,3 +1,4 @@
+import type { WebHostingClauseWithResources } from '../manifest/schemas/site-o-matic-manifest.schema';
 import type { HasNetworkDerived, SomContext } from '../types';
 import { getTmpDirPath, processContentDirectory } from './lib';
 import * as default_ from './producers/default/manifest';
@@ -12,6 +13,7 @@ export type SomContentProducer = {
 
 export type SomContentGenerator = (
   somId: string,
+  webHostingSpec: WebHostingClauseWithResources,
   context: HasNetworkDerived<SomContext>
 ) => Promise<string | undefined>;
 
@@ -20,15 +22,22 @@ export const CONTENT_PRODUCER_IDS = [default_.ID] as const;
 function createContentGenerator(contentProducer: SomContentProducer): SomContentGenerator {
   return async function generateContent(
     somId: string,
+    webHostingSpec: WebHostingClauseWithResources,
     context: HasNetworkDerived<SomContext>
   ): Promise<string | undefined> {
-    const tmpDirPath = getTmpDirPath(somId, contentProducer.ID);
+    const tmpDirPath = getTmpDirPath(somId, webHostingSpec, contentProducer.ID);
     if (!tmpDirPath) {
       console.log(`ERROR: Could not generate content: Could not get tmp dir path`);
       return undefined;
     }
 
-    const result = await processContentDirectory(somId, context, contentProducer.TEMPLATE_DIR_PATH, tmpDirPath);
+    const result = await processContentDirectory(
+      somId,
+      webHostingSpec,
+      context,
+      contentProducer.TEMPLATE_DIR_PATH,
+      tmpDirPath
+    );
     if (!result) {
       console.log(`ERROR: Could not generate content`);
       return undefined;

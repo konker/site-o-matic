@@ -1,5 +1,193 @@
 # Site-o-Matic
 
+## V2
+
+### Other
+
+- Convert to TF??
+  - Current limitations with CDK:
+    - Cannot create user resource and give it bucket permissions (DomainPublisher)
+    - Cannot create access key for user and store it in SecureString SSM param
+- Add `config` echo param, like context/facts
+
+### Pipeline reboot?
+
+- What about just having GitHub actions as the pipeline?
+
+  - Provide an action for publishing to som-bucket?
+  - Provide way to export credentials for publishing from CLI tool
+    - New user, with [access_id, access_secret]
+    - Would need to be re-generated if needed again?
+      - Or store it in secrets manager, and can be fetched by tool?
+  - Provide example workflow(s) of simple main -> /www pipeline
+  - Later could accommodate Gitlab, Codeberg, etc...
+  - Later could accommodate AWS CodePipeline?
+    - CLI option to give IAM permissions for a given CodePipeline pipeline?
+
+### Pipeline scheme
+
+- Common defaults for (S3) webHosting clauses, can be overridden
+- One webHosting clause per subdomain
+
+  - Each subdomain clause specifies an `originPath`
+    - Could warn but not error if more than one subdomain uses the same originPath?
+  - ~~One subdomain associated with one git branch~~
+  - ~~Default mapping of `main` branch to root domain name~~
+
+- One cloudfront distribution per subdomain (root domain is a subdomain in this sense)
+
+  - All subdomains are served from the same bucket
+  - ~~Cloudfront distribution serves from `<branch>/www` folder of domain S3 bucket~~
+
+- One pipeline (?) per subdomain
+  - Subdomain branch is the trigger for the pipeline
+  - Output is copied to S3 bucket -> `<branch>/` subfolder
+  - Otherwise, the build steps are the same for each pipeline in a domain
+    - Do we need some way for the build steps to diverge based on branch?
+
+### Manifest Scheme
+
+- A
+  - DomainUser, DomainRole
+  - HostedZone (read in if AWS registered)
+  - DomainBucket
+  - SNS Topic
+- B
+  - ExtraDNS records (MX/etc, top-level flat list)
+- C
+  - For Each (WebHostingClause x):
+    - Create certificate for x.domainName
+    - Create Cloudfront Distro
+      - Apply origin = `${x.branch}/www`
+      - Add edge
+      - Add WAF?
+      - ...?
+    - Create CNAME: x.domainName -> Cloudfront (?)
+    - Create Pipeline
+      - S3Copy by default
+      - Pipeline trigger: x.branch
+      - Output path: S3://<domainBucket>/x.branch
+- D
+  - Certificate clones?
+  - Cross-account access?
+  - Context gen?
+
+### Basic manifest structure:
+
+- domainName
+- email/etc...
+- extraDnsConfig: Array<DnsConfig>
+- webHostingDefaults: { errorResponses/etc }
+- webHosting: Array<{ cloudfront distro def, with origin/etc; one per (sub)domain }>
+  - Default for root?
+  - What is specified per item?
+    - basics (type/origin/path)
+    - redirects?
+    - basic auth?
+  - What is specified globally?
+    - default path redirect
+    - ???
+- waf
+- certificate clones [?]
+- cross account access [?]
+- notifications
+- pipeline
+
+  - Needs further design to determine how it fits with new "multi-distro/domain" model
+
+- NOTE: assumes (currently) one S3 bucket per domain, with subdomains routed to sub-folders
+  - Question of how pipeline works with this model, i.e. does build refresh all sub-folders, every time?
+    - Ideally, there would be targeted builds, e.g. branch -> sub-folder/sub-domain update?
+
+## V2 Reboot
+
+- NOTE: is this significantly distinguished from amplify hosting?
+  - Has domains, builds, per branch stuff, basic auth
+- NOTE: is there any place for terraform here??
+  - Most likely not, would be a full re-write (bad)
+  - Plus, not aiming to be cross platform/cloud, AWS-only
+- NOTE: map branches to domains (a la amplify hosting?)
+  - Meaning, subdomain can be associated with a branch (not just origin path?)
+  - Support for deployment builds which checkout different branches and build them to different S3 origins?
+- NOTE: edge function for basic auth
+
+  - Per subdomain?
+  - Specify [SSM, SecretsManager] path to load usernames/passwords from?
+
+- NOTE: keep in mind that you need to define the "scope" and "design goals"/"design decisions" for the system
+
+  - This means that there are (and should be) certain boundaries for the scope
+    - e.g. Just CDK/AWS [?]
+    - e.g. Single Tenant
+    - e.g. ???
+
+- Start from the ground up
+- Start with the new overall model
+  - Nested subdomains (Linear list from top level, not recursive)
+    - But "recursive" definition of the types (kind of)
+- Break up the CDK defs into smaller pieces
+- Build up to first iteration with new pieces
+
+  - **Foundation L1**
+    - IAM user
+    - Domain Role
+    - HostedZone
+    - Registrar stuff [?]
+  - **Foundation L2**
+    - `extraDns` for root domain name
+      - OR: for entire domain? [yes]
+      - So this is basically the "DNS stack"?
+      - Code needs to collect all the DMS defs from root/subdomains and flatten them at this level
+  - **Web Hosting Foundation (L3?)**
+    - Cloudfront Distro (Cfr)
+    - Bucket for domain (root and sub-domains)
+      - Scheme is one bucket for domain, with sub-folders f or domain origins
+  - **Web Hosting for domain (L4?)**
+    - Certificate for root domain
+    - Cfr Origin for root domain name (`/www`)
+
+- Next iteration is to allow for subdomains
+
+  - Assumes that there is a parent hosted zone
+  - Assumes that there is a parent cloudformation distro
+    - Can we make that mandatory at the root? [yes]
+  - Process is:
+    - Add Certificate for subdomain (note: wildcards)
+    - Cfr origin for sub domain name (`www-dev`)
+    - Basically another "L4" entry?
+      - Inherits, but can override parent props, e.g. `defaultRootObject`, `errorResponses`, etc
+    - ~~Allow for `extraDns` config for subdomain~~
+      - ~~Do we actually need this? Or can the root level list of extraDns handle everything?~~
+
+- Where do the other parts fit in?
+
+  - Redirects?
+    - Are these a global instance (or list?), or should they be defined per (sub)domain?
+    - The directory redirect to `deafultRootObject` should be global, and automatically provisioned rather than subject to configuration.
+  - WAF
+    - Check how this is configured on Cloudfront, prolly global for the distro?
+  - Pipeline?
+    - Probably should be one pipeline for the domain, with configuration to publish to sub-folders?
+      - In principle it would be better if there was an explicit delineation between a "dev" pipeline execution, and a "prod" pipeline execution.
+      - ...
+  - Services?
+    - Is this basically another kind of "L4", i.e. a Cloudfront origin?
+  - Cross-account access?
+    - Remind yourself how this is useful?
+  - Notifications?
+    - Closely related to pipeline?
+
+- Where does region come into this?
+  - Some parts need to be in us-east-1
+    - What actually? HostedZones? Certificates? Cloudfront Distro?
+  - Other parts can/should be in another region
+    - Bucket?
+    - ???
+  - 1st step: what are the "global" AWS services?
+  - 2nd step: what are the parts which _must_ be in eu-east-1?
+  - 3rd step: what are the implications of moving other parts to a different region? E.g. eu-west-1?
+    - Permissions? What else?
+
 ## Productize / Release
 
 - Finish any outstanding small features/polishing

@@ -1,157 +1,198 @@
 {
   // The root domain name of the website, this is the only required property
-  "rootDomainName": "example.com",
+  domainName: 'example.com',
 
   // A title for the website, this is used as the HTML title by the default content producer
-  "title": "example.com",
+  title: 'example.com',
+
+  // Optional, non-functional notes
+  notes: 'Example Company website FTW?',
 
   // An email address which will be subscribed to notifications sent to the SNS Topic
-  "webmasterEmail": "webmaster@example.com",
+  webmasterEmail: 'webmaster@example.com',
 
   // A registrar ID from the list of supported registrars, currently [dynadot, awsRoute53]
-  "registrar": "dynadot",
+  registrar: 'dynadot',
 
   // Whether to add protection rules to resources created by the tool
-  "protected": false,
+  locked: false,
 
   // Extra DNS configuration, this is in addition to DNS records required for the website itself
-  "dns": {
-    "domainName": "example.com",
-    "extraDnsConfig": [
-      {
-        "type": "MX",
-        "hostName": "in1-smtp.example.com",
-        "priority": 10
+  extraDnsConfig: [
+    {
+      type: 'MX',
+      hostName: 'in1-smtp.example.com',
+      priority: 10,
+    },
+    {
+      type: 'CNAME',
+      recordName: 'fm1._domainkey.example.com',
+      domainName: 'fm1.example.com.dkim.example.com',
+    },
+    {
+      type: 'TXT',
+      recordName: '',
+      values: ['v=spf1 include:spf.example.com ?all'],
+    },
+  ],
+
+  // Cloudfront configuration defaults
+  webHostingDefaults: {
+    'cloudfront-s3': {
+      // The default file that will be served when a directory is requested
+      defaultRootObject: 'index.html',
+
+      // A mapping to custom files for HTTP error situations
+      errorResponses: [
+        { httpStatus: 403, responsePagePath: '/403.html' },
+        { httpStatus: 404, responsePagePath: '/404.html' },
+      ],
+    },
+  },
+
+  // A list of cloudfront distributions which will be created,
+  // can point at either an S3 bucket, or a HTTPS origin url (e.g. API gateway)
+  // ~~For S3 buckets origins, the branch designates the sub-folder for the origin under the root of the site bucket.~~
+  // ~~It is assumed that the web root will be `main`, e.g. `/main/main`.~~
+  // ~~If a pipeline has been configured (off by default), then the git branch will be used as the basis [TODO]~~
+  // ~~NOTE:  we assume as much by convention until it is useful to provide manual overrides~~
+  webHosting: [
+    {
+      type: 'cloudfront-s3',
+      domainName: 'example.com',
+      originPath: '/main/www',
+
+      redirect: {
+        // Currently this is the only supported value
+        implementation: 'edge-cf-function',
+
+        // A regex to match against the incoming request path.
+        // If the regex matches, the redirect will be triggered.
+        source: '.',
+
+        // The target URL to redirect to
+        target: 'https://www.example.org/',
       },
-      {
-        "type": "CNAME",
-        "recordName": "fm1._domainkey.example.com",
-        "domainName": "fm1.example.com.dkim.example.com"
+    },
+    {
+      type: 'cloudfront-s3',
+      domainName: 'www.example.com',
+      originPath: '/main/www',
+
+      // Add WAF protection
+      waf: {
+        // Toggle whether WAF is enabled or not
+        enabled: true,
+
+        // Currently only AWS Managed Rules are supported. This is a list of rule-sets to enable.
+        AWSManagedRules: [
+          { name: 'AWSManagedRulesCommonRuleSet', priority: 10 },
+          { name: 'AWSManagedRulesBotControlRuleSet', priority: 20 },
+        ],
       },
-      {
-        "type": "TXT",
-        "recordName": "",
-        "values": ["v=spf1 include:spf.example.com ?all"]
-      }
-    ],
+    },
+    {
+      type: 'cloudfront-s3',
+      domainName: 'dev.example.com',
+      originPath: '/dev/www',
+      auth: {
+        // Currently this is the only supported type
+        type: 'basic-auth',
 
-    // Subdomains to create. These will have functioning SSL certificates
-    // Subdomains can also have their own extraDnsConfig clauses
-    "subdomains": [{ "domainName": "dev.example.com" }]
-  },
+        // Currently this is the only supported value
+        implementation: 'edge-cf-function',
 
-  // Cloudfront configuration
-  "webHosting": {
-    // This is currently the only supported type
-    "type": "cloudfront-s3",
-
-    // The path in the S3 bucket which is the web root
-    "originPath": "/www",
-
-    // The default file that will be served when a directory is requested
-    "defaultRootObject": "index.html",
-
-    // A mapping to custom files for HTTP error situations
-    "errorResponses": [
-      { "httpStatus": 403, "responsePagePath": "/403.html" },
-      { "httpStatus": 404, "responsePagePath": "/404.html" }
-    ],
-
-    // Add WAF protection
-    "waf": {
-      // Toggle whether WAF is enabled or not
-      "enabled": true,
-
-      // Currently only AWS Managed Rules are supported. This is a list of rule-sets to enable.
-      "AWSManagedRules": [
-        { "name": "AWSManagedRulesCommonRuleSet", "priority":  10 },
-        { "name": "AWSManagedRulesBotControlRuleSet", "priority":  20 }
-      ]
-    }
-  },
-
-  // Add a redirect to the website
-  "redirect": {
-    // Currently this is the only supported type
-    "type": "edge-cf-function",
-
-    // A regex to match against the incoming request path.
-    // If the regex matches, the redirect will be triggered.
-    "source": ".",
-
-    // The target URL to redirect to
-    "target": "https://www.example.org/"
-  },
+        // Add this secret via the CLI
+        secretName: 'dev.example.com_basic_auth_secret',
+      },
+    },
+    {
+      type: 'cloudfront-https',
+      domainName: 'api.bp-o-matic.development.konker.dev',
+      url: 'https://8r3xuheel8.execute-api.eu-west-1.amazonaws.com/',
+      originPath: '/',
+      certificate: 'api.bp-o-matic.development.konker.dev', // do we need this?
+    },
+  ],
 
   // Configuration related to the site SNS topic.
   // This topic receives a message whenever the site is deployed or destroyed via the tool.
   // Additionally, if a deployment pipeline is configured, the topic will receive messages
   // related to pipeline execution status.
-  "notifications": {
+  notifications: {
     // Disable the SNS Topic
-    "disable": false,
+    disable: false,
 
     // By default, if there is a webmaster email, then it will be automatically subscribed to the SNS topic.
     // This setting allows you to disable that behaviour.
-    "noSubscription": false,
+    noSubscription: false,
 
     // Override the webmaster email with a different email address
-    "subscriptionEmail": "webmaster+{{context.manifest.rootDomainName}}@example.com"
+    subscriptionEmail: 'webmaster+{{context.manifest.rootDomainName}}@example.com',
   },
-  "pipeline": {
+
+  // TODO: need to be able to invoke the pipeline for branches other than `main`
+  // TODO: but not just any branch, only those configured under the `webHosting` clause
+  pipeline: {
     // Type of pipeline to create, currently one of [codestar-s3, codestar-custom, codecommit-s3, codecommit-custom]
-    "type": "codestar-custom",
+    type: 'codestar-custom',
 
     // If the type is [codestar-s3, codestar-custom], then this is the source GitHub repo connection via CodeStar Connections
-    "codestarConnectionArn": "arn:aws:codestar-connections:us-east-1:111111111111:connection/12345678-cafe-cafe-cafe-123456789012",
+    codestarConnectionArn: 'arn:aws:codestar-connections:us-east-1:111111111111:connection/12345678-cafe-cafe-cafe-123456789012',
     // The GitHub user
-    "owner": "example",
+    owner: 'example',
     // The GitHub repo
-    "repo": "example.com",
+    repo: 'example.com',
 
     // The files which should be deployed, defaults to ["**/*"]
-    "buildFiles": ["www/**"],
+    // TODO: do we need this as a config or will it be governed by conventions?
+    // TODO: these build files will be copied by the pipeline to the bucket directory corresponding to the branch.
+    buildFiles: ['www/**'],
 
     // The CodeBuild image to use, defaults to SITE_PIPELINE_DEFAULT_BUILD_IMAGE
     // See: https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-available.html
-    "buildImage": "aws/codebuild/amazonlinux2-x86_64-standard:5.0",
+    buildImage: 'aws/codebuild/amazonlinux2-x86_64-standard:5.0',
 
     // Optionally specify some custom build phases for the CodeBuild pipeline
-    "buildPhases": {
-      "install": {
-        "commands": ["npm install"]
+    // TODO: assume this is always the same for every branch
+    // TODO: perhaps inject the branch into the env or something?
+    buildPhases: {
+      install: {
+        commands: ['npm install'],
       },
-      "build": {
-        "commands": ["npm run build"]
-      }
-    }
+      build: {
+        commands: ['npm run build'],
+      },
+    },
   },
 
-  "certificate": {
+  // TODO: leave for later, what was this for again?
+  certificate: {
     // Clone the SSL certificates for this domain and sub-domains to the following accounts
-    "clones": [
+    clones: [
       {
-        "name": "eg-development",
-        "account": "111111111111",
-        "region": "eu-north-1"
+        name: 'eg-development',
+        account: '111111111111',
+        region: 'eu-north-1',
       },
       {
-        "name": "eg-production",
-        "account": "222222222222",
-        "region": "eu-north-1"
-      }
-    ]
+        name: 'eg-production',
+        account: '222222222222',
+        region: 'eu-north-1',
+      },
+    ],
   },
 
   // Allow the following roles to assume the DomainRole for this website
-  "crossAccountAccess": [
+  // TODO: What is this for again?
+  crossAccountAccess: [
     {
-      "name": "eg-development",
-      "arn": "arn:aws:sts::111111111111:role/OrganizationAccountAccessRole"
+      name: 'eg-development',
+      arn: 'arn:aws:sts::111111111111:role/OrganizationAccountAccessRole',
     },
     {
-      "name": "eg-production",
-      "arn": "arn:aws:iam::222222222222:role/OrganizationAccountAccessRole"
-    }
-  ]
+      name: 'eg-production',
+      arn: 'arn:aws:iam::222222222222:role/OrganizationAccountAccessRole',
+    },
+  ],
 }

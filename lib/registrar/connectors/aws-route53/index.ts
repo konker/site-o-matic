@@ -1,12 +1,13 @@
 import { getNsRecordValuesForDomainName } from '../../../aws/route53';
 import type { SiteOMaticConfig } from '../../../config/schemas/site-o-matic-config.schema';
+import type { SecretsSetCollection } from '../../../secrets/types';
 
 export const ID = 'aws-route53';
 export const SECRETS = [];
 
 export async function getNameServers(
   config: SiteOMaticConfig,
-  _secrets: { [key: string]: string },
+  _secrets: SecretsSetCollection,
   domain: string
 ): Promise<Array<string>> {
   // if the registrar is aws-route53 then this is where the nameservers are (right?)
@@ -16,7 +17,7 @@ export async function getNameServers(
 
 export async function setNameServers(
   config: SiteOMaticConfig,
-  secrets: { [key: string]: string },
+  secrets: SecretsSetCollection,
   domain: string,
   _hosts: Array<string>
 ): Promise<Array<string> | undefined> {

@@ -1,15 +1,22 @@
 import { findHostedZoneAttributes, getNsRecordValuesForDomainName } from './aws/route53';
 import { getIsS3BucketEmpty } from './aws/s3';
-import * as secretsmanager from './aws/secretsmanager';
 import * as ssm from './aws/ssm';
 import { ssmBasePath } from './aws/ssm';
 import type { SiteOMaticConfig } from './config/schemas/site-o-matic-config.schema';
-import { DEFAULT_AWS_REGION, SSM_PARAM_NAME_DOMAIN_BUCKET_NAME, SSM_PARAM_NAME_SOM_VERSION, VERSION } from './consts';
+import {
+  DEFAULT_AWS_REGION,
+  REGISTRAR_ID_AWS_ROUTE53,
+  SSM_PARAM_NAME_DOMAIN_BUCKET_NAME,
+  SSM_PARAM_NAME_SOM_VERSION,
+  VERSION,
+} from './consts';
 import { resolveDnsNameserverRecords, resolveDnsSomTxtRecord } from './dns';
 import { getSiteConnectionStatus } from './http';
 import { calculateDomainHash, formulateSomId } from './index';
 import type { SiteOMaticManifest } from './manifest/schemas/site-o-matic-manifest.schema';
 import { getRegistrarConnector } from './registrar';
+import type { SomFacts } from './rules/site-o-matic.rules';
+import * as secrets from './secrets';
 import type { HasManifest, HasNetworkDerived, SomContext } from './types';
 import { contextTemplateString, getContextParam, getParam } from './utils';
 
@@ -49,8 +56,8 @@ export async function getRegistrarNameservers(config: SiteOMaticConfig, context:
     return [];
   }
   const registrarConnector = getRegistrarConnector(context.registrar);
-  const somSecrets = await secretsmanager.getSomSecrets(config, DEFAULT_AWS_REGION, registrarConnector.SECRETS);
-  if (!registrarConnector.SECRETS.every((secretName) => somSecrets[secretName])) {
+  const somSecrets = await secrets.getAllSomSecrets(config, DEFAULT_AWS_REGION, context.somId);
+  if (!registrarConnector.SECRETS.every((secretName) => somSecrets.lookup[secretName])) {
     console.log(`WARNING: secrets required by registrar connector missing: ${registrarConnector.SECRETS}`);
     return [];
   } else {
@@ -114,11 +121,11 @@ export function manifestDerivedProps(
     ...context,
     pathToManifestFile,
     manifest,
-    rootDomainName: manifest.rootDomainName,
-    domainHash: calculateDomainHash(manifest.rootDomainName),
-    somId: formulateSomId(config, manifest.rootDomainName),
-    siteUrl: `https://${manifest.rootDomainName}/`,
-    subdomains: manifest.dns?.subdomains?.map((i: any) => i.domainName) ?? [],
+    rootDomainName: manifest.domainName,
+    domainHash: calculateDomainHash(manifest.domainName),
+    somId: formulateSomId(config, manifest.domainName),
+    siteUrl: `https://${manifest.domainName}/`,
+    subdomains: [],
     registrar: manifest.registrar,
   };
   return {
@@ -127,11 +134,24 @@ export function manifestDerivedProps(
   };
 }
 
-export async function refreshContext(
+export async function refreshContextPass1(
   config: SiteOMaticConfig,
   context: HasManifest<SomContext>
 ): Promise<HasNetworkDerived<SomContext>> {
   return loadContextDerivedProps(await loadNetworkDerivedContext(config, context));
+}
+
+export async function refreshContextPass2(
+  context: HasNetworkDerived<SomContext>,
+  facts: SomFacts
+): Promise<HasNetworkDerived<SomContext>> {
+  return {
+    ...context,
+    registrar: facts.isAwsRoute53RegisteredDomain ? REGISTRAR_ID_AWS_ROUTE53 : context.registrar,
+    registrarNameservers: facts.isAwsRoute53RegisteredDomain
+      ? context.hostedZoneNameservers
+      : context.registrarNameservers,
+  };
 }
 
 export async function loadContext(
@@ -139,5 +159,8 @@ export async function loadContext(
   pathToManifestFile: string,
   manifest: SiteOMaticManifest
 ): Promise<HasNetworkDerived<SomContext>> {
-  return refreshContext(config, manifestDerivedProps(config, DEFAULT_INITIAL_CONTEXT, pathToManifestFile, manifest));
+  return refreshContextPass1(
+    config,
+    manifestDerivedProps(config, DEFAULT_INITIAL_CONTEXT, pathToManifestFile, manifest)
+  );
 }

@@ -1,90 +1,80 @@
 import {
   CreateSecretCommand,
-  DeleteSecretCommand,
+  DescribeSecretCommand,
   GetSecretValueCommand,
-  ListSecretsCommand,
+  PutSecretValueCommand,
+  ResourceNotFoundException,
   SecretsManagerClient,
 } from '@aws-sdk/client-secrets-manager';
 
 import type { SiteOMaticConfig } from '../config/schemas/site-o-matic-config.schema';
+import type { SecretsPlain } from '../secrets/types';
 import { assumeSomRole } from './sts';
 
-export async function getSomSecrets(
-  config: SiteOMaticConfig,
-  region: string,
-  secretNames: Array<string>
-): Promise<Record<string, string>> {
-  const somRoleCredentials = await assumeSomRole(config, region);
-
-  const client = new SecretsManagerClient({ region, credentials: somRoleCredentials });
-
-  const cmd1 = new ListSecretsCommand({});
-  const secrets = await client.send(cmd1);
-  if (!secrets?.SecretList) return {};
-
-  const somSecretNames = secrets.SecretList.filter(({ Tags }) => Tags?.find(({ Key }) => Key === config.SOM_TAG_NAME))
-    .map(({ Name }) => Name)
-    .filter((Name) => secretNames.includes(Name as string));
-
-  const somSecrets = await Promise.all(
-    somSecretNames.map(async (Name) => {
-      const cmd2 = new GetSecretValueCommand({ SecretId: Name as string });
-      const secretValue = await client.send(cmd2);
-      return { Name: Name as string, Value: secretValue.SecretString as string };
-    })
-  );
-
-  return somSecrets.reduce(
-    (acc, val) => {
-      acc[val.Name] = val.Value;
-      return acc;
-    },
-    {} as Record<string, string>
-  );
-}
-
-export async function listSomSecrets(config: SiteOMaticConfig, region: string): Promise<Array<Record<string, string>>> {
+export async function readSecret(config: SiteOMaticConfig, region: string, secretName: string): Promise<SecretsPlain> {
   const somRoleCredentials = await assumeSomRole(config, region);
   const client = new SecretsManagerClient({ region, credentials: somRoleCredentials });
 
-  const cmd1 = new ListSecretsCommand({});
-  const secrets = await client.send(cmd1);
-  if (!secrets?.SecretList) return [];
+  // Try to describe the secret, if it doesn't exist, return empty secrets
+  try {
+    const cmd1 = new DescribeSecretCommand({
+      SecretId: secretName,
+    });
+    await client.send(cmd1);
+  } catch (ex: unknown) {
+    // Return empty secrets
+    if (ex instanceof ResourceNotFoundException) {
+      return {};
+    }
 
-  return secrets.SecretList.filter(({ Tags }) => Tags?.find(({ Key }) => Key === config.SOM_TAG_NAME)).map(
-    ({ Name }) => ({ Name: Name as string })
-  );
-}
+    // Some other error, so just re-throw
+    throw ex;
+  }
 
-export async function addSomSecret(
-  config: SiteOMaticConfig,
-  region: string,
-  name: string,
-  value: string
-): Promise<Array<Record<string, string>>> {
-  const somRoleCredentials = await assumeSomRole(config, region);
-  const client = new SecretsManagerClient({ region, credentials: somRoleCredentials });
-
-  const cmd1 = new CreateSecretCommand({
-    Name: name,
-    SecretString: value,
-    Tags: [{ Key: config.SOM_TAG_NAME, Value: config.SOM_TAG_NAME }],
+  const cmd2 = new GetSecretValueCommand({
+    SecretId: secretName,
   });
-  await client.send(cmd1);
+  const secretPersisted = await client.send(cmd2);
 
-  return listSomSecrets(config, region);
+  return JSON.parse(secretPersisted?.SecretString ?? '{}');
 }
 
-export async function deleteSomSecret(
+export async function upsertSecret(
   config: SiteOMaticConfig,
   region: string,
-  name: string
-): Promise<Array<Record<string, string>>> {
+  secretName: string,
+  secretsPlain: SecretsPlain
+): Promise<SecretsPlain> {
   const somRoleCredentials = await assumeSomRole(config, region);
   const client = new SecretsManagerClient({ region, credentials: somRoleCredentials });
+  const secretPersisted = JSON.stringify(secretsPlain);
 
-  const cmd1 = new DeleteSecretCommand({ SecretId: name, ForceDeleteWithoutRecovery: true });
-  await client.send(cmd1);
+  // Try to describe the secret, if it doesn't exist, insert it
+  try {
+    const cmd1 = new DescribeSecretCommand({
+      SecretId: secretName,
+    });
+    await client.send(cmd1);
+  } catch (ex: unknown) {
+    // Attempt to insert the secret
+    if (ex instanceof ResourceNotFoundException) {
+      const cmd1b = new CreateSecretCommand({
+        Name: secretName,
+        SecretString: secretPersisted,
+      });
+      await client.send(cmd1b);
+    } else {
+      // Some other error, so just re-throw
+      throw ex;
+    }
+  }
 
-  return listSomSecrets(config, region);
+  // We now definitely have a secret, so we can just update it (will be redundant the first time)
+  const cmd2 = new PutSecretValueCommand({
+    SecretId: secretName,
+    SecretString: secretPersisted,
+  });
+  await client.send(cmd2);
+
+  return readSecret(config, region, secretName);
 }

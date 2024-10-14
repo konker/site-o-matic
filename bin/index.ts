@@ -8,31 +8,27 @@ import type { ParseArgsConfig } from 'util';
 import { parseArgs } from 'util';
 import Vorpal from 'vorpal';
 
-import { CODESTAR_CONNECTION_PROVIDER_TYPES } from '../lib/aws/codestar';
 import { loadConfig } from '../lib/config';
 import { SOM_CONFIG_PATH_TO_DEFAULT_FILE, VERSION } from '../lib/consts';
-import { actionAddCodeStarConnection } from './actions/addCodeStarConnection';
-import { actionAddPublicKey } from './actions/addPublicKey';
 import { actionAddSecret } from './actions/addSecret';
 import { actionAddUser } from './actions/addUser';
 import { actionClearScreen } from './actions/clearScreen';
-import { actionDeleteCodeStarConnection } from './actions/deleteCodeStarConnection';
-import { actionDeletePublicKey } from './actions/deletePublicKey';
 import { actionDeleteSecret } from './actions/deleteSecret';
 import { actionDeploy } from './actions/deploy';
 import { actionDeployCheck } from './actions/deployCheck';
 import { actionDestroy } from './actions/destroy';
+import { actionDiff } from './actions/diff';
 import { actionInfo } from './actions/info';
-import { actionListCodeStarConnections } from './actions/listCodeStarConnections';
-import { actionListPublicKeys } from './actions/listPublicKeys';
 import { actionListSecrets } from './actions/listSecrets';
 import { actionListSites } from './actions/listSites';
 import { actionListUsers } from './actions/listUsers';
 import { actionLoadManifest } from './actions/loadManifest';
 import { actionSetNameServersWithRegistrar } from './actions/setNameserversWithRegistrar';
+import { actionShowCOnfig } from './actions/showConfig';
 import { actionShowContext } from './actions/showContext';
 import { actionShowFacts } from './actions/showFacts';
 import { actionShowManifest } from './actions/showManifest';
+import { actionShowSecret } from './actions/showSecret';
 import { actionSynthesize } from './actions/synthesize';
 import { SomGlobalState } from './SomGlobalState';
 
@@ -53,9 +49,11 @@ async function main() {
   const { values, positionals } = parseArgs(ARG_PARSE_CONFIG);
 
   const vorpal = new Vorpal();
-  const globalState = new SomGlobalState(values);
+
   const config = await loadConfig(SOM_CONFIG_PATH_TO_DEFAULT_FILE);
   assert(config, '[site-o-matic] Fatal Error: Failed to load config');
+
+  const globalState = new SomGlobalState(config, values);
 
   if (!globalState.plumbing) {
     console.log('\n');
@@ -85,15 +83,19 @@ async function main() {
     .action(actionShowManifest(vorpal, config, globalState));
   vorpal.command('facts', 'Show current facts').action(actionShowFacts(vorpal, config, globalState));
   vorpal.command('context', 'Show current context').action(actionShowContext(vorpal, config, globalState));
+  vorpal.command('config', 'Show current config').action(actionShowCOnfig(vorpal, config, globalState));
   vorpal.command('info', 'Show details about the site deployment').action(actionInfo(vorpal, config, globalState));
 
   vorpal.command('ls users', 'List users').action(actionListUsers(vorpal, config, globalState));
   vorpal.command('add user <username>', 'Add a user').action(actionAddUser(vorpal, config, globalState));
 
+  // TODO: change this to SSM secure strings?
   vorpal.command('ls secrets', 'List secrets').action(actionListSecrets(vorpal, config, globalState));
   vorpal.command('add secret <name> <value>', 'Add a secret').action(actionAddSecret(vorpal, config, globalState));
+  vorpal.command('show secret <name>', 'Reveal a secret value').action(actionShowSecret(vorpal, config, globalState));
   vorpal.command('del secret <name>', 'Delete a secret').action(actionDeleteSecret(vorpal, config, globalState));
 
+  /*[XXX: do we need this really?]
   vorpal
     .command('ls keys <username>', 'List SSH public keys added for the given user')
     .action(actionListPublicKeys(vorpal, config, globalState));
@@ -116,10 +118,14 @@ async function main() {
   vorpal
     .command('del codestar <connectionArn>', 'Delete a CodeStar connection')
     .action(actionDeleteCodeStarConnection(vorpal, config, globalState));
+  */
 
   vorpal
     .command('synth [username]', 'Synthesize the CDK stack under the given user')
     .action(actionSynthesize(vorpal, config, globalState));
+  vorpal
+    .command('diff [username]', 'Diff the CDK stack with the currently deployed resources, under the given user')
+    .action(actionDiff(vorpal, config, globalState));
   vorpal
     .command('check [username]', 'Perform deployment checks')
     .action(actionDeployCheck(vorpal, config, globalState));

@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 
 import { UNKNOWN } from '../consts';
-import { CONTENT_PRODUCER_ID_DEFAULT } from '../content';
 import { formatStatusBreadCrumbAndMessage } from '../status';
 import type { SomInfoSpec, SomInfoStatus } from '../types';
 import { tabulate } from './tables';
@@ -19,39 +18,39 @@ export function renderInfoSpec(infoSpec: SomInfoSpec): string {
         Param: chalk.bold(chalk.white('registrar')),
         Value: infoSpec.registrar,
       },
-      {
-        Param: chalk.bold(chalk.white('subdomains')),
-        Value: infoSpec.subdomains?.join('\n'),
-      },
+      /*
       {
         Param: chalk.bold(chalk.white('content')),
         Value: infoSpec.content ?? CONTENT_PRODUCER_ID_DEFAULT,
       },
+      */
       {
         Param: chalk.bold(chalk.white('web hosting')),
         Value: infoSpec.webHosting
-          ? tabulate(
-              [
-                {
-                  Hosting:
-                    `${chalk.bold(chalk.white('type'))}:\n ↪ ${infoSpec.webHosting.type}` +
-                    `\n${chalk.bold(chalk.white('originPath'))}:\n ↪ ${infoSpec.webHosting.originPath}` +
-                    `\n${chalk.bold(chalk.white('defaultRootObject'))}:\n ↪ ${infoSpec.webHosting.defaultRootObject}`,
-                  ErrorResponses: infoSpec.webHosting.errorResponses.join('\n'),
-                  WAF: infoSpec.webHosting?.waf
-                    ? `${chalk.bold(chalk.white('WAF enabled'))}:\n ↪ ${infoSpec.webHosting.waf.enabled}\n${chalk.bold(
-                        chalk.white('WAF managed rules')
-                      )}: ${infoSpec.webHosting.waf.AWSManagedRules?.map((rule: string) => `\n ↪ ${rule}`)}\n`
-                    : undefined,
-                },
-              ],
-              ['Hosting', 'ErrorResponses', 'WAF'],
-              undefined,
-              false,
-              [25, 25, 28]
-            )
+          ? infoSpec.webHosting
+              .map((x) =>
+                tabulate(
+                  [
+                    // { Param: 'DomainName', Value: x.domainName },
+                    { Param: 'type', Value: x.type },
+                    { Param: 'originPath', Value: x.originPath },
+                    'content' in x ? { Param: 'content', Value: x.content } : { Param: 'content', Value: undefined },
+                    'redirect' in x
+                      ? { Param: 'redirect', Value: x.redirect }
+                      : { Param: 'redirect', Value: undefined },
+                    'auth' in x ? { Param: 'auth', Value: x.auth } : { Param: 'auth', Value: undefined },
+                    'waf' in x ? { Param: 'WAF', Value: x.waf } : { Param: 'WAF', Value: undefined },
+                  ],
+                  ['Param', 'Value'],
+                  ['', x.domainName ?? ''],
+                  true,
+                  [25, 54]
+                )
+              )
+              .join('\n')
           : undefined,
       },
+      /*[XXX]
       {
         Param: chalk.bold(chalk.white('pipeline')),
         Value: infoSpec.pipeline
@@ -65,6 +64,8 @@ export function renderInfoSpec(infoSpec: SomInfoSpec): string {
             ('repo' in infoSpec.pipeline ? `\n${chalk.bold(chalk.white('repo'))}:\n ↪ ${infoSpec.pipeline?.repo}` : '')
           : undefined,
       },
+      */
+      /*[XXX]
       {
         Param: chalk.bold(chalk.white('redirect')),
         Value: infoSpec.redirect
@@ -72,10 +73,7 @@ export function renderInfoSpec(infoSpec: SomInfoSpec): string {
             `\n${chalk.bold(chalk.white('action'))}:\n ${infoSpec.redirect.action}`
           : undefined,
       },
-      {
-        Param: chalk.bold(chalk.white('services')),
-        Value: infoSpec.services?.map(([a, b]) => `${chalk.bold(a)}\n ↪ ${b}`)?.join('\n'),
-      },
+      */
       {
         Param: chalk.bold(chalk.white('notifications')),
         Value: tabulate(
@@ -93,6 +91,7 @@ export function renderInfoSpec(infoSpec: SomInfoSpec): string {
         ),
       },
     ]
+      /*[XXX]
       .concat(
         infoSpec.certificateClones
           ? [
@@ -113,17 +112,18 @@ export function renderInfoSpec(infoSpec: SomInfoSpec): string {
             ]
           : []
       )
+      */
       .concat([
         {
-          Param: chalk.bold(chalk.white('protected')),
+          Param: chalk.bold(chalk.white('locked')),
           Value: `SSM: ${
-            infoSpec.protected.protectedSsm === infoSpec.protected.protectedManifest
-              ? chalk.green(infoSpec.protected.protectedSsm)
-              : chalk.red(infoSpec.protected.protectedSsm)
+            infoSpec.locked.lockedSsm === infoSpec.locked.lockedManifest
+              ? chalk.green(infoSpec.locked.lockedSsm)
+              : chalk.red(infoSpec.locked.lockedSsm)
           } / Manifest: ${
-            infoSpec.protected.protectedManifest === infoSpec.protected.protectedSsm
-              ? chalk.green(infoSpec.protected.protectedManifest)
-              : chalk.red(infoSpec.protected.protectedManifest)
+            infoSpec.locked.lockedManifest === infoSpec.locked.lockedSsm
+              ? chalk.green(infoSpec.locked.lockedManifest)
+              : chalk.red(infoSpec.locked.lockedManifest)
           }`,
         },
         infoSpec.pathToManifestFile,

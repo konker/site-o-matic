@@ -1,20 +1,9 @@
 import type Vorpal from 'vorpal';
 
 import type { SiteOMaticConfig } from '../../lib/config/schemas/site-o-matic-config.schema';
-import {
-  SOM_STATUS_BREADCRUMB,
-  UNKNOWN,
-  VERSION,
-  WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT,
-  WEB_HOSTING_DEFAULT_ERROR_RESPONSES,
-  WEB_HOSTING_DEFAULT_ORIGIN_PATH,
-  WEB_HOSTING_TYPE_CLOUDFRONT_S3,
-} from '../../lib/consts';
-import { hasManifest, refreshContext } from '../../lib/context';
-import type {
-  WafAwsManagedRule,
-  WebHostingErrorResponse,
-} from '../../lib/manifest/schemas/site-o-matic-manifest.schema';
+import { SOM_STATUS_BREADCRUMB, UNKNOWN, VERSION } from '../../lib/consts';
+import { hasManifest, refreshContextPass1, refreshContextPass2 } from '../../lib/context';
+import type { WafAwsManagedRule } from '../../lib/manifest/schemas/site-o-matic-manifest.schema';
 import { siteOMaticRules } from '../../lib/rules/site-o-matic.rules';
 import { getStatus, getStatusMessage } from '../../lib/status';
 import type { SomInfoSpec, SomInfoStatus } from '../../lib/types';
@@ -33,8 +22,9 @@ export function actionInfo(vorpal: Vorpal, config: SiteOMaticConfig, state: SomG
     try {
       state.spinner.start();
 
-      const context = await refreshContext(config, state.context);
-      const facts = await siteOMaticRules(context);
+      const contextPass1 = await refreshContextPass1(config, state.context);
+      const facts = await siteOMaticRules(contextPass1);
+      const context = await refreshContextPass2(contextPass1, facts);
       const status = getStatus(facts);
       const statusMessage = getStatusMessage(context, facts, status);
 
@@ -46,22 +36,27 @@ export function actionInfo(vorpal: Vorpal, config: SiteOMaticConfig, state: SomG
         webmasterEmail: context.webmasterEmail,
         registrar: context.registrar,
         subdomains: context.subdomains,
-        webHosting: {
-          type: context.manifest.webHosting?.type ?? WEB_HOSTING_TYPE_CLOUDFRONT_S3,
-          originPath: context.manifest.webHosting?.originPath ?? WEB_HOSTING_DEFAULT_ORIGIN_PATH,
-          defaultRootObject: context.manifest.webHosting?.defaultRootObject ?? WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT,
-          errorResponses: (context.manifest.webHosting?.errorResponses ?? WEB_HOSTING_DEFAULT_ERROR_RESPONSES).map(
-            (i: WebHostingErrorResponse) => `↪ ${i.httpStatus} -> ${i.responsePagePath}`
-          ),
-          waf: context.manifest.webHosting?.waf
-            ? {
-                enabled: context.manifest.webHosting.waf.enabled,
-                AWSManagedRules:
-                  context.manifest.webHosting.waf.AWSManagedRules?.map((i: WafAwsManagedRule) => i.name) ?? [],
-              }
-            : undefined,
-        },
-        content: context.manifest.content?.producerId,
+        webHosting: context.manifest.webHosting.map((x) =>
+          Object.assign(
+            { type: x.type },
+            'domainName' in x ? { domainName: x.domainName } : {},
+            'originPath' in x ? { originPath: x.originPath } : {},
+            'content' in x ? { content: x.content?.producerId } : { content: undefined },
+            'redirect' in x ? { redirect: x.redirect } : { redirect: undefined },
+            'auth' in x ? { auth: x.auth } : { auth: undefined },
+            'waf' in x
+              ? {
+                  waf: x?.waf
+                    ? {
+                        enabled: x.waf.enabled,
+                        AWSManagedRules: x.waf.AWSManagedRules?.map((i: WafAwsManagedRule) => i.name) ?? [],
+                      }
+                    : undefined,
+                }
+              : { waf: undefined }
+          )
+        ),
+        /*
         pipeline: context.manifest.pipeline,
         redirect: context.manifest.redirect
           ? {
@@ -69,18 +64,20 @@ export function actionInfo(vorpal: Vorpal, config: SiteOMaticConfig, state: SomG
               action: `${context.manifest.redirect.source} ⟶ ${context.manifest.redirect.target}`,
             }
           : undefined,
-        services: context.manifest.services?.map((i) => [i.domainName, i.url]) ?? [],
+        */
+        /*
         certificateClones: context.manifest.certificate?.clones?.map((i) => `${i.name} / ${i.region}`),
         crossAccountAccessNames: context.manifest.crossAccountAccess?.map((i) => i.name),
+        */
 
         notifications: {
           disabled: context.manifest.notifications?.disabled ?? false,
           noSubscription: context.manifest.notifications?.noSubscription ?? false,
           subscriptionEmail: context.manifest.notifications?.subscriptionEmail ?? context.webmasterEmail,
         },
-        protected: {
-          protectedManifest: facts.protectedManifest,
-          protectedSsm: facts.protectedSsm,
+        locked: {
+          lockedManifest: facts.lockedManifest,
+          lockedSsm: facts.lockedSsm,
         },
         pathToManifestFile: { Param: 'pathToManifestFile', Value: context.pathToManifestFile ?? UNKNOWN },
         somId: { Param: 'somId', Value: context.somId ?? UNKNOWN },

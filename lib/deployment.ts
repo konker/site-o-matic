@@ -1,14 +1,9 @@
 import chalk from 'chalk';
 
-import * as codestar from '../lib/aws/codestar';
 import * as iam from './aws/iam';
-import * as secretsmanager from './aws/secretsmanager';
 import type { SiteOMaticConfig } from './config/schemas/site-o-matic-config.schema';
 import {
   DEFAULT_AWS_REGION,
-  SITE_PIPELINE_TYPE_CODESTAR_CUSTOM,
-  SITE_PIPELINE_TYPE_CODESTAR_S3,
-  SITE_PIPELINE_TYPES,
   SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG,
   SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS,
   VERSION,
@@ -16,6 +11,7 @@ import {
 import { hasManifest } from './context';
 import { getRegistrarConnector } from './registrar';
 import { siteOMaticRules } from './rules/site-o-matic.rules';
+import * as secrets from './secrets';
 import { getStatus } from './status';
 import type { SomContext } from './types';
 
@@ -62,12 +58,7 @@ export async function preDeploymentCheck(
     checkItems.push(checkPassed('User'));
   }
 
-  if (context.manifest?.pipeline && !SITE_PIPELINE_TYPES.includes(context.manifest.pipeline.type)) {
-    checkItems.push(checkFailed('Pipeline Type', `Must be one of: ${SITE_PIPELINE_TYPES.join(', ')}`));
-  } else {
-    checkItems.push(checkPassed('Pipeline Type'));
-  }
-
+  /*[XXX]
   if (context.manifest) {
     // Check codestar pipeline
     if (
@@ -86,11 +77,12 @@ export async function preDeploymentCheck(
       }
     }
   }
+  */
 
   if (context.registrar) {
     const registrarConnector = getRegistrarConnector(context.registrar);
-    const somSecrets = await secretsmanager.getSomSecrets(config, DEFAULT_AWS_REGION, registrarConnector.SECRETS);
-    if (!registrarConnector.SECRETS.every((secretName) => somSecrets[secretName])) {
+    const somSecrets = await secrets.getAllSomSecrets(config, DEFAULT_AWS_REGION, context.somId);
+    if (!registrarConnector.SECRETS.every((secretName) => somSecrets.lookup[secretName])) {
       checkItems.push(
         checkFailed(
           'Registrar secrets',
@@ -102,16 +94,16 @@ export async function preDeploymentCheck(
     }
   }
 
-  if (context.manifest?.webHosting?.waf) {
-    if (
-      context.manifest?.webHosting?.waf?.enabled &&
-      (context.manifest?.webHosting?.waf?.AWSManagedRules?.length ?? 0) === 0
-    ) {
-      checkItems.push(checkFailed('WAF', 'WAF is enabled, but no AWS Managed Rules are configured'));
-    } else {
-      checkItems.push(checkPassed('WAF'));
-    }
-  }
+  // if (context.manifest?.webHosting?.waf) {
+  //   if (
+  //     context.manifest?.webHosting?.waf?.enabled &&
+  //     (context.manifest?.webHosting?.waf?.AWSManagedRules?.length ?? 0) === 0
+  //   ) {
+  //     checkItems.push(checkFailed('WAF', 'WAF is enabled, but no AWS Managed Rules are configured'));
+  //   } else {
+  //     checkItems.push(checkPassed('WAF'));
+  //   }
+  // }
 
   if (status === SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG) {
     if (context.registrar) {
