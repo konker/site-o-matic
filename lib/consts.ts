@@ -22,9 +22,15 @@ export const MAX_SOM_ID_LEN = 48 as const;
 
 export const GLOBAL_SECRETS_SCOPE = 'global';
 
+export const CF_OUTPUT_NAME_DOMAIN_USER_USER_NAME = 'DomainUserName' as const;
+export const CF_OUTPUT_NAME_DOMAIN_PUBLISHER_USER_NAME = 'DomainPublisherUserName' as const;
+export const CF_OUTPUT_NAME_DOMAIN_PUBLISHER_ACCESS_KEY_ID = 'DomainPublisherAccessKeyId' as const;
+export const CF_OUTPUT_NAME_DOMAIN_PUBLISHER_ACCESS_KEY_SECRET = 'DomainPublisherAccessKeySecret' as const;
+
 export const SSM_PARAM_NAME_SOM_VERSION = 'som-version' as const;
 export const SSM_PARAM_NAME_ROOT_DOMAIN_NAME = 'root-domain-name' as const;
 export const SSM_PARAM_NAME_DOMAIN_USER_NAME = 'domain-user-name' as const;
+export const SSM_PARAM_NAME_DOMAIN_PUBLISHER_USER_NAME = 'domain-publisher-user-name' as const;
 export const SSM_PARAM_NAME_DOMAIN_ROLE_ARN = 'domain-role-arn' as const;
 export const SSM_PARAM_NAME_WEBMASTER_EMAIL = 'webmaster-email' as const;
 export const SSM_PARAM_NAME_PROTECTED_STATUS = 'protected-status' as const;
@@ -41,7 +47,6 @@ export const SSM_PARAM_NAME_CODE_PIPELINE_ARN = 'code-pipeline-arn' as const;
 export const SSM_PARAM_NAME_CODE_PIPELINE_NAME = 'code-pipeline-name' as const;
 export const SSM_PARAM_NAME_CODE_PIPELINE_CONSOLE_URL = 'code-pipeline-console-url' as const;
 export const SSM_PARAM_NAME_CODECOMMIT_CLONE_URL_SSH = 'code-commit-clone-url-ssh' as const;
-export const SSM_PARAM_NAME_DOMAIN_PUBLISHER_USER_NAME = 'domain-publisher-user-name' as const;
 export const SSM_PARAM_NAME_DOMAIN_PUBLISHER_SECRET_NAME_ACCESS_KEY_ID =
   'domain-publisher-secret-name-access-key-id' as const;
 export const SSM_PARAM_NAME_DOMAIN_PUBLISHER_SECRET_NAME_ACCESS_KEY_SECRET =
@@ -136,3 +141,6 @@ export const WEB_HOSTING_DEFAULT = (domainName: string) =>
     type: WEB_HOSTING_TYPE_CLOUDFRONT_S3,
     domainName: domainName,
   }) as const;
+
+export const BOOTSTRAP_STACK_ID = (somId: string) => `boostrap-${somId}`;
+export const SITE_RESOURCES_STACK_ID = (somId: string) => `siteResources-${somId}`;

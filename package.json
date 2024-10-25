@@ -41,6 +41,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-acm": "^3.623.0",
+    "@aws-sdk/client-cloudformation": "^3.679.0",
     "@aws-sdk/client-codecommit": "^3.623.0",
     "@aws-sdk/client-codestar-connections": "^3.623.0",
     "@aws-sdk/client-iam": "^3.623.0",

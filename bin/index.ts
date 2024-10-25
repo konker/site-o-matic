@@ -19,6 +19,7 @@ import { actionDeployCheck } from './actions/deployCheck';
 import { actionDestroy } from './actions/destroy';
 import { actionDiff } from './actions/diff';
 import { actionInfo } from './actions/info';
+import { actionList } from './actions/list';
 import { actionListSecrets } from './actions/listSecrets';
 import { actionListSites } from './actions/listSites';
 import { actionListUsers } from './actions/listUsers';
@@ -120,18 +121,13 @@ async function main() {
     .action(actionDeleteCodeStarConnection(vorpal, config, globalState));
   */
 
+  vorpal.command('list', 'List the CDK stacks').action(actionList(vorpal, config, globalState));
+  vorpal.command('synth', 'Synthesize the CDK stack').action(actionSynthesize(vorpal, config, globalState));
   vorpal
-    .command('synth [username]', 'Synthesize the CDK stack under the given user')
-    .action(actionSynthesize(vorpal, config, globalState));
-  vorpal
-    .command('diff [username]', 'Diff the CDK stack with the currently deployed resources, under the given user')
+    .command('diff', 'Diff the CDK stack with the currently deployed resources,')
     .action(actionDiff(vorpal, config, globalState));
-  vorpal
-    .command('check [username]', 'Perform deployment checks')
-    .action(actionDeployCheck(vorpal, config, globalState));
-  vorpal
-    .command('deploy [username]', 'Deploy the site under the given user')
-    .action(actionDeploy(vorpal, config, globalState));
+  vorpal.command('check', 'Perform deployment checks').action(actionDeployCheck(vorpal, config, globalState));
+  vorpal.command('deploy', 'Deploy the site').action(actionDeploy(vorpal, config, globalState));
   vorpal
     .command('set nameservers', 'Set the nameservers automatically with the registrar, if configured')
     .action(actionSetNameServersWithRegistrar(vorpal, config, globalState));

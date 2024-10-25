@@ -6,7 +6,7 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { toSsmParamName } from '../../../../lib/aws/ssm';
 import { SSM_PARAM_NAME_DOMAIN_BUCKET_NAME } from '../../../../lib/consts';
 import { _removalPolicyFromBoolean, _somMeta } from '../../../../lib/utils';
-import type { SiteResourcesNestedStack } from './SiteStack/SiteResourcesNestedStack';
+import type { SiteResourcesStack } from './SiteStack/SiteResourcesStack';
 
 // ----------------------------------------------------------------------
 export type DomainBucketResources = {
@@ -16,9 +16,12 @@ export type DomainBucketResources = {
 };
 
 // ----------------------------------------------------------------------
-export async function build(siteResourcesStack: SiteResourcesNestedStack): Promise<DomainBucketResources> {
+export async function build(siteResourcesStack: SiteResourcesStack): Promise<DomainBucketResources> {
   if (!siteResourcesStack.domainUserResources?.domainUser) {
     throw new Error('[site-o-matic] Could not build domain bucket resources when domainUser is missing');
+  }
+  if (!siteResourcesStack.domainPublisherResources?.domainPublisher) {
+    throw new Error('[site-o-matic] Could not build domain bucket resources when domainPublisher is missing');
   }
 
   // ----------------------------------------------------------------------
@@ -52,6 +55,7 @@ export async function build(siteResourcesStack: SiteResourcesNestedStack): Promi
     siteResourcesStack.siteProps.locked
   );
 
+  // Add to domain policy permissions for domainUser
   domainBucket.addToResourcePolicy(
     new iam.PolicyStatement({
       actions: ['s3:DeleteObject', 's3:GetObject', 's3:GetObjectVersion', 's3:PutObject', 's3:PutObjectAcl'],
@@ -64,6 +68,22 @@ export async function build(siteResourcesStack: SiteResourcesNestedStack): Promi
       actions: ['s3:ListBucket'],
       resources: [domainBucket.bucketArn],
       principals: [siteResourcesStack.domainUserResources.domainUser],
+    })
+  );
+
+  // Add to domain policy permissions for domainPublisher to write to domain bucket
+  domainBucket.addToResourcePolicy(
+    new iam.PolicyStatement({
+      actions: ['s3:DeleteObject', 's3:GetObject', 's3:GetObjectVersion', 's3:PutObject', 's3:PutObjectAcl'],
+      resources: [`${domainBucket.bucketArn}/*`],
+      principals: [siteResourcesStack.domainPublisherResources.domainPublisher],
+    })
+  );
+  domainBucket.addToResourcePolicy(
+    new iam.PolicyStatement({
+      actions: ['s3:ListBucket'],
+      resources: [domainBucket.bucketArn],
+      principals: [siteResourcesStack.domainPublisherResources.domainPublisher],
     })
   );
 

@@ -1,17 +1,24 @@
+import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import type * as ssm from 'aws-cdk-lib/aws-ssm';
 
+import { CF_OUTPUT_NAME_DOMAIN_USER_USER_NAME } from '../../../../lib/consts';
 import { _somMeta } from '../../../../lib/utils';
-import type { SiteResourcesNestedStack } from './SiteStack/SiteResourcesNestedStack';
+import type { SiteResourcesStack } from './SiteStack/SiteResourcesStack';
 
 // ----------------------------------------------------------------------
 export type DomainUserResources = {
+  readonly domainUserName: string;
   readonly domainUser: iam.IUser;
   readonly domainPolicy: iam.Policy;
+  readonly ssmParams: Array<ssm.StringParameter>;
 };
 
 // ----------------------------------------------------------------------
-export async function build(siteResourcesStack: SiteResourcesNestedStack): Promise<DomainUserResources> {
-  const domainUser = iam.User.fromUserName(siteResourcesStack, 'DomainUser', siteResourcesStack.siteProps.username);
+export async function build(siteResourcesStack: SiteResourcesStack): Promise<DomainUserResources> {
+  const importedDomainUserName = cdk.Fn.importValue(CF_OUTPUT_NAME_DOMAIN_USER_USER_NAME);
+
+  const domainUser = iam.User.fromUserName(siteResourcesStack, 'DomainUser', importedDomainUserName);
 
   const domainPolicy = new iam.Policy(siteResourcesStack, 'DomainPolicy', {
     statements: [],
@@ -24,7 +31,9 @@ export async function build(siteResourcesStack: SiteResourcesNestedStack): Promi
   );
 
   return {
+    domainUserName: importedDomainUserName,
     domainUser,
     domainPolicy,
+    ssmParams: [],
   };
 }

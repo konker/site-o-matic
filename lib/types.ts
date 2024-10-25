@@ -2,7 +2,7 @@ import type * as cdk from 'aws-cdk-lib';
 import type * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import type * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
 
-import type { SiteResourcesNestedStack } from '../system/aws/defs/siteomatic/SiteStack/SiteResourcesNestedStack';
+import type { SiteResourcesStack } from '../system/aws/defs/siteomatic/SiteStack/SiteResourcesStack';
 import type { SiteOMaticConfig } from './config/schemas/site-o-matic-config.schema';
 import type {
   SITE_PIPELINE_TYPE_CODESTAR_CUSTOM,
@@ -60,7 +60,7 @@ export type ServiceResources = RestApiServiceResources;
 
 // ----------------------------------------------------------------------
 export type HostedZoneBuilderProps = {
-  readonly siteResourcesStack: SiteResourcesNestedStack;
+  readonly siteResourcesStack: SiteResourcesStack;
   readonly rootDomainName: string;
 };
 
@@ -92,7 +92,7 @@ export type SiteStackProps = cdk.StackProps & {
   readonly facts: SomFacts;
   readonly locked: boolean;
   readonly description: string;
-  readonly username: string;
+  // readonly username: string;
   readonly contextParams: Record<string, string>;
   readonly env: Record<string, string>;
 };
@@ -124,7 +124,7 @@ export type PipelineType = typeof SITE_PIPELINE_TYPE_CODESTAR_S3 | typeof SITE_P
 
 export type PipelineBuilderProps = {
   readonly pipelineType: PipelineType;
-  readonly siteResourcesStack: SiteResourcesNestedStack;
+  readonly siteResourcesStack: SiteResourcesStack;
 };
 
 // ----------------------------------------------------------------------

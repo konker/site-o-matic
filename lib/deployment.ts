@@ -1,6 +1,5 @@
 import chalk from 'chalk';
 
-import * as iam from './aws/iam';
 import type { SiteOMaticConfig } from './config/schemas/site-o-matic-config.schema';
 import {
   DEFAULT_AWS_REGION,
@@ -26,8 +25,7 @@ export const checkFailed = (name: string, message?: string): DeploymentCheckItem
 
 export async function preDeploymentCheck(
   config: SiteOMaticConfig,
-  context: SomContext,
-  somUser: string
+  context: SomContext
 ): Promise<Array<DeploymentCheckItem>> {
   const facts = await siteOMaticRules(context);
   const status = getStatus(facts);
@@ -51,12 +49,14 @@ export async function preDeploymentCheck(
     checkItems.push(checkPassed('Site-O-Matic version'));
   }
 
+  /*[XXX]
   const somUsers = await iam.listSomUsers(config, DEFAULT_AWS_REGION);
   if (!somUsers.some((i) => i.UserName === somUser)) {
     checkItems.push(checkFailed('User', `User ${somUser} does not exist`));
   } else {
     checkItems.push(checkPassed('User'));
   }
+  */
 
   /*[XXX]
   if (context.manifest) {

@@ -1,7 +1,7 @@
 import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 
 import type { WebHostingClauseWithResources } from '../../../../../lib/manifest/schemas/site-o-matic-manifest.schema';
-import type { SiteResourcesNestedStack } from '../SiteStack/SiteResourcesNestedStack';
+import type { SiteResourcesStack } from '../SiteStack/SiteResourcesStack';
 
 // ----------------------------------------------------------------------
 export type WafResources =
@@ -12,7 +12,7 @@ export type WafResources =
 
 // ----------------------------------------------------------------------
 export async function build(
-  siteResourcesStack: SiteResourcesNestedStack,
+  siteResourcesStack: SiteResourcesStack,
   webHostingSpec: WebHostingClauseWithResources
 ): Promise<WafResources> {
   if (!siteResourcesStack.domainUserResources?.domainUser) {

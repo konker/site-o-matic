@@ -5,7 +5,11 @@ import type Vorpal from 'vorpal';
 import * as cdkExec from '../../lib/aws/cdkExec';
 import { postToSnsTopic } from '../../lib/aws/sns';
 import type { SiteOMaticConfig } from '../../lib/config/schemas/site-o-matic-config.schema';
-import { SSM_PARAM_NAME_DOMAIN_USER_NAME, SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN } from '../../lib/consts';
+import {
+  BOOTSTRAP_STACK_ID,
+  SITE_RESOURCES_STACK_ID,
+  SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN,
+} from '../../lib/consts';
 import { hasManifest, refreshContextPass1, refreshContextPass2 } from '../../lib/context';
 import { preDeploymentCheck } from '../../lib/deployment';
 import { siteOMaticRules } from '../../lib/rules/site-o-matic.rules';
@@ -17,17 +21,19 @@ export function actionDeploy(vorpal: Vorpal, config: SiteOMaticConfig, state: So
   return async (args: Vorpal.Args | string): Promise<void> => {
     if (typeof args === 'string') throw new Error('Error: string args to action');
 
+    /*[XXX]
     const username = args.username ?? getContextParam(state.context, SSM_PARAM_NAME_DOMAIN_USER_NAME);
     if (!username) {
       const errorMessage = `ERROR: no username was resolved`;
       verror(vorpal, state, errorMessage);
       return;
     }
+    */
 
     if (!state.plumbing) {
       vorpal.log('Pre-flight checks...');
     }
-    const checkItems = await preDeploymentCheck(config, state.context, username);
+    const checkItems = await preDeploymentCheck(config, state.context);
     const checksPassed = checkItems.every((checkItem) => checkItem.passed);
 
     if (!state.plumbing) {
@@ -61,9 +67,7 @@ export function actionDeploy(vorpal: Vorpal, config: SiteOMaticConfig, state: So
           message: chalk.green(
             `${
               facts.shouldDeployS3Content ? chalk.cyan('NOTE: content will be uploaded to the S3 bucket.\n') : ''
-            }Are you sure you want to deploy site: ${chalk.bold(state.context.somId)} under user ${chalk.bold(
-              username
-            )}? [y/N] `
+            }Are you sure you want to deploy site: ${chalk.bold(state.context.somId)}? [y/N] `
           ),
         });
     if (response1.confirm !== 'y') {
@@ -101,32 +105,44 @@ export function actionDeploy(vorpal: Vorpal, config: SiteOMaticConfig, state: So
 
     // Engage
     try {
-      const [code, log] = await cdkExec.cdkDeploy(
+      const [codeBoostrap, logBootstrap] = await cdkExec.cdkDeploy(
         vorpal,
         state.context.somId,
         {
           pathToManifestFile: state.context.pathToManifestFile,
-          iamUsername: username,
-          deploySubdomainCerts: 'true',
         },
-        state.plumbing
+        state.plumbing,
+        BOOTSTRAP_STACK_ID(state.context.somId)
       );
+      if (state.plumbing) {
+        vorpal.log(JSON.stringify({ context: state.context, codeBoostrap, logBootstrap }));
+      }
+
+      const [codeSiteResources, logSiteResources] = await cdkExec.cdkDeploy(
+        vorpal,
+        state.context.somId,
+        {
+          pathToManifestFile: state.context.pathToManifestFile,
+        },
+        state.plumbing,
+        SITE_RESOURCES_STACK_ID(state.context.somId)
+      );
+      if (state.plumbing) {
+        vorpal.log(JSON.stringify({ context: state.context, codeSiteResources, logSiteResources }));
+      }
 
       const contextPass1 = await refreshContextPass1(config, state.context);
       const facts = await siteOMaticRules(contextPass1);
       const context = await refreshContextPass2(contextPass1, facts);
       state.updateContext(context);
 
-      if (state.plumbing) {
-        vorpal.log(JSON.stringify({ context: state.context, code, log }));
-      }
       if (facts.hasNotificationsSnsTopic && facts.isSnsNotificationsEnabled) {
         const resp = await postToSnsTopic(
           getContextParam(state.context, SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN) as string,
           {
             somId: state.context.somId,
             message: 'Site-O-Matic deployment completed',
-            code,
+            codeSiteResources,
           }
         );
         if (resp) {

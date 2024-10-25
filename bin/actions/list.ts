@@ -6,7 +6,7 @@ import { hasManifest } from '../../lib/context';
 import { verror } from '../../lib/ui/logging';
 import type { SomGlobalState } from '../SomGlobalState';
 
-export function actionSynthesize(vorpal: Vorpal, _: SiteOMaticConfig, state: SomGlobalState) {
+export function actionList(vorpal: Vorpal, _: SiteOMaticConfig, state: SomGlobalState) {
   return async (args: Vorpal.Args | string): Promise<void> => {
     if (typeof args === 'string') throw new Error('Error: string args to action');
 
@@ -25,7 +25,7 @@ export function actionSynthesize(vorpal: Vorpal, _: SiteOMaticConfig, state: Som
       return;
     }
 
-    const [code, log] = await cdkExec.cdkSynth(
+    const [code, log] = await cdkExec.cdkList(
       vorpal,
       state.context.somId,
       {

@@ -1,7 +1,7 @@
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 
 import { _somMeta } from '../../../../../lib/utils';
-import type { SiteResourcesNestedStack } from '../SiteStack/SiteResourcesNestedStack';
+import type { SiteResourcesStack } from '../SiteStack/SiteResourcesStack';
 
 // ----------------------------------------------------------------------
 export type CloudfrontFunctionsResources = {
@@ -10,7 +10,7 @@ export type CloudfrontFunctionsResources = {
 
 // ----------------------------------------------------------------------
 export async function build(
-  siteResourcesStack: SiteResourcesNestedStack,
+  siteResourcesStack: SiteResourcesStack,
   cfFunctionViewerRequestTmpFilePath: [string, string | undefined],
   cfFunctionViewerResponseTmpFilePath: [string, string | undefined]
 ): Promise<CloudfrontFunctionsResources> {

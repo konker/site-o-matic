@@ -5,12 +5,13 @@ import * as cdk from 'aws-cdk-lib';
 import chalk from 'chalk';
 
 import { loadConfig } from '../../../lib/config';
-import { SOM_CONFIG_PATH_TO_DEFAULT_FILE } from '../../../lib/consts';
+import { BOOTSTRAP_STACK_ID, SITE_RESOURCES_STACK_ID, SOM_CONFIG_PATH_TO_DEFAULT_FILE } from '../../../lib/consts';
 import { loadContext } from '../../../lib/context';
 import { loadManifest } from '../../../lib/manifest';
 import { siteOMaticRules } from '../../../lib/rules/site-o-matic.rules';
 import { _somTag } from '../../../lib/utils';
-import { SiteResourcesNestedStack } from '../defs/siteomatic/SiteStack/SiteResourcesNestedStack';
+import { SiteBootstrapStack } from '../defs/siteomatic/SiteStack/SiteBootstrapStack';
+import { SiteResourcesStack } from '../defs/siteomatic/SiteStack/SiteResourcesStack';
 
 async function main(): Promise<void> {
   const app = new cdk.App();
@@ -28,7 +29,6 @@ async function main(): Promise<void> {
   );
 
   // ----------------------------------------------------------------------
-  const username = contextParams.iamUsername as string;
   const pathToManifestFile = contextParams.pathToManifestFile as string;
   const manifest = await loadManifest(pathToManifestFile);
   if (!manifest) {
@@ -38,23 +38,26 @@ async function main(): Promise<void> {
   const context = await loadContext(config, pathToManifestFile, manifest);
   const facts = await siteOMaticRules(context);
 
-  /*FIXME
-   */
-
   // ----------------------------------------------------------------------
-  // Main site stack
-  const siteStack = new SiteResourcesNestedStack(app, {
+  // Generate the CDK Stacks
+  const siteProps = {
     config,
     context,
     facts,
     locked: context.manifest.locked ?? false,
-    username,
     contextParams,
     description: `Site-o-Matic Stack for ${manifest.domainName}`,
     env: {},
-  });
-  await siteStack.build();
-  _somTag(config, siteStack, context.somId);
+  };
+
+  const bootstrapStack = new SiteBootstrapStack(app, BOOTSTRAP_STACK_ID(context.somId), siteProps);
+  await bootstrapStack.build();
+  _somTag(config, bootstrapStack, context.somId);
+
+  const siteResourcesStack = new SiteResourcesStack(app, SITE_RESOURCES_STACK_ID(context.somId), siteProps);
+  await siteResourcesStack.build();
+  siteResourcesStack.addDependency(bootstrapStack);
+  _somTag(config, siteResourcesStack, context.somId);
 }
 
 main().catch((err) => {

@@ -17,7 +17,7 @@ import type {
   WebHostingDefaultsClauseCloudfrontS3,
 } from '../../../../../lib/manifest/schemas/site-o-matic-manifest.schema';
 import { _somMeta } from '../../../../../lib/utils';
-import type { SiteResourcesNestedStack } from '../SiteStack/SiteResourcesNestedStack';
+import type { SiteResourcesStack } from '../SiteStack/SiteResourcesStack';
 import type { CertificateResources } from './CertificateBuilder';
 import type { CloudfrontFunctionsResources } from './CloudfrontFunctionsBuilder';
 import * as CloudfrontFunctionsBuilder from './CloudfrontFunctionsBuilder';
@@ -37,7 +37,7 @@ export type S3CloudfrontDistributionResources = {
 
 // ----------------------------------------------------------------------
 export async function build(
-  siteResourcesStack: SiteResourcesNestedStack,
+  siteResourcesStack: SiteResourcesStack,
   webHostingSpec: WebHostingClauseCloudfrontS3,
   webHostingDefaults: WebHostingDefaultsClauseCloudfrontS3,
   certificateResources: CertificateResources,

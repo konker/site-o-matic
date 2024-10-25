@@ -7,7 +7,7 @@ import {
 } from '../../../../../lib/consts';
 import { getFunctionProducer } from '../../../../../lib/edge';
 import type { WebHostingClauseWithResources } from '../../../../../lib/manifest/schemas/site-o-matic-manifest.schema';
-import type { SiteResourcesNestedStack } from '../SiteStack/SiteResourcesNestedStack';
+import type { SiteResourcesStack } from '../SiteStack/SiteResourcesStack';
 
 export type CloudfrontFunctionsLoaderResources = {
   readonly cfFunctionViewerRequestTmpFilePath: string | undefined;
@@ -16,7 +16,7 @@ export type CloudfrontFunctionsLoaderResources = {
 
 // ----------------------------------------------------------------------
 export async function load(
-  siteResourcesStack: SiteResourcesNestedStack,
+  siteResourcesStack: SiteResourcesStack,
   webHostingSpec: WebHostingClauseWithResources
 ): Promise<CloudfrontFunctionsLoaderResources> {
   if (!siteResourcesStack.domainUserResources?.domainUser) {

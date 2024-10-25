@@ -2,7 +2,6 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 
 import { toSsmParamName } from '../../../../lib/aws/ssm';
 import {
-  SSM_PARAM_NAME_DOMAIN_USER_NAME,
   SSM_PARAM_NAME_PROTECTED_STATUS,
   SSM_PARAM_NAME_ROOT_DOMAIN_NAME,
   SSM_PARAM_NAME_SOM_VERSION,
@@ -11,13 +10,20 @@ import {
   VERSION,
 } from '../../../../lib/consts';
 import { _somMeta, contextTemplateString } from '../../../../lib/utils';
-import type { SiteResourcesNestedStack } from './SiteStack/SiteResourcesNestedStack';
+import type { SiteResourcesStack } from './SiteStack/SiteResourcesStack';
 
 // ----------------------------------------------------------------------
 export type DomainParametersResources = Array<ssm.StringParameter>;
 
 // ----------------------------------------------------------------------
-export async function build(siteResourcesStack: SiteResourcesNestedStack): Promise<DomainParametersResources> {
+export async function build(siteResourcesStack: SiteResourcesStack): Promise<DomainParametersResources> {
+  if (!siteResourcesStack.domainUserResources?.domainUserName) {
+    throw new Error('[site-o-matic] Could not build parameter resources when domainUserName is missing');
+  }
+  if (!siteResourcesStack.domainPublisherResources?.domainPublisherUserName) {
+    throw new Error('[site-o-matic] Could not build parameter resources when domainPublisherUserName is missing');
+  }
+
   const res1 = new ssm.StringParameter(siteResourcesStack, 'SsmSiteEntryRootDomainName', {
     parameterName: `/som/site/root-domain-name/${siteResourcesStack.siteProps.context.rootDomainName}`,
     stringValue: siteResourcesStack.somId,
@@ -58,19 +64,12 @@ export async function build(siteResourcesStack: SiteResourcesNestedStack): Promi
   });
   _somMeta(siteResourcesStack.siteProps.config, res5, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
 
-  const res6 = new ssm.StringParameter(siteResourcesStack, 'SsmDomainUserName', {
-    parameterName: toSsmParamName(siteResourcesStack.somId, SSM_PARAM_NAME_DOMAIN_USER_NAME),
-    stringValue: siteResourcesStack.siteProps.username,
-    tier: ssm.ParameterTier.STANDARD,
-  });
-  _somMeta(siteResourcesStack.siteProps.config, res6, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
-
-  const res7 = new ssm.StringParameter(siteResourcesStack, 'SsmSomVersion', {
+  const res6 = new ssm.StringParameter(siteResourcesStack, 'SsmSomVersion', {
     parameterName: toSsmParamName(siteResourcesStack.somId, SSM_PARAM_NAME_SOM_VERSION),
     stringValue: VERSION,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(siteResourcesStack.siteProps.config, res7, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
+  _somMeta(siteResourcesStack.siteProps.config, res6, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
 
-  return [res1, res2, res3, res4, res5, res6, res7];
+  return [res1, res2, res3, res4, res5, res6];
 }

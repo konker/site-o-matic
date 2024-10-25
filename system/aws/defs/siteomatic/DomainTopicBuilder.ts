@@ -7,7 +7,7 @@ import {
   SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_NAME,
 } from '../../../../lib/consts';
 import { _somMeta } from '../../../../lib/utils';
-import type { SiteResourcesNestedStack } from './SiteStack/SiteResourcesNestedStack';
+import type { SiteResourcesStack } from './SiteStack/SiteResourcesStack';
 
 // ----------------------------------------------------------------------
 export type DomainTopicResources = {
@@ -16,10 +16,12 @@ export type DomainTopicResources = {
 };
 
 // ----------------------------------------------------------------------
-export async function build(siteResourcesStack: SiteResourcesNestedStack): Promise<DomainTopicResources> {
+export async function build(siteResourcesStack: SiteResourcesStack): Promise<DomainTopicResources> {
   if (!siteResourcesStack.domainUserResources?.domainUser) {
-    // TODO: check wording of this error message (domain bucket)
     throw new Error('[site-o-matic] Could not build domain topic resources when domainUser is missing');
+  }
+  if (!siteResourcesStack.domainPublisherResources?.domainPublisher) {
+    throw new Error('[site-o-matic] Could not build domain topic resources when domainPublisher is missing');
   }
 
   // ----------------------------------------------------------------------
@@ -28,13 +30,16 @@ export async function build(siteResourcesStack: SiteResourcesNestedStack): Promi
     displayName: `NotificationsSnsTopic-${siteResourcesStack.somId}`,
     topicName: `NotificationsSnsTopic-${siteResourcesStack.somId}`,
   });
-  notificationsSnsTopic.grantPublish(siteResourcesStack.domainUserResources.domainUser);
   _somMeta(
     siteResourcesStack.siteProps.config,
     notificationsSnsTopic,
     siteResourcesStack.somId,
     siteResourcesStack.siteProps.locked
   );
+
+  // Permissions for domainUser and domainPublisher
+  notificationsSnsTopic.grantPublish(siteResourcesStack.domainUserResources.domainUser);
+  notificationsSnsTopic.grantPublish(siteResourcesStack.domainPublisherResources.domainPublisher);
 
   // ----------------------------------------------------------------------
   // SSM Params

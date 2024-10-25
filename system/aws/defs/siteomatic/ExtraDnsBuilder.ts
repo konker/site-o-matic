@@ -2,13 +2,13 @@ import * as route53 from 'aws-cdk-lib/aws-route53';
 
 import type { DnsConfigMx } from '../../../../lib/manifest/schemas/site-o-matic-manifest.schema';
 import { _id, _somMeta } from '../../../../lib/utils';
-import type { SiteResourcesNestedStack } from './SiteStack/SiteResourcesNestedStack';
+import type { SiteResourcesStack } from './SiteStack/SiteResourcesStack';
 
 // ----------------------------------------------------------------------
 export type ExtraDnsResources = Array<route53.RecordSet>;
 
 // ----------------------------------------------------------------------
-export async function build(siteResourcesStack: SiteResourcesNestedStack): Promise<ExtraDnsResources> {
+export async function build(siteResourcesStack: SiteResourcesStack): Promise<ExtraDnsResources> {
   const hostedZone = siteResourcesStack.hostedZoneResources?.hostedZone;
   if (!hostedZone) {
     throw new Error('[site-o-matic] Could not build extra DNS resources when hostedZone is missing');

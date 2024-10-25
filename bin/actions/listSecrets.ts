@@ -16,7 +16,10 @@ export function actionListSecrets(vorpal: Vorpal, config: SiteOMaticConfig, stat
       vorpal,
       state,
       data.map((x) => ({ Name: x })),
-      ['Name']
+      ['Name'],
+      ['Name'],
+      false,
+      [60]
     );
   };
 }

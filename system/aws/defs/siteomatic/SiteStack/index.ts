@@ -23,6 +23,15 @@ export class SiteStack extends cdk.Stack {
   }
 
   async build() {
-    console.log(`Created SiteStack [${this.somId}]`);
+    /*
+    const bootstrapNestedStack = new SiteBootstrapStack(this, this.siteProps);
+    await bootstrapNestedStack.build();
+
+    const siteResourcesNestedStack = new SiteResourcesStack(this, this.siteProps);
+    await siteResourcesNestedStack.build();
+    siteResourcesNestedStack.addDependency(bootstrapNestedStack);
+    */
+
+    console.log(`Generated SiteStack [${this.somId}]`);
   }
 }

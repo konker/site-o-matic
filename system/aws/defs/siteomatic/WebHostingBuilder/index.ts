@@ -3,7 +3,7 @@ import type {
   WebHostingClauseWithResources,
   WebHostingType,
 } from '../../../../../lib/manifest/schemas/site-o-matic-manifest.schema';
-import type { SiteResourcesNestedStack } from '../SiteStack/SiteResourcesNestedStack';
+import type { SiteResourcesStack } from '../SiteStack/SiteResourcesStack';
 import * as CertificateBuilder from './CertificateBuilder';
 import * as HttpsCloudfrontDistributionBuilder from './HttpsCloudfrontDistributionBuilder';
 import * as S3CloudfrontDistributionBuilder from './S3CloudfrontDistributionBuilder';
@@ -24,7 +24,7 @@ export type WebHostingResources = {
 
 // ----------------------------------------------------------------------
 export async function build(
-  siteResourcesStack: SiteResourcesNestedStack,
+  siteResourcesStack: SiteResourcesStack,
   webHostingSpec: WebHostingClauseWithResources
 ): Promise<WebHostingResources> {
   // TODO: check for actual dependencies, if any

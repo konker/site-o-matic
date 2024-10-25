@@ -2,7 +2,7 @@ import { Duration } from 'aws-cdk-lib';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 
 import { _somMeta } from '../../../../../lib/utils';
-import type { SiteResourcesNestedStack } from '../SiteStack/SiteResourcesNestedStack';
+import type { SiteResourcesStack } from '../SiteStack/SiteResourcesStack';
 
 // ----------------------------------------------------------------------
 export type ResponseHeadersResources = {
@@ -10,7 +10,7 @@ export type ResponseHeadersResources = {
 };
 
 // ----------------------------------------------------------------------
-export async function build(siteResourcesStack: SiteResourcesNestedStack): Promise<ResponseHeadersResources> {
+export async function build(siteResourcesStack: SiteResourcesStack): Promise<ResponseHeadersResources> {
   if (!siteResourcesStack.domainUserResources?.domainUser) {
     throw new Error('[site-o-matic] Could not build response headers resources when domainUser is missing');
   }

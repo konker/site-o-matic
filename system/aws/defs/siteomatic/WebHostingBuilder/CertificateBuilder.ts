@@ -6,7 +6,7 @@ import { toSsmParamName } from '../../../../../lib/aws/ssm';
 import { SSM_PARAM_NAME_DOMAIN_CERTIFICATE_ARN } from '../../../../../lib/consts';
 import type { WebHostingClauseWithResources } from '../../../../../lib/manifest/schemas/site-o-matic-manifest.schema';
 import { _somMeta, _somTag } from '../../../../../lib/utils';
-import type { SiteResourcesNestedStack } from '../SiteStack/SiteResourcesNestedStack';
+import type { SiteResourcesStack } from '../SiteStack/SiteResourcesStack';
 
 // ----------------------------------------------------------------------
 export type CertificateResources = {
@@ -17,7 +17,7 @@ export type CertificateResources = {
 
 // ----------------------------------------------------------------------
 export async function build(
-  siteResourcesStack: SiteResourcesNestedStack,
+  siteResourcesStack: SiteResourcesStack,
   webHostingSpec: WebHostingClauseWithResources
 ): Promise<CertificateResources> {
   // TODO: check for actual dependencies

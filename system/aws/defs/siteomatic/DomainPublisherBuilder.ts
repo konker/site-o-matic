@@ -1,118 +1,98 @@
-import { CfnOutput } from 'aws-cdk-lib';
+import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import { CfnAccessKey } from 'aws-cdk-lib/aws-iam';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 
+import { getCloudformationExport } from '../../../../lib/aws/cloudformation';
 import { toSsmParamName } from '../../../../lib/aws/ssm';
-import { SSM_PARAM_NAME_DOMAIN_PUBLISHER_USER_NAME } from '../../../../lib/consts';
+import {
+  CF_OUTPUT_NAME_DOMAIN_PUBLISHER_ACCESS_KEY_ID,
+  CF_OUTPUT_NAME_DOMAIN_PUBLISHER_ACCESS_KEY_SECRET,
+  CF_OUTPUT_NAME_DOMAIN_PUBLISHER_USER_NAME,
+  DEFAULT_AWS_REGION,
+  SSM_PARAM_NAME_DOMAIN_PUBLISHER_SECRET_NAME_ACCESS_KEY_ID,
+  SSM_PARAM_NAME_DOMAIN_PUBLISHER_SECRET_NAME_ACCESS_KEY_SECRET,
+} from '../../../../lib/consts';
+import * as secrets from '../../../../lib/secrets';
+import { SECRETS_SOURCE_SECRETS_MANAGER } from '../../../../lib/secrets/types';
 import { _somMeta } from '../../../../lib/utils';
-import type { SiteResourcesNestedStack } from './SiteStack/SiteResourcesNestedStack';
+import type { SiteResourcesStack } from './SiteStack/SiteResourcesStack';
 
 // ----------------------------------------------------------------------
 export type DomainPublisherResources = {
-  readonly domainPublisherAccessKey: CfnAccessKey;
-  readonly secretNameAccessKeyId: string;
-  readonly secretNameAccessKeySecret: string;
+  readonly domainPublisherUserName: string;
+  readonly domainPublisher: iam.IUser;
+  readonly domainPublisherAccessKeyIdSecretName: string;
+  readonly domainPublisherAccessKeySecretSecretName: string;
   readonly ssmParams: Array<ssm.StringParameter>;
 };
 
 // ----------------------------------------------------------------------
-export async function build(siteResourcesStack: SiteResourcesNestedStack): Promise<DomainPublisherResources> {
-  const domainBucket = siteResourcesStack.domainBucketResources?.domainBucket;
-  if (!domainBucket) {
-    throw new Error('[site-o-matic] Could not build domain publisher resources when domainBucket is missing');
-  }
-  const domainTopic = siteResourcesStack.domainTopicResources?.domainTopic;
-  if (!domainTopic) {
-    throw new Error('[site-o-matic] Could not build domain publisher resources when domainTopic is missing');
+export async function build(siteResourcesStack: SiteResourcesStack): Promise<DomainPublisherResources> {
+  const importedDomainPublisherUserName = cdk.Fn.importValue(CF_OUTPUT_NAME_DOMAIN_PUBLISHER_USER_NAME);
+  const domainPublisher = iam.User.fromUserName(siteResourcesStack, 'DomainPublisher', importedDomainPublisherUserName);
+
+  const importedDomainPublisherAccessKeyId = await getCloudformationExport(
+    siteResourcesStack.siteProps.config,
+    DEFAULT_AWS_REGION,
+    CF_OUTPUT_NAME_DOMAIN_PUBLISHER_ACCESS_KEY_ID
+  );
+  const importedDomainPublisherAccessKeySecret = await getCloudformationExport(
+    siteResourcesStack.siteProps.config,
+    DEFAULT_AWS_REGION,
+    CF_OUTPUT_NAME_DOMAIN_PUBLISHER_ACCESS_KEY_SECRET
+  );
+
+  if (!importedDomainPublisherAccessKeyId || !importedDomainPublisherAccessKeySecret) {
+    throw new Error(`Could not get publisher access key ID/secret for: ${siteResourcesStack.somId}`);
   }
 
   // ----------------------------------------------------------------------
-  // Create domainPublisher user
-  const domainPublisher = new iam.User(siteResourcesStack, 'DomainPublisher', {
-    userName: `publisher-${siteResourcesStack.somId}`,
-    path: siteResourcesStack.siteProps.config.SOM_PREFIX,
-  });
-
-  // Add to domain policy permissions to write to domain bucket
-  domainBucket.addToResourcePolicy(
-    new iam.PolicyStatement({
-      actions: ['s3:DeleteObject', 's3:GetObject', 's3:GetObjectVersion', 's3:PutObject', 's3:PutObjectAcl'],
-      resources: [`${domainBucket.bucketArn}/*`],
-      principals: [domainPublisher as iam.IUser],
-    })
-  );
-  domainBucket.addToResourcePolicy(
-    new iam.PolicyStatement({
-      actions: ['s3:ListBucket'],
-      resources: [domainBucket.bucketArn],
-      principals: [domainPublisher as iam.IUser],
-    })
+  // Create a secret for the accessKeyId
+  const domainPublisherAccessKeyIdSecretName = 'DomainPublisherAccessKeyId';
+  await secrets.addSomSecret(
+    siteResourcesStack.siteProps.config,
+    DEFAULT_AWS_REGION,
+    SECRETS_SOURCE_SECRETS_MANAGER,
+    siteResourcesStack.siteProps.context.somId,
+    domainPublisherAccessKeyIdSecretName,
+    importedDomainPublisherAccessKeyId.value
   );
 
-  // Add permissions to publish to domain SNS topic?
-  domainTopic.grantPublish(domainPublisher);
-
-  // Export [access_id, access_secret] for domainPublisher
-  const domainPublisherAccessKey = new CfnAccessKey(siteResourcesStack, 'DomainPublisherAccessKey', {
-    userName: domainPublisher.userName,
-  });
-
-  // ----------------------------------------------------------------------
-  // Save [access_id, access_secret] to SecretsManager using key: `secretName`
-  /*[XXX: does not work]
-  const secretPath1 = resolveSsmSecretPath(siteStack.siteProps.config, siteStack.somId);
-  const secretNameAccessKeyId = `${secretPath1}/published_access_key_id`;
-  const secret1 = new ssm.StringParameter(siteStack, 'SsmSecretAccessKeyId', {
-    parameterName: secretNameAccessKeyId,
-    stringValue: domainPublisherAccessKey.attrId,
-    tier: ssm.ParameterTier.STANDARD,
-  });
-  _somMeta(siteStack.siteProps.config, secret1, siteStack.somId, siteStack.siteProps.locked);
-
-  const secretPath2 = resolveSsmSecretPath(siteStack.siteProps.config, siteStack.somId);
-  const secretNameAccessKeySecret = `${secretPath2}/published_access_key_secret`;
-  const secret2 = new ssm.StringParameter(siteStack, 'SsmSecretAccessKeySecret', {
-    parameterName: secretNameAccessKeySecret,
-    stringValue: domainPublisherAccessKey.attrSecretAccessKey,
-    tier: ssm.ParameterTier.STANDARD,
-  });
-  _somMeta(siteStack.siteProps.config, secret2, siteStack.somId, siteStack.siteProps.locked);
-  */
-  new CfnOutput(siteResourcesStack, 'OutputSecretAccessKeyId', { value: domainPublisherAccessKey.ref });
-  new CfnOutput(siteResourcesStack, 'SsmSecretAccessKeySecret', {
-    value: domainPublisherAccessKey.attrSecretAccessKey,
-  });
+  // Create a secret for the accessKeySecret
+  const domainPublisherAccessKeySecretSecretName = 'DomainPublisherAccessKeySecret';
+  await secrets.addSomSecret(
+    siteResourcesStack.siteProps.config,
+    DEFAULT_AWS_REGION,
+    SECRETS_SOURCE_SECRETS_MANAGER,
+    siteResourcesStack.siteProps.context.somId,
+    domainPublisherAccessKeySecretSecretName,
+    importedDomainPublisherAccessKeySecret.value
+  );
 
   // ----------------------------------------------------------------------
   // SSM Params
-  const res1 = new ssm.StringParameter(siteResourcesStack, 'SsmDomainPublisherUserName', {
-    parameterName: toSsmParamName(siteResourcesStack.somId, SSM_PARAM_NAME_DOMAIN_PUBLISHER_USER_NAME),
-    stringValue: siteResourcesStack.somId,
+  const res1 = new ssm.StringParameter(siteResourcesStack, 'SsmDomainPublisherAccessKeySecretIdSecretName', {
+    parameterName: toSsmParamName(siteResourcesStack.somId, SSM_PARAM_NAME_DOMAIN_PUBLISHER_SECRET_NAME_ACCESS_KEY_ID),
+    stringValue: domainPublisherAccessKeyIdSecretName,
     tier: ssm.ParameterTier.STANDARD,
   });
   _somMeta(siteResourcesStack.siteProps.config, res1, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
 
-  /*[XXX: no secrets]
-  const res2 = new ssm.StringParameter(siteStack, 'SsmDomainPublisherSecretNameAccessKeyId', {
-    parameterName: toSsmParamName(siteStack.somId, SSM_PARAM_NAME_DOMAIN_PUBLISHER_SECRET_NAME_ACCESS_KEY_ID),
-    stringValue: secretNameAccessKeyId,
+  const res2 = new ssm.StringParameter(siteResourcesStack, 'SsmDomainPublisherAccessKeySecretSecretSecretName', {
+    parameterName: toSsmParamName(
+      siteResourcesStack.somId,
+      SSM_PARAM_NAME_DOMAIN_PUBLISHER_SECRET_NAME_ACCESS_KEY_SECRET
+    ),
+    stringValue: domainPublisherAccessKeySecretSecretName,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(siteStack.siteProps.config, res2, siteStack.somId, siteStack.siteProps.locked);
-
-  const res3 = new ssm.StringParameter(siteStack, 'SsmDomainPublisherSecretNameAccessKeySecret', {
-    parameterName: toSsmParamName(siteStack.somId, SSM_PARAM_NAME_DOMAIN_PUBLISHER_SECRET_NAME_ACCESS_KEY_SECRET),
-    stringValue: secretNameAccessKeySecret,
-    tier: ssm.ParameterTier.STANDARD,
-  });
-  _somMeta(siteStack.siteProps.config, res3, siteStack.somId, siteStack.siteProps.locked);
-  */
+  _somMeta(siteResourcesStack.siteProps.config, res2, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
 
   return {
-    domainPublisherAccessKey,
-    secretNameAccessKeyId: domainPublisherAccessKey.attrId,
-    secretNameAccessKeySecret: domainPublisherAccessKey.attrSecretAccessKey,
-    ssmParams: [res1],
+    domainPublisherUserName: importedDomainPublisherUserName,
+    domainPublisher,
+    domainPublisherAccessKeyIdSecretName,
+    domainPublisherAccessKeySecretSecretName,
+    ssmParams: [res1, res2],
   };
 }

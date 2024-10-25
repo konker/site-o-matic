@@ -14,7 +14,7 @@ import {
 import * as awsRoute53Registrar from '../../../../lib/registrar/connectors/aws-route53';
 import { EMPTY_SECRETS_SETS_COLLECTION } from '../../../../lib/secrets';
 import { _id, _somMeta } from '../../../../lib/utils';
-import type { SiteResourcesNestedStack } from './SiteStack/SiteResourcesNestedStack';
+import type { SiteResourcesStack } from './SiteStack/SiteResourcesStack';
 
 // ----------------------------------------------------------------------
 export type HostedZoneResources = {
@@ -24,7 +24,7 @@ export type HostedZoneResources = {
 };
 
 // ----------------------------------------------------------------------
-export async function build(siteResourcesStack: SiteResourcesNestedStack): Promise<HostedZoneResources> {
+export async function build(siteResourcesStack: SiteResourcesStack): Promise<HostedZoneResources> {
   if (!siteResourcesStack.domainUserResources?.domainUser) {
     throw new Error('[site-o-matic] Could not build hosted zone resources when domainUser is missing');
   }

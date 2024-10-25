@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import type { SomContentGenerator } from '../../../../../lib/content';
 import { getContentProducer } from '../../../../../lib/content';
 import type { WebHostingClauseWithResources } from '../../../../../lib/manifest/schemas/site-o-matic-manifest.schema';
-import type { SiteResourcesNestedStack } from '../SiteStack/SiteResourcesNestedStack';
+import type { SiteResourcesStack } from '../SiteStack/SiteResourcesStack';
 
 // ----------------------------------------------------------------------
 export type CloudfrontFunctionsLoaderResources = {
@@ -13,7 +13,7 @@ export type CloudfrontFunctionsLoaderResources = {
 
 // ----------------------------------------------------------------------
 export async function load(
-  siteResourcesStack: SiteResourcesNestedStack,
+  siteResourcesStack: SiteResourcesStack,
   webHostingSpec: WebHostingClauseWithResources
 ): Promise<CloudfrontFunctionsLoaderResources> {
   const siteContentTmpDirPath = await (async () => {

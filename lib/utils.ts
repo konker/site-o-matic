@@ -59,3 +59,7 @@ export function searchCertificates(
   if (certificateResources?.domainName === domainName) return certificateResources;
   return undefined;
 }
+
+export function formulateIamUserName(somId: string, prefix: string): string {
+  return `${prefix}_${somId}`.replace(/--/g, '_').replace(/-/g, '_');
+}
