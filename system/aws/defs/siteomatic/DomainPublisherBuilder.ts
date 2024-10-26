@@ -21,6 +21,7 @@ import type { SiteResourcesStack } from './SiteStack/SiteResourcesStack';
 export type DomainPublisherResources = {
   readonly domainPublisherUserName: string;
   readonly domainPublisher: iam.IUser;
+  readonly domainPublisherPolicy: iam.Policy;
   readonly domainPublisherAccessKeyIdSecretName: string;
   readonly domainPublisherAccessKeySecretSecretName: string;
   readonly ssmParams: Array<ssm.StringParameter>;
@@ -30,6 +31,16 @@ export type DomainPublisherResources = {
 export async function build(siteResourcesStack: SiteResourcesStack): Promise<DomainPublisherResources> {
   const importedDomainPublisherUserName = cdk.Fn.importValue(CF_OUTPUT_NAME_DOMAIN_PUBLISHER_USER_NAME);
   const domainPublisher = iam.User.fromUserName(siteResourcesStack, 'DomainPublisher', importedDomainPublisherUserName);
+
+  const domainPublisherPolicy = new iam.Policy(siteResourcesStack, 'DomainPublisherPolicy', {
+    statements: [],
+  });
+  _somMeta(
+    siteResourcesStack.siteProps.config,
+    domainPublisherPolicy,
+    siteResourcesStack.somId,
+    siteResourcesStack.siteProps.locked
+  );
 
   const importedDomainPublisherAccessKeyId = await getCloudformationExport(
     siteResourcesStack.siteProps.config,
@@ -91,6 +102,7 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Dom
   return {
     domainPublisherUserName: importedDomainPublisherUserName,
     domainPublisher,
+    domainPublisherPolicy,
     domainPublisherAccessKeyIdSecretName,
     domainPublisherAccessKeySecretSecretName,
     ssmParams: [res1, res2],

@@ -47,7 +47,10 @@ async function main(): Promise<void> {
     locked: context.manifest.locked ?? false,
     contextParams,
     description: `Site-o-Matic Stack for ${manifest.domainName}`,
-    env: {},
+    env: {
+      accountId: process.env.CDK_DEFAULT_ACCOUNT!,
+      region: process.env.CDK_DEFAULT_REGION!,
+    },
   };
 
   const bootstrapStack = new SiteBootstrapStack(app, BOOTSTRAP_STACK_ID(context.somId), siteProps);

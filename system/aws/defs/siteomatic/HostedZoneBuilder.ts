@@ -78,7 +78,7 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Hos
 
   // ----------------------------------------------------------------------
   // Add basic list permissions to the domain policy
-  siteResourcesStack.domainUserResources.domainPolicy.addStatements(
+  siteResourcesStack.domainUserResources.domainUserPolicy.addStatements(
     new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       resources: ['*'], //[FIXME: tighten with conditions clause which specifies ARN?]

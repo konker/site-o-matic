@@ -10,7 +10,7 @@ import type { SiteResourcesStack } from './SiteStack/SiteResourcesStack';
 export type DomainUserResources = {
   readonly domainUserName: string;
   readonly domainUser: iam.IUser;
-  readonly domainPolicy: iam.Policy;
+  readonly domainUserPolicy: iam.Policy;
   readonly ssmParams: Array<ssm.StringParameter>;
 };
 
@@ -20,12 +20,12 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Dom
 
   const domainUser = iam.User.fromUserName(siteResourcesStack, 'DomainUser', importedDomainUserName);
 
-  const domainPolicy = new iam.Policy(siteResourcesStack, 'DomainPolicy', {
+  const domainUserPolicy = new iam.Policy(siteResourcesStack, 'DomainUserPolicy', {
     statements: [],
   });
   _somMeta(
     siteResourcesStack.siteProps.config,
-    domainPolicy,
+    domainUserPolicy,
     siteResourcesStack.somId,
     siteResourcesStack.siteProps.locked
   );
@@ -33,7 +33,7 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Dom
   return {
     domainUserName: importedDomainUserName,
     domainUser,
-    domainPolicy,
+    domainUserPolicy,
     ssmParams: [],
   };
 }

@@ -49,8 +49,10 @@ export async function build(
   if (!siteResourcesStack.domainBucketResources?.domainBucket) {
     throw new Error('[site-o-matic] Could not build S3 Cloudfront distribution resources when domainBucket is missing');
   }
-  if (!siteResourcesStack.domainUserResources?.domainUser) {
-    throw new Error('[site-o-matic] Could not build S3 Cloudfront distribution resources when domainUser is missing');
+  if (!siteResourcesStack.domainPublisherResources?.domainPublisher) {
+    throw new Error(
+      '[site-o-matic] Could not build S3 Cloudfront distribution resources when domainPublisher is missing'
+    );
   }
 
   // ----------------------------------------------------------------------
@@ -158,6 +160,18 @@ export async function build(
     target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(cloudfrontDistribution)),
   });
   _somMeta(siteResourcesStack.siteProps.config, dns2, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
+
+  // ----------------------------------------------------------------------
+  // Domain Publisher permissions
+  siteResourcesStack.domainPublisherResources.domainPublisherPolicy.addStatements(
+    new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      resources: [
+        `arn:aws:cloudfront::${siteResourcesStack.siteProps.env.accountId}:distribution/${cloudfrontDistribution.distributionId}`,
+      ],
+      actions: ['cloudfront:CreateInvalidation', 'cloudfront:GetInvalidation', 'cloudfront:ListInvalidations'],
+    })
+  );
 
   // ----------------------------------------------------------------------
   // Add automatically generated content to the bucket if it is empty, and if so configured
