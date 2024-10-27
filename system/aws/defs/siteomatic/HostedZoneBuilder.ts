@@ -103,7 +103,11 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Hos
   // ----------------------------------------------------------------------
   // SSM Params, only create for the top level
   const ssm1 = new ssm.StringParameter(siteResourcesStack, _id('SsmHostedZoneId', siteResourcesStack.rootDomainName), {
-    parameterName: toSsmParamName(siteResourcesStack.somId, SSM_PARAM_NAME_HOSTED_ZONE_ID),
+    parameterName: toSsmParamName(
+      siteResourcesStack.siteProps.config,
+      siteResourcesStack.somId,
+      SSM_PARAM_NAME_HOSTED_ZONE_ID
+    ),
     stringValue: hostedZone.hostedZoneId,
     tier: ssm.ParameterTier.STANDARD,
   });
@@ -113,7 +117,11 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Hos
     siteResourcesStack,
     _id('SsmHostedZoneNameServers', siteResourcesStack.rootDomainName),
     {
-      parameterName: toSsmParamName(siteResourcesStack.somId, SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS),
+      parameterName: toSsmParamName(
+        siteResourcesStack.siteProps.config,
+        siteResourcesStack.somId,
+        SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS
+      ),
       stringValue: cdk.Fn.join(',', hostedZone.hostedZoneNameServers ?? []),
       tier: ssm.ParameterTier.STANDARD,
     }
@@ -124,7 +132,11 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Hos
     siteResourcesStack,
     _id('SsmIsAwsRoute53RegisteredDomain', siteResourcesStack.rootDomainName),
     {
-      parameterName: toSsmParamName(siteResourcesStack.somId, SSM_PARAM_NAME_IS_AWS_ROUTE53_REGISTERED_DOMAIN),
+      parameterName: toSsmParamName(
+        siteResourcesStack.siteProps.config,
+        siteResourcesStack.somId,
+        SSM_PARAM_NAME_IS_AWS_ROUTE53_REGISTERED_DOMAIN
+      ),
       stringValue: 'true',
       tier: ssm.ParameterTier.STANDARD,
     }

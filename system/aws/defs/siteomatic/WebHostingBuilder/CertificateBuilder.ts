@@ -41,6 +41,7 @@ export async function build(
   // SSM Params
   const res1 = new ssm.StringParameter(siteResourcesStack, 'DomainCertificateArn', {
     parameterName: toSsmParamName(
+      siteResourcesStack.siteProps.config,
       siteResourcesStack.somId,
       SSM_PARAM_NAME_DOMAIN_CERTIFICATE_ARN,
       webHostingSpec.domainName

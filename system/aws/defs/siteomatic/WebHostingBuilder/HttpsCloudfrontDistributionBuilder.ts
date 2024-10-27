@@ -131,6 +131,7 @@ export async function build(
   // SSM Params
   const ssm1 = new ssm.StringParameter(siteResourcesStack, 'SsmCloudfrontDistributionId', {
     parameterName: toSsmParamName(
+      siteResourcesStack.siteProps.config,
       siteResourcesStack.somId,
       SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID,
       webHostingSpec.domainName
@@ -142,6 +143,7 @@ export async function build(
 
   const ssm2 = new ssm.StringParameter(siteResourcesStack, 'SsmCloudfrontDomainName', {
     parameterName: toSsmParamName(
+      siteResourcesStack.siteProps.config,
       siteResourcesStack.somId,
       SSM_PARAM_NAME_CLOUDFRONT_DOMAIN_NAME,
       webHostingSpec.domainName

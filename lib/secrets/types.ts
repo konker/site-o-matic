@@ -1,7 +1,10 @@
-export const SECRETS_SOURCE_SECRETS_MANAGER = 'secretsmanager';
-export const SECRETS_SOURCE_SSM = 'ssm';
+export const SECRETS_SOURCE_SSM = 'ssm' as const;
+export const SECRETS_SOURCE_SECRETS_MANAGER = 'secretsmanager' as const;
 
-export type SecretsSource = typeof SECRETS_SOURCE_SECRETS_MANAGER | typeof SECRETS_SOURCE_SSM;
+export type SecretsSource = typeof SECRETS_SOURCE_SSM | typeof SECRETS_SOURCE_SECRETS_MANAGER;
+
+export const ALL_SECRETS_SOURCES = [SECRETS_SOURCE_SSM, SECRETS_SOURCE_SECRETS_MANAGER] as const;
+export const DEFAULT_SECRETS_SOURCE: SecretsSource = SECRETS_SOURCE_SSM;
 
 export type SecretsPlain = Record<string, string>;
 

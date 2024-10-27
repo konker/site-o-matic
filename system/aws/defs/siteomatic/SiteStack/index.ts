@@ -2,13 +2,17 @@ import * as cdk from 'aws-cdk-lib';
 import type { Construct } from 'constructs';
 import cloneDeep from 'lodash.clonedeep';
 
-import { DEFAULT_STACK_PROPS } from '../../../../../lib/consts';
+import { BOOTSTRAP_STACK_ID, DEFAULT_STACK_PROPS, SITE_RESOURCES_STACK_ID } from '../../../../../lib/consts';
 import type { SiteStackProps } from '../../../../../lib/types';
+import { SiteBootstrapStack } from './SiteBootstrapStack';
+import { SiteResourcesStack } from './SiteResourcesStack';
 
 export class SiteStack extends cdk.Stack {
   public readonly siteProps: SiteStackProps;
   public readonly rootDomainName: string;
   public readonly somId: string;
+  public bootstrapNestedStack: SiteBootstrapStack | undefined;
+  public siteResourcesNestedStack: SiteResourcesStack | undefined;
 
   constructor(scope: Construct, props: SiteStackProps) {
     super(
@@ -23,14 +27,20 @@ export class SiteStack extends cdk.Stack {
   }
 
   async build() {
-    /*
-    const bootstrapNestedStack = new SiteBootstrapStack(this, this.siteProps);
-    await bootstrapNestedStack.build();
+    this.bootstrapNestedStack = new SiteBootstrapStack(
+      this,
+      BOOTSTRAP_STACK_ID(this.siteProps.context.somId),
+      this.siteProps
+    );
+    await this.bootstrapNestedStack.build();
 
-    const siteResourcesNestedStack = new SiteResourcesStack(this, this.siteProps);
-    await siteResourcesNestedStack.build();
-    siteResourcesNestedStack.addDependency(bootstrapNestedStack);
-    */
+    this.siteResourcesNestedStack = new SiteResourcesStack(
+      this,
+      SITE_RESOURCES_STACK_ID(this.siteProps.context.somId),
+      this.siteProps
+    );
+    await this.siteResourcesNestedStack.build();
+    this.siteResourcesNestedStack.addDependency(this.bootstrapNestedStack);
 
     console.log(`Generated SiteStack [${this.somId}]`);
   }

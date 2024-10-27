@@ -44,14 +44,22 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Dom
   // ----------------------------------------------------------------------
   // SSM Params
   const ssm1 = new ssm.StringParameter(siteResourcesStack, 'SsmSnsTopicName', {
-    parameterName: toSsmParamName(siteResourcesStack.somId, SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_NAME),
+    parameterName: toSsmParamName(
+      siteResourcesStack.siteProps.config,
+      siteResourcesStack.somId,
+      SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_NAME
+    ),
     stringValue: notificationsSnsTopic.topicName,
     tier: ssm.ParameterTier.STANDARD,
   });
   _somMeta(siteResourcesStack.siteProps.config, ssm1, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
 
   const ssm2 = new ssm.StringParameter(siteResourcesStack, 'SsmSnsTopicArn', {
-    parameterName: toSsmParamName(siteResourcesStack.somId, SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN),
+    parameterName: toSsmParamName(
+      siteResourcesStack.siteProps.config,
+      siteResourcesStack.somId,
+      SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN
+    ),
     stringValue: notificationsSnsTopic.topicArn,
     tier: ssm.ParameterTier.STANDARD,
   });

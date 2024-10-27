@@ -37,7 +37,11 @@ export async function build(siteBootstrapStack: SiteBootstrapStack): Promise<Dom
   // ----------------------------------------------------------------------
   // SSM Params
   const res1 = new ssm.StringParameter(siteBootstrapStack, 'SsmDomainUserName', {
-    parameterName: toSsmParamName(siteBootstrapStack.somId, SSM_PARAM_NAME_DOMAIN_USER_NAME),
+    parameterName: toSsmParamName(
+      siteBootstrapStack.siteProps.config,
+      siteBootstrapStack.somId,
+      SSM_PARAM_NAME_DOMAIN_USER_NAME
+    ),
     stringValue: domainUserName,
     tier: ssm.ParameterTier.STANDARD,
   });

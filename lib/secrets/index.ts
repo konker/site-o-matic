@@ -4,15 +4,15 @@
 import * as secretsManager from '../aws/secretsmanager';
 import * as ssm from '../aws/ssm';
 import type { SiteOMaticConfig } from '../config/schemas/site-o-matic-config.schema';
-import { GLOBAL_SECRETS_SCOPE } from '../consts';
+import { GLOBAL_SECRETS_SCOPE, SECURE_STRING_FLAG } from '../consts';
 import type { SomParam } from '../types';
 import type { Secret, SecretsPlain, SecretsSet, SecretsSetCollection, SecretsSource } from './types';
-import { SECRETS_SOURCE_SECRETS_MANAGER, SECRETS_SOURCE_SSM } from './types';
+import { ALL_SECRETS_SOURCES, SECRETS_SOURCE_SECRETS_MANAGER, SECRETS_SOURCE_SSM } from './types';
 
-// ----------------------------------------------------------------------
+// --------------------------------------------------------------------------
 export const EMPTY_SECRETS_SETS_COLLECTION: SecretsSetCollection = { secretsSets: [], lookup: {} } as const;
 
-// ----------------------------------------------------------------------
+// --------------------------------------------------------------------------
 export function _secretsPlainToSecretSet(secretsPlain: SecretsPlain, source: SecretsSource, scope: string): SecretsSet {
   return {
     source,
@@ -44,16 +44,16 @@ export function _somParamsToSecretsPlain(somParams: Array<SomParam>): SecretsPla
   );
 }
 
-// ----------------------------------------------------------------------
+// --------------------------------------------------------------------------
 export function resolveSecretsManagerSecretName(config: SiteOMaticConfig, scope: string): string {
-  return `/${config.SOM_PREFIX}/secrets/${scope}/site_secrets`;
+  return `/secrets/${config.SOM_PREFIX}/${scope}/site_secrets`;
 }
 
 export function resolveSsmSecretPath(config: SiteOMaticConfig, scope: string): string {
-  return `/${config.SOM_PREFIX}/secrets/${scope}`;
+  return `/secrets/${config.SOM_PREFIX}/${scope}`;
 }
 
-// ----------------------------------------------------------------------
+// --------------------------------------------------------------------------
 export async function getSecretsManagerScopedSomSecrets(
   config: SiteOMaticConfig,
   region: string,
@@ -68,7 +68,7 @@ export async function getSecretsManagerGlobalSomSecrets(config: SiteOMaticConfig
   return getSecretsManagerScopedSomSecrets(config, region, GLOBAL_SECRETS_SCOPE);
 }
 
-// ----------------------------------------------------------------------
+// --------------------------------------------------------------------------
 export async function getSsmScopedSomSecrets(
   config: SiteOMaticConfig,
   region: string,
@@ -85,7 +85,7 @@ export async function getSsmGlobalSomSecrets(config: SiteOMaticConfig, region: s
   return getSsmScopedSomSecrets(config, region, GLOBAL_SECRETS_SCOPE);
 }
 
-// ----------------------------------------------------------------------
+// --------------------------------------------------------------------------
 export async function getAllSomSecrets(
   config: SiteOMaticConfig,
   region: string,
@@ -102,6 +102,7 @@ export async function getAllSomSecrets(
   return _secretsSetsToSecretsSetCollection(secretSets);
 }
 
+// --------------------------------------------------------------------------
 export async function getSomSecret(
   config: SiteOMaticConfig,
   region: string,
@@ -114,6 +115,7 @@ export async function getSomSecret(
   return value === undefined ? undefined : { name, value };
 }
 
+// --------------------------------------------------------------------------
 export async function listSomSecretNames(
   config: SiteOMaticConfig,
   region: string,
@@ -123,9 +125,11 @@ export async function listSomSecretNames(
   return Object.keys(secretSet.lookup);
 }
 
+// --------------------------------------------------------------------------
 export async function addSomSecret(
   config: SiteOMaticConfig,
   region: string,
+  somId: string,
   source: SecretsSource,
   scope: string,
   name: string,
@@ -141,23 +145,28 @@ export async function addSomSecret(
           [name]: value,
         };
 
-        await secretsManager.upsertSecret(config, region, secretName, updatedSecretsPlain);
+        await secretsManager.upsertSecret(config, region, somId, secretName, updatedSecretsPlain);
       }
       break;
-    case SECRETS_SOURCE_SSM:
-      throw new Error('[site-o-matic/secrets] Error: SSM secrets are readonly');
+    case SECRETS_SOURCE_SSM: {
+      const secretPath = resolveSsmSecretPath(config, scope);
+      const secretName = `${secretPath}/${name}`;
+      await ssm.createSsmParam(config, region, somId, secretName, value, SECURE_STRING_FLAG);
+    }
   }
 
   return listSomSecretNames(config, region, scope);
 }
 
-export async function deleteSomSecret(
+// --------------------------------------------------------------------------
+export async function deleteSomSecretBySource(
   config: SiteOMaticConfig,
   region: string,
+  somId: string,
   source: SecretsSource,
   scope: string,
   name: string
-): Promise<Array<string>> {
+): Promise<void> {
   switch (source) {
     case SECRETS_SOURCE_SECRETS_MANAGER:
       {
@@ -168,9 +177,29 @@ export async function deleteSomSecret(
           {}
         );
 
-        await secretsManager.upsertSecret(config, region, secretName, updatedSecretsPlain);
+        await secretsManager.upsertSecret(config, region, somId, secretName, updatedSecretsPlain);
       }
       break;
+    case SECRETS_SOURCE_SSM:
+      {
+        const secretPath = resolveSsmSecretPath(config, scope);
+        const secretName = `${secretPath}/name`;
+        await ssm.deleteSsmParam(config, region, secretName);
+      }
+      break;
+  }
+}
+
+// --------------------------------------------------------------------------
+export async function deleteSomSecret(
+  config: SiteOMaticConfig,
+  region: string,
+  somId: string,
+  scope: string,
+  name: string
+): Promise<Array<string>> {
+  for (const source of ALL_SECRETS_SOURCES) {
+    await deleteSomSecretBySource(config, region, somId, source, scope, name);
   }
 
   return listSomSecretNames(config, region, scope);

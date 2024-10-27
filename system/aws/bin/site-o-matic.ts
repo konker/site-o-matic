@@ -53,6 +53,12 @@ async function main(): Promise<void> {
     },
   };
 
+  /*[XXX]
+  const siteStack = new SiteStack(app, siteProps);
+  await siteStack.build();
+  _somTag(config, siteStack, context.somId);
+  */
+
   const bootstrapStack = new SiteBootstrapStack(app, BOOTSTRAP_STACK_ID(context.somId), siteProps);
   await bootstrapStack.build();
   _somTag(config, bootstrapStack, context.somId);

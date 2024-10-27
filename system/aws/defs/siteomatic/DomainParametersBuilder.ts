@@ -39,14 +39,22 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Dom
   _somMeta(siteResourcesStack.siteProps.config, res2, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
 
   const res3 = new ssm.StringParameter(siteResourcesStack, 'SsmRootDomain', {
-    parameterName: toSsmParamName(siteResourcesStack.somId, SSM_PARAM_NAME_ROOT_DOMAIN_NAME),
+    parameterName: toSsmParamName(
+      siteResourcesStack.siteProps.config,
+      siteResourcesStack.somId,
+      SSM_PARAM_NAME_ROOT_DOMAIN_NAME
+    ),
     stringValue: siteResourcesStack.siteProps.context.rootDomainName,
     tier: ssm.ParameterTier.STANDARD,
   });
   _somMeta(siteResourcesStack.siteProps.config, res3, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
 
   const res4 = new ssm.StringParameter(siteResourcesStack, 'SsmWebmasterEmail', {
-    parameterName: toSsmParamName(siteResourcesStack.somId, SSM_PARAM_NAME_WEBMASTER_EMAIL),
+    parameterName: toSsmParamName(
+      siteResourcesStack.siteProps.config,
+      siteResourcesStack.somId,
+      SSM_PARAM_NAME_WEBMASTER_EMAIL
+    ),
     stringValue:
       contextTemplateString(
         siteResourcesStack.siteProps.context.manifest.webmasterEmail ??
@@ -58,14 +66,22 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Dom
   _somMeta(siteResourcesStack.siteProps.config, res4, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
 
   const res5 = new ssm.StringParameter(siteResourcesStack, 'SsmProtectedStatus', {
-    parameterName: toSsmParamName(siteResourcesStack.somId, SSM_PARAM_NAME_PROTECTED_STATUS),
+    parameterName: toSsmParamName(
+      siteResourcesStack.siteProps.config,
+      siteResourcesStack.somId,
+      SSM_PARAM_NAME_PROTECTED_STATUS
+    ),
     stringValue: siteResourcesStack.siteProps.locked ? 'true' : 'false',
     tier: ssm.ParameterTier.STANDARD,
   });
   _somMeta(siteResourcesStack.siteProps.config, res5, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
 
   const res6 = new ssm.StringParameter(siteResourcesStack, 'SsmSomVersion', {
-    parameterName: toSsmParamName(siteResourcesStack.somId, SSM_PARAM_NAME_SOM_VERSION),
+    parameterName: toSsmParamName(
+      siteResourcesStack.siteProps.config,
+      siteResourcesStack.somId,
+      SSM_PARAM_NAME_SOM_VERSION
+    ),
     stringValue: VERSION,
     tier: ssm.ParameterTier.STANDARD,
   });

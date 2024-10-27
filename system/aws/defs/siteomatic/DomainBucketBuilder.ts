@@ -90,7 +90,11 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Dom
   // ----------------------------------------------------------------------
   // SSM Params
   const ssm1 = new ssm.StringParameter(siteResourcesStack, 'SsmDomainBucketName', {
-    parameterName: toSsmParamName(siteResourcesStack.somId, SSM_PARAM_NAME_DOMAIN_BUCKET_NAME),
+    parameterName: toSsmParamName(
+      siteResourcesStack.siteProps.config,
+      siteResourcesStack.somId,
+      SSM_PARAM_NAME_DOMAIN_BUCKET_NAME
+    ),
     stringValue: domainBucket.bucketName,
     tier: ssm.ParameterTier.STANDARD,
   });

@@ -42,6 +42,7 @@ export async function readSecret(config: SiteOMaticConfig, region: string, secre
 export async function upsertSecret(
   config: SiteOMaticConfig,
   region: string,
+  somId: string,
   secretName: string,
   secretsPlain: SecretsPlain
 ): Promise<SecretsPlain> {
@@ -61,6 +62,7 @@ export async function upsertSecret(
       const cmd1b = new CreateSecretCommand({
         Name: secretName,
         SecretString: secretPersisted,
+        Tags: [{ Key: config.SOM_TAG_NAME, Value: somId }],
       });
       await client.send(cmd1b);
     } else {

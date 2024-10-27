@@ -17,6 +17,8 @@ export type DomainPublisherBootstrapResources = {
   readonly domainPublisherUserName: string;
   readonly domainPublisher: iam.User;
   readonly domainPublisherAccessKey: iam.AccessKey;
+  readonly domainPublisherAccessKeySecretSecretName: string;
+  readonly domainPublisherAccessKeyIdSecretName: string;
   readonly ssmParams: Array<ssm.StringParameter>;
 };
 
@@ -57,7 +59,11 @@ export async function build(siteBootstrapStack: SiteBootstrapStack): Promise<Dom
   // ----------------------------------------------------------------------
   // SSM Params
   const res1 = new ssm.StringParameter(siteBootstrapStack, 'SsmDomainPublisherUserName', {
-    parameterName: toSsmParamName(siteBootstrapStack.somId, SSM_PARAM_NAME_DOMAIN_PUBLISHER_USER_NAME),
+    parameterName: toSsmParamName(
+      siteBootstrapStack.siteProps.config,
+      siteBootstrapStack.somId,
+      SSM_PARAM_NAME_DOMAIN_PUBLISHER_USER_NAME
+    ),
     stringValue: domainPublisherUserName,
     tier: ssm.ParameterTier.STANDARD,
   });
@@ -67,6 +73,8 @@ export async function build(siteBootstrapStack: SiteBootstrapStack): Promise<Dom
     domainPublisherUserName,
     domainPublisher,
     domainPublisherAccessKey,
+    domainPublisherAccessKeyIdSecretName: 'DomainPublisherAccessKeyId',
+    domainPublisherAccessKeySecretSecretName: 'DomainPublisherAccessKeySecret',
     ssmParams: [res1],
   };
 }

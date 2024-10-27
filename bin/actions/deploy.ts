@@ -105,7 +105,7 @@ export function actionDeploy(vorpal: Vorpal, config: SiteOMaticConfig, state: So
 
     // Engage
     try {
-      const [codeBoostrap, logBootstrap] = await cdkExec.cdkDeploy(
+      const [codeBootstrap, logBootstrap] = await cdkExec.cdkDeploy(
         vorpal,
         state.context.somId,
         {
@@ -115,7 +115,7 @@ export function actionDeploy(vorpal: Vorpal, config: SiteOMaticConfig, state: So
         BOOTSTRAP_STACK_ID(state.context.somId)
       );
       if (state.plumbing) {
-        vorpal.log(JSON.stringify({ context: state.context, codeBoostrap, logBootstrap }));
+        vorpal.log(JSON.stringify({ context: state.context, codeBootstrap, logBootstrap }));
       }
 
       const [codeSiteResources, logSiteResources] = await cdkExec.cdkDeploy(

@@ -144,3 +144,5 @@ export const WEB_HOSTING_DEFAULT = (domainName: string) =>
 
 export const BOOTSTRAP_STACK_ID = (somId: string) => `boostrap-${somId}`;
 export const SITE_RESOURCES_STACK_ID = (somId: string) => `siteResources-${somId}`;
+
+export const SECURE_STRING_FLAG = true;

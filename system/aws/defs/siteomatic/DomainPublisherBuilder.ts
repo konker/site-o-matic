@@ -13,7 +13,7 @@ import {
   SSM_PARAM_NAME_DOMAIN_PUBLISHER_SECRET_NAME_ACCESS_KEY_SECRET,
 } from '../../../../lib/consts';
 import * as secrets from '../../../../lib/secrets';
-import { SECRETS_SOURCE_SECRETS_MANAGER } from '../../../../lib/secrets/types';
+import { DEFAULT_SECRETS_SOURCE } from '../../../../lib/secrets/types';
 import { _somMeta } from '../../../../lib/utils';
 import type { SiteResourcesStack } from './SiteStack/SiteResourcesStack';
 
@@ -63,8 +63,9 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Dom
   await secrets.addSomSecret(
     siteResourcesStack.siteProps.config,
     DEFAULT_AWS_REGION,
-    SECRETS_SOURCE_SECRETS_MANAGER,
-    siteResourcesStack.siteProps.context.somId,
+    siteResourcesStack.somId,
+    DEFAULT_SECRETS_SOURCE,
+    siteResourcesStack.somId,
     domainPublisherAccessKeyIdSecretName,
     importedDomainPublisherAccessKeyId.value
   );
@@ -74,8 +75,9 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Dom
   await secrets.addSomSecret(
     siteResourcesStack.siteProps.config,
     DEFAULT_AWS_REGION,
-    SECRETS_SOURCE_SECRETS_MANAGER,
-    siteResourcesStack.siteProps.context.somId,
+    siteResourcesStack.somId,
+    DEFAULT_SECRETS_SOURCE,
+    siteResourcesStack.somId,
     domainPublisherAccessKeySecretSecretName,
     importedDomainPublisherAccessKeySecret.value
   );
@@ -83,7 +85,11 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Dom
   // ----------------------------------------------------------------------
   // SSM Params
   const res1 = new ssm.StringParameter(siteResourcesStack, 'SsmDomainPublisherAccessKeySecretIdSecretName', {
-    parameterName: toSsmParamName(siteResourcesStack.somId, SSM_PARAM_NAME_DOMAIN_PUBLISHER_SECRET_NAME_ACCESS_KEY_ID),
+    parameterName: toSsmParamName(
+      siteResourcesStack.siteProps.config,
+      siteResourcesStack.somId,
+      SSM_PARAM_NAME_DOMAIN_PUBLISHER_SECRET_NAME_ACCESS_KEY_ID
+    ),
     stringValue: domainPublisherAccessKeyIdSecretName,
     tier: ssm.ParameterTier.STANDARD,
   });
@@ -91,6 +97,7 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Dom
 
   const res2 = new ssm.StringParameter(siteResourcesStack, 'SsmDomainPublisherAccessKeySecretSecretSecretName', {
     parameterName: toSsmParamName(
+      siteResourcesStack.siteProps.config,
       siteResourcesStack.somId,
       SSM_PARAM_NAME_DOMAIN_PUBLISHER_SECRET_NAME_ACCESS_KEY_SECRET
     ),

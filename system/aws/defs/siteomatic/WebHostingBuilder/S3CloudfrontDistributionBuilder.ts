@@ -191,14 +191,24 @@ export async function build(
   // ----------------------------------------------------------------------
   // SSM Params
   const ssm1 = new ssm.StringParameter(siteResourcesStack, 'SsmCloudfrontDistributionId', {
-    parameterName: toSsmParamName(siteResourcesStack.somId, SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID, 'www'),
+    parameterName: toSsmParamName(
+      siteResourcesStack.siteProps.config,
+      siteResourcesStack.somId,
+      SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID,
+      'www'
+    ),
     stringValue: cloudfrontDistribution.distributionId,
     tier: ssm.ParameterTier.STANDARD,
   });
   _somMeta(siteResourcesStack.siteProps.config, ssm1, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
 
   const ssm2 = new ssm.StringParameter(siteResourcesStack, 'SsmCloudfrontDomainName', {
-    parameterName: toSsmParamName(siteResourcesStack.somId, SSM_PARAM_NAME_CLOUDFRONT_DOMAIN_NAME, 'www'),
+    parameterName: toSsmParamName(
+      siteResourcesStack.siteProps.config,
+      siteResourcesStack.somId,
+      SSM_PARAM_NAME_CLOUDFRONT_DOMAIN_NAME,
+      'www'
+    ),
     stringValue: cloudfrontDistribution.distributionDomainName,
     tier: ssm.ParameterTier.STANDARD,
   });

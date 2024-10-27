@@ -34,7 +34,7 @@ export async function load(
   const viewerRequestFunctionProducer = getFunctionProducer(
     WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID,
     cfFunctionViewerRequestSubComponentIds,
-    siteResourcesStack.siteProps.context.somId,
+    siteResourcesStack.somId,
     siteResourcesStack.siteProps.context.manifest,
     webHostingSpec
   );
@@ -47,7 +47,7 @@ export async function load(
   const viewerResponseFunctionProducer = getFunctionProducer(
     WEB_HOSTING_VIEWER_RESPONSE_FUNCTION_PRODUCER_ID,
     [],
-    siteResourcesStack.siteProps.context.somId,
+    siteResourcesStack.somId,
     siteResourcesStack.siteProps.context.manifest,
     webHostingSpec
   );

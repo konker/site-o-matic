@@ -25,7 +25,7 @@ export async function load(
       const contentProducerId = webHostingSpec.content.producerId;
       const contentGenerator: SomContentGenerator = getContentProducer(contentProducerId);
       const ret = await contentGenerator(
-        siteResourcesStack.siteProps.context.somId,
+        siteResourcesStack.somId,
         webHostingSpec,
         siteResourcesStack.siteProps.context
       );
