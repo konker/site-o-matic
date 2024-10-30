@@ -36,6 +36,7 @@ export async function getSsmParams(config: SiteOMaticConfig, region: string, pat
           Path: path,
           MaxResults: 10,
           Recursive: true,
+          WithDecryption: true,
         },
         nextToken ? { NextToken: nextToken } : {}
       )

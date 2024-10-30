@@ -63,3 +63,7 @@ export function searchCertificates(
 export function formulateIamUserName(somId: string, prefix: string): string {
   return `${prefix}_${somId}`.replace(/--/g, '_').replace(/-/g, '_');
 }
+
+export async function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}

@@ -1,7 +1,6 @@
 import { findHostedZoneAttributes, getNsRecordValuesForDomainName } from './aws/route53';
 import { getIsS3BucketEmpty } from './aws/s3';
-import * as ssm from './aws/ssm';
-import { ssmBasePath } from './aws/ssm';
+import { getSsmParams, ssmBasePath } from './aws/ssm';
 import type { SiteOMaticConfig } from './config/schemas/site-o-matic-config.schema';
 import {
   DEFAULT_AWS_REGION,
@@ -57,7 +56,8 @@ export async function getRegistrarNameservers(config: SiteOMaticConfig, context:
   }
   const registrarConnector = getRegistrarConnector(context.registrar);
   const somSecrets = await secrets.getAllSomSecrets(config, DEFAULT_AWS_REGION, context.somId);
-  if (!registrarConnector.SECRETS.every((secretName) => somSecrets.lookup[secretName])) {
+
+  if (!registrarConnector.SECRETS.every((secretName) => !!somSecrets.lookup[secretName])) {
     console.log(`WARNING: secrets required by registrar connector missing: ${registrarConnector.SECRETS}`);
     return [];
   } else {
@@ -87,7 +87,7 @@ export async function loadNetworkDerivedContext(
     dnsVerificationTxtRecord,
     connectionStatus,
   ] = await Promise.all([
-    ssm.getSsmParams(config, DEFAULT_AWS_REGION, ssmBasePath(config, context.somId)),
+    getSsmParams(config, DEFAULT_AWS_REGION, ssmBasePath(config, context.somId)),
     findHostedZoneAttributes(config, context.rootDomainName),
     getNsRecordValuesForDomainName(config, context.rootDomainName),
     resolveDnsNameserverRecords(context.rootDomainName),

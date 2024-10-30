@@ -2,7 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import type * as ssm from 'aws-cdk-lib/aws-ssm';
 
-import { CF_OUTPUT_NAME_DOMAIN_USER_USER_NAME } from '../../../../lib/consts';
+import { BOOTSTRAP_DOMAIN_USER_USER_NAME_OUTPUT_NAME } from '../../../../lib/consts';
 import { _somMeta } from '../../../../lib/utils';
 import type { SiteResourcesStack } from './SiteStack/SiteResourcesStack';
 
@@ -16,7 +16,9 @@ export type DomainUserResources = {
 
 // ----------------------------------------------------------------------
 export async function build(siteResourcesStack: SiteResourcesStack): Promise<DomainUserResources> {
-  const importedDomainUserName = cdk.Fn.importValue(CF_OUTPUT_NAME_DOMAIN_USER_USER_NAME);
+  const importedDomainUserName = cdk.Fn.importValue(
+    BOOTSTRAP_DOMAIN_USER_USER_NAME_OUTPUT_NAME(siteResourcesStack.somId)
+  );
 
   const domainUser = iam.User.fromUserName(siteResourcesStack, 'DomainUser', importedDomainUserName);
 

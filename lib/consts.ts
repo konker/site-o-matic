@@ -3,11 +3,11 @@ import path from 'path';
 
 import type { SiteOMaticConfig } from './config/schemas/site-o-matic-config.schema';
 import { CONTENT_PRODUCER_ID_DEFAULT } from './content';
-import type { WebHostingErrorResponse } from './manifest/schemas/site-o-matic-manifest.schema';
 import type { SiteStackProps } from './types';
 
+export const SOM = 'site-o-matic';
 export const UNKNOWN = 'UNKNOWN' as const;
-export const VERSION = '0.0.2' as const;
+export const VERSION = '0.0.3' as const;
 export const DEFAULT_AWS_REGION = 'us-east-1' as const;
 export const DEFAULT_CERTIFICATE_REGION = 'us-east-1' as const;
 export const CLS = '\u001b[2J\u001b[0;0H' as const;
@@ -22,14 +22,9 @@ export const MAX_SOM_ID_LEN = 48 as const;
 
 export const GLOBAL_SECRETS_SCOPE = 'global';
 
-export const CF_OUTPUT_NAME_DOMAIN_USER_USER_NAME = 'DomainUserName' as const;
-export const CF_OUTPUT_NAME_DOMAIN_PUBLISHER_USER_NAME = 'DomainPublisherUserName' as const;
-export const CF_OUTPUT_NAME_DOMAIN_PUBLISHER_ACCESS_KEY_ID = 'DomainPublisherAccessKeyId' as const;
-export const CF_OUTPUT_NAME_DOMAIN_PUBLISHER_ACCESS_KEY_SECRET = 'DomainPublisherAccessKeySecret' as const;
-
 export const SSM_PARAM_NAME_SOM_VERSION = 'som-version' as const;
 export const SSM_PARAM_NAME_ROOT_DOMAIN_NAME = 'root-domain-name' as const;
-export const SSM_PARAM_NAME_DOMAIN_USER_NAME = 'domain-user-name' as const;
+export const SSM_PARAM_NAME_DOMAIN_USER_USER_NAME = 'domain-user-name' as const;
 export const SSM_PARAM_NAME_DOMAIN_PUBLISHER_USER_NAME = 'domain-publisher-user-name' as const;
 export const SSM_PARAM_NAME_DOMAIN_ROLE_ARN = 'domain-role-arn' as const;
 export const SSM_PARAM_NAME_WEBMASTER_EMAIL = 'webmaster-email' as const;
@@ -57,17 +52,6 @@ export const WEB_HOSTING_TYPE_CLOUDFRONT_S3 = 'cloudfront-s3' as const;
 export const WEB_HOSTING_TYPE_CLOUDFRONT_HTTPS = 'cloudfront-https' as const;
 export const WEB_HOSTING_TYPE_NONE = 'none' as const;
 
-export const WEB_HOSTING_BRANCH_DEFAULT = 'main' as const;
-
-export const WEB_HOSTING_DEFAULT_ORIGIN_PATH = '/www' as const;
-export const WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT = 'index.html' as const;
-export const WEB_HOSTING_DEFAULT_ERROR_RESPONSES: Array<WebHostingErrorResponse> = [
-  {
-    httpStatus: 404,
-    responsePagePath: '/404.html',
-  },
-] as const;
-
 export const REDIRECT_IMPL_EDGE_CF_FUNCTION = 'edge-cf-function' as const;
 
 export const AUTH_TYPE_BASIC_AUTH = 'basic-auth' as const;
@@ -76,6 +60,7 @@ export const AUTH_IMPL_EDGE_CF_FUNCTION = 'edge-cf-function' as const;
 export const WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID = 'cf-functions-viewer-request';
 export const WEB_HOSTING_VIEWER_REQUEST_DIR_DEFAULT_FUNCTION_PRODUCER_ID = 'cf-functions-viewer-request-dir-default';
 export const WEB_HOSTING_VIEWER_REQUEST_REDIRECT_FUNCTION_PRODUCER_ID = 'cf-functions-viewer-request-redirect';
+export const WEB_HOSTING_VIEWER_REQUEST_BASIC_AUTH_FUNCTION_PRODUCER_ID = 'cf-functions-viewer-request-basic-auth';
 export const WEB_HOSTING_VIEWER_RESPONSE_FUNCTION_PRODUCER_ID = 'cf-functions-viewer-response';
 
 export const SITE_PIPELINE_TYPE_CODESTAR_S3 = 'codestar-s3' as const;
@@ -111,6 +96,9 @@ export const DEFAULT_CONTENT_CLAUSE = {
   producerId: CONTENT_PRODUCER_ID_DEFAULT,
 } as const;
 
+export const WEB_HOSTING_DEFAULT_ORIGIN_PATH = '/www' as const;
+export const WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT = 'index.html' as const;
+
 export const WEB_HOSTING_TYPE_CLOUDFRONT_S3_DEFAULTS_DEFAULT = {
   // The default file that will be served when a directory is requested
   defaultRootObject: 'index.html',
@@ -142,7 +130,20 @@ export const WEB_HOSTING_DEFAULT = (domainName: string) =>
     domainName: domainName,
   }) as const;
 
-export const BOOTSTRAP_STACK_ID = (somId: string) => `boostrap-${somId}`;
-export const SITE_RESOURCES_STACK_ID = (somId: string) => `siteResources-${somId}`;
+export const CF_OUTPUT_NAME_DOMAIN_USER_USER_NAME = 'DomainUserName' as const;
+export const CF_OUTPUT_NAME_DOMAIN_PUBLISHER_USER_NAME = 'DomainPublisherUserName' as const;
+export const CF_OUTPUT_NAME_DOMAIN_PUBLISHER_ACCESS_KEY_ID = 'DomainPublisherAccessKeyId' as const;
+export const CF_OUTPUT_NAME_DOMAIN_PUBLISHER_ACCESS_KEY_SECRET = 'DomainPublisherAccessKeySecret' as const;
+
+export const BOOTSTRAP_STACK_ID = (somId: string) => `${somId}-bootstrap`;
+export const BOOTSTRAP_DOMAIN_PUBLISHER_USER_NAME_OUTPUT_NAME = (somId: string) =>
+  `${somId}-${CF_OUTPUT_NAME_DOMAIN_PUBLISHER_USER_NAME}`;
+export const BOOTSTRAP_DOMAIN_PUBLISHER_ACCESS_KEY_ID_OUTPUT_NAME = (somId: string) =>
+  `${somId}-${CF_OUTPUT_NAME_DOMAIN_PUBLISHER_ACCESS_KEY_ID}`;
+export const BOOTSTRAP_DOMAIN_PUBLISHER_ACCESS_KEY_SECRET_OUTPUT_NAME = (somId: string) =>
+  `${somId}-${CF_OUTPUT_NAME_DOMAIN_PUBLISHER_ACCESS_KEY_SECRET}`;
+export const BOOTSTRAP_DOMAIN_USER_USER_NAME_OUTPUT_NAME = (somId: string) =>
+  `${somId}-${CF_OUTPUT_NAME_DOMAIN_USER_USER_NAME}`;
+export const SITE_RESOURCES_STACK_ID = (somId: string) => `${somId}-siteResources`;
 
 export const SECURE_STRING_FLAG = true;

@@ -2,6 +2,8 @@ import { spawn } from 'child_process';
 import path from 'path';
 import type Vorpal from 'vorpal';
 
+import { sanitizeOutput } from '../sanitization';
+
 export type CdkExecResponse = [number, Array<string>];
 
 async function cdkExecProc(
@@ -15,13 +17,15 @@ async function cdkExecProc(
     const proc = spawn(command, args, {
       cwd: path.join(__dirname, '..', '..'),
     });
-    proc.stdout.on('data', (data: string) => {
-      log.push(data.toString());
-      if (!plumbing) vorpal.log(data.toString());
+    proc.stdout.on('data', (data: Buffer) => {
+      const s = sanitizeOutput(data.toString('utf-8'));
+      log.push(s);
+      if (!plumbing) vorpal.log(s);
     });
-    proc.stderr.on('data', (data: string) => {
-      log.push(data.toString());
-      if (!plumbing) vorpal.log(data.toString());
+    proc.stderr.on('data', (data: Buffer) => {
+      const s = sanitizeOutput(data.toString('utf-8'));
+      log.push(String(s));
+      if (!plumbing) vorpal.log(String(s));
     });
     proc.on('close', (code: number) => {
       if (code === 0) resolve([code, log]);

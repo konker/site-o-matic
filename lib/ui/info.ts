@@ -18,12 +18,6 @@ export function renderInfoSpec(infoSpec: SomInfoSpec): string {
         Param: chalk.bold(chalk.white('registrar')),
         Value: infoSpec.registrar,
       },
-      /*
-      {
-        Param: chalk.bold(chalk.white('content')),
-        Value: infoSpec.content ?? CONTENT_PRODUCER_ID_DEFAULT,
-      },
-      */
       {
         Param: chalk.bold(chalk.white('web hosting')),
         Value: infoSpec.webHosting
@@ -62,15 +56,6 @@ export function renderInfoSpec(infoSpec: SomInfoSpec): string {
               ? `\n${chalk.bold(chalk.white('owner'))}:\n ↪ ${infoSpec.pipeline.owner}`
               : '') +
             ('repo' in infoSpec.pipeline ? `\n${chalk.bold(chalk.white('repo'))}:\n ↪ ${infoSpec.pipeline?.repo}` : '')
-          : undefined,
-      },
-      */
-      /*[XXX]
-      {
-        Param: chalk.bold(chalk.white('redirect')),
-        Value: infoSpec.redirect
-          ? `${chalk.bold(chalk.white('type'))}:\n ↪ ${infoSpec.redirect.type}` +
-            `\n${chalk.bold(chalk.white('action'))}:\n ${infoSpec.redirect.action}`
           : undefined,
       },
       */

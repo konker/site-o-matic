@@ -1,11 +1,7 @@
 import type * as cdk from 'aws-cdk-lib';
-import type * as codebuild from 'aws-cdk-lib/aws-codebuild';
-import type * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
 
 import type { SiteOMaticConfig } from './config/schemas/site-o-matic-config.schema';
 import type {
-  SITE_PIPELINE_TYPE_CODESTAR_CUSTOM,
-  SITE_PIPELINE_TYPE_CODESTAR_S3,
   SOM_STATUS_BREADCRUMB,
   SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG,
   SOM_STATUS_HOSTED_ZONE_OK,
@@ -27,44 +23,18 @@ export type HostedZoneAttributes = {
   hostedZoneId: string;
 };
 
-/*
-export type HostedZoneResources = {
-  readonly hostedZone: route53.IHostedZone;
+// ----------------------------------------------------------------------
+export type SiteStackProps = cdk.StackProps & {
+  readonly config: SiteOMaticConfig;
+  readonly context: HasNetworkDerived<SomContext>;
+  readonly facts: SomFacts;
+  readonly locked: boolean;
+  readonly description: string;
+  readonly contextParams: Record<string, string>;
+  readonly env: Record<string, string>;
 };
-
-export type CertificateResources = {
-  readonly domainName: string;
-  readonly domainCertificate: certificatemanager.ICertificate;
-  readonly subdomainResources: Array<CertificateResources>;
-};
-
-export type WebHostingResources = {
-  readonly domainBucket: s3.Bucket;
-  readonly originAccessControl: cloudfront.CfnOriginAccessControl;
-  readonly cloudFrontDistribution: cloudfront.Distribution;
-};
-
-export type RestApiServiceResources = {
-  readonly type: typeof SERVICE_TYPE_REST_API;
-  readonly service: RestApiServiceSpec;
-  readonly originAccessIdentity: cloudfront.OriginAccessIdentity;
-  readonly cloudFrontDistribution: cloudfront.Distribution;
-};
-
-// Maybe add some others in the future
-// ...
-
-export type ServiceResources = RestApiServiceResources;
-*/
 
 /*[XXX]
-// ----------------------------------------------------------------------
-export type HostedZoneBuilderProps = {
-  readonly siteResourcesStack: SiteResourcesNestedStack;
-  readonly rootDomainName: string;
-};
-*/
-
 // ----------------------------------------------------------------------
 export type BaseSitePipelineResources = {
   readonly invalidateCloudfrontCodeBuildProject: codebuild.PipelineProject;
@@ -86,41 +56,6 @@ export type CodeStarCustomSitePipelineResources = BaseSitePipelineResources & {
 
 export type PipelineResources = CodeStarS3SitePipelineResources | CodeStarCustomSitePipelineResources;
 
-// ----------------------------------------------------------------------
-export type SiteStackProps = cdk.StackProps & {
-  readonly config: SiteOMaticConfig;
-  readonly context: HasNetworkDerived<SomContext>;
-  readonly facts: SomFacts;
-  readonly locked: boolean;
-  readonly description: string;
-  // readonly username: string;
-  readonly contextParams: Record<string, string>;
-  readonly env: Record<string, string>;
-};
-
-/*
-export type SiteNestedStackProps = cdk.StackProps & {
-  readonly description: string;
-  readonly env?: Record<string, string>;
-};
-
-// ----------------------------------------------------------------------
-export type CertificateBuilderProps = {
-  readonly siteStack: SiteStack;
-  readonly rootDomainName: string;
-  readonly hostedZoneId: string;
-};
-
-// ----------------------------------------------------------------------
-export type WebHostingBuilderProps = {
-  readonly siteStack: SiteStack;
-  readonly domainCertificate: certificatemanager.ICertificate;
-  readonly cfFunctionViewerRequestTmpFilePath: [string, string | undefined];
-  readonly cfFunctionViewerResponseTmpFilePath: [string, string | undefined];
-};
-*/
-
-/*[XXX]
 // ----------------------------------------------------------------------
 export type PipelineType = typeof SITE_PIPELINE_TYPE_CODESTAR_S3 | typeof SITE_PIPELINE_TYPE_CODESTAR_CUSTOM;
 
@@ -201,28 +136,6 @@ export type SomInfoSpec = {
     readonly domainName?: string;
     readonly originPath?: string | undefined;
   }>;
-  // readonly webHosting:
-  //   | (Required<Omit<WebHostingClause, 'errorResponses' | 'waf'>> & {
-  //       errorResponses: Array<string>;
-  //       waf:
-  //         | {
-  //             enabled: boolean;
-  //             AWSManagedRules: Array<string>;
-  //           }
-  //         | undefined;
-  //     })
-  //   | undefined;
-  // readonly content: string | undefined;
-  // readonly pipeline: PipelineClause | undefined;
-  // readonly redirect:
-  //   | {
-  //       readonly type: string;
-  //       readonly action: string;
-  //     }
-  //   | undefined;
-  // readonly services: Array<[string, string]>;
-  // readonly certificateClones: Array<string> | undefined;
-  // readonly crossAccountAccessNames: Array<string> | undefined;
   readonly notifications: {
     readonly disabled: boolean;
     readonly noSubscription: boolean;

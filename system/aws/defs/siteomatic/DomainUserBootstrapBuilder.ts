@@ -3,7 +3,10 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 
 import { toSsmParamName } from '../../../../lib/aws/ssm';
-import { CF_OUTPUT_NAME_DOMAIN_USER_USER_NAME, SSM_PARAM_NAME_DOMAIN_USER_NAME } from '../../../../lib/consts';
+import {
+  BOOTSTRAP_DOMAIN_USER_USER_NAME_OUTPUT_NAME,
+  SSM_PARAM_NAME_DOMAIN_USER_USER_NAME,
+} from '../../../../lib/consts';
 import { _somMeta, formulateIamUserName } from '../../../../lib/utils';
 import type { SiteBootstrapStack } from './SiteStack/SiteBootstrapStack';
 
@@ -31,7 +34,7 @@ export async function build(siteBootstrapStack: SiteBootstrapStack): Promise<Dom
   // Cloudformation Outputs
   new CfnOutput(siteBootstrapStack, 'OutputDomainUserName', {
     value: domainUserName,
-    exportName: CF_OUTPUT_NAME_DOMAIN_USER_USER_NAME,
+    exportName: BOOTSTRAP_DOMAIN_USER_USER_NAME_OUTPUT_NAME(siteBootstrapStack.somId),
   });
 
   // ----------------------------------------------------------------------
@@ -40,7 +43,7 @@ export async function build(siteBootstrapStack: SiteBootstrapStack): Promise<Dom
     parameterName: toSsmParamName(
       siteBootstrapStack.siteProps.config,
       siteBootstrapStack.somId,
-      SSM_PARAM_NAME_DOMAIN_USER_NAME
+      SSM_PARAM_NAME_DOMAIN_USER_USER_NAME
     ),
     stringValue: domainUserName,
     tier: ssm.ParameterTier.STANDARD,

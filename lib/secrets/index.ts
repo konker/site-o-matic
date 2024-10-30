@@ -183,7 +183,7 @@ export async function deleteSomSecretBySource(
     case SECRETS_SOURCE_SSM:
       {
         const secretPath = resolveSsmSecretPath(config, scope);
-        const secretName = `${secretPath}/name`;
+        const secretName = `${secretPath}/${name}`;
         await ssm.deleteSsmParam(config, region, secretName);
       }
       break;

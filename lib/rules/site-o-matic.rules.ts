@@ -3,6 +3,8 @@ import {
   SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID,
   SSM_PARAM_NAME_DOMAIN_BUCKET_NAME,
   SSM_PARAM_NAME_DOMAIN_CERTIFICATE_ARN,
+  SSM_PARAM_NAME_DOMAIN_PUBLISHER_USER_NAME,
+  SSM_PARAM_NAME_DOMAIN_USER_USER_NAME,
   SSM_PARAM_NAME_HOSTED_ZONE_ID,
   SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS,
   SSM_PARAM_NAME_IS_AWS_ROUTE53_REGISTERED_DOMAIN,
@@ -17,6 +19,9 @@ import { is, isNonZero, isNot, rulesEngineFactory } from './index';
 export const SOM_FACTS_NAMES = [
   'lockedManifest',
   'lockedSsm',
+  'hasDomainUserUserNameParam',
+  'hasDomainPublisherUserNameParam',
+  'isBootstrapped',
   'hasHostedZoneIdParam',
   'hasHostedZoneNameServers',
   'hasHostedZoneAttributes',
@@ -57,6 +62,13 @@ export type SomFacts = Facts<SomFactNames>;
 export const siteOMaticRules = rulesEngineFactory<SomFactNames, SomContext>({
   lockedManifest: async (_facts, context) => context.manifest?.locked === true,
   lockedSsm: async (_facts, context) => getContextParam(context, SSM_PARAM_NAME_PROTECTED_STATUS) === 'true',
+  hasDomainUserUserNameParam: async (_facts, context) =>
+    is(getContextParam(context, SSM_PARAM_NAME_DOMAIN_USER_USER_NAME)),
+  hasDomainPublisherUserNameParam: async (_facts, context) =>
+    is(getContextParam(context, SSM_PARAM_NAME_DOMAIN_PUBLISHER_USER_NAME)),
+  isBootstrapped: async (facts, _context) =>
+    is(facts.hasDomainUserUserNameParam) && is(facts.hasDomainPublisherUserNameParam),
+
   hasHostedZoneIdParam: async (_facts, context) =>
     is(getContextParam(context, SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS)),
   hasHostedZoneNameServers: async (_facts, context) => is(context.hostedZoneNameservers),

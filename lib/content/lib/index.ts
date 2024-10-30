@@ -19,7 +19,19 @@ export function getTmpDirPath(
 ): string | undefined {
   return contentProducerId
     ? path.join(os.tmpdir(), `${somId}-${webHostingSpec.domainName}-${contentProducerId}`)
-    : undefined;
+    : /*
+    ? path.join(
+        __dirname,
+        '..',
+        '..',
+        '..', // project root
+        'system',
+        'aws',
+        `.cdk-${somId}.out`,
+        `content-${somId}-${webHostingSpec.domainName}-${contentProducerId}`
+      )
+    */
+      undefined;
 }
 
 export async function processContentDirectory(

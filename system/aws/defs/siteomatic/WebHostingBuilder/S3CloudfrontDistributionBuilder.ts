@@ -16,7 +16,7 @@ import type {
   WebHostingClauseCloudfrontS3,
   WebHostingDefaultsClauseCloudfrontS3,
 } from '../../../../../lib/manifest/schemas/site-o-matic-manifest.schema';
-import { _somMeta } from '../../../../../lib/utils';
+import { _somMeta, sleep } from '../../../../../lib/utils';
 import type { SiteResourcesStack } from '../SiteStack/SiteResourcesStack';
 import type { CertificateResources } from './CertificateBuilder';
 import type { CloudfrontFunctionsResources } from './CloudfrontFunctionsBuilder';
@@ -163,15 +163,7 @@ export async function build(
 
   // ----------------------------------------------------------------------
   // Domain Publisher permissions
-  siteResourcesStack.domainPublisherResources.domainPublisherPolicy.addStatements(
-    new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      resources: [
-        `arn:aws:cloudfront::${siteResourcesStack.siteProps.env.accountId}:distribution/${cloudfrontDistribution.distributionId}`,
-      ],
-      actions: ['cloudfront:CreateInvalidation', 'cloudfront:GetInvalidation', 'cloudfront:ListInvalidations'],
-    })
-  );
+  cloudfrontDistribution.grantCreateInvalidation(siteResourcesStack.domainPublisherResources.domainPublisher);
 
   // ----------------------------------------------------------------------
   // Add automatically generated content to the bucket if it is empty, and if so configured
@@ -181,6 +173,9 @@ export async function build(
   ) {
     const siteContentDeps = await SiteContentLoader.load(siteResourcesStack, webHostingSpec);
     if (siteContentDeps.siteContentTmpDirPath) {
+      // Sleep to avoid race condition between creating the content, and deploying the content
+      await sleep(1000);
+
       new s3Deployment.BucketDeployment(siteResourcesStack, 'S3BucketContentDeployment', {
         sources: [s3Deployment.Source.asset(siteContentDeps.siteContentTmpDirPath)],
         destinationBucket: siteResourcesStack.domainBucketResources.domainBucket,

@@ -13,8 +13,10 @@ export class SiteBootstrapStack extends cdk.Stack {
   public readonly rootDomainName: string;
   public readonly somId: string;
 
-  public domainUserResources: DomainUserBootstrapBuilder.DomainUserBootstrapResources | undefined;
-  public domainPublisherResources: DomainPublisherBoostrapBuilder.DomainPublisherBootstrapResources | undefined;
+  public domainUserBootstrapResources: DomainUserBootstrapBuilder.DomainUserBootstrapResources | undefined;
+  public domainPublisherBootstrapResources:
+    | DomainPublisherBoostrapBuilder.DomainPublisherBootstrapResources
+    | undefined;
 
   constructor(scope: Construct, id: string, props: SiteStackProps) {
     super(scope, id, Object.assign({}, DEFAULT_STACK_PROPS(props.config, props.context.somId, props), props));
@@ -26,8 +28,8 @@ export class SiteBootstrapStack extends cdk.Stack {
   }
 
   async build() {
-    this.domainUserResources = await DomainUserBootstrapBuilder.build(this);
-    this.domainPublisherResources = await DomainPublisherBoostrapBuilder.build(this);
+    this.domainUserBootstrapResources = await DomainUserBootstrapBuilder.build(this);
+    this.domainPublisherBootstrapResources = await DomainPublisherBoostrapBuilder.build(this);
 
     console.log(`Generated SiteBootstrapStack [${this.somId}]`);
   }

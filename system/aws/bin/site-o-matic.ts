@@ -29,7 +29,7 @@ async function main(): Promise<void> {
   );
 
   // ----------------------------------------------------------------------
-  const pathToManifestFile = contextParams.pathToManifestFile as string;
+  const pathToManifestFile = contextParams.pathToManifestFile!;
   const manifest = await loadManifest(pathToManifestFile);
   if (!manifest) {
     console.log(chalk.red(chalk.bold('Invalid manifest')));

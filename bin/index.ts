@@ -9,9 +9,8 @@ import { parseArgs } from 'util';
 import Vorpal from 'vorpal';
 
 import { loadConfig } from '../lib/config';
-import { SOM_CONFIG_PATH_TO_DEFAULT_FILE, VERSION } from '../lib/consts';
+import { SOM, SOM_CONFIG_PATH_TO_DEFAULT_FILE, VERSION } from '../lib/consts';
 import { actionAddSecret } from './actions/addSecret';
-import { actionAddUser } from './actions/addUser';
 import { actionClearScreen } from './actions/clearScreen';
 import { actionDeleteSecret } from './actions/deleteSecret';
 import { actionDeploy } from './actions/deploy';
@@ -19,7 +18,6 @@ import { actionDeployCheck } from './actions/deployCheck';
 import { actionDestroy } from './actions/destroy';
 import { actionDiff } from './actions/diff';
 import { actionInfo } from './actions/info';
-import { actionList } from './actions/list';
 import { actionListSecrets } from './actions/listSecrets';
 import { actionListSites } from './actions/listSites';
 import { actionListUsers } from './actions/listUsers';
@@ -30,6 +28,7 @@ import { actionShowContext } from './actions/showContext';
 import { actionShowFacts } from './actions/showFacts';
 import { actionShowManifest } from './actions/showManifest';
 import { actionShowSecret } from './actions/showSecret';
+import { actionStacks } from './actions/stacks';
 import { actionSynthesize } from './actions/synthesize';
 import { SomGlobalState } from './SomGlobalState';
 
@@ -50,6 +49,7 @@ async function main() {
   const { values, positionals } = parseArgs(ARG_PARSE_CONFIG);
 
   const vorpal = new Vorpal();
+  vorpal.history(SOM);
 
   const config = await loadConfig(SOM_CONFIG_PATH_TO_DEFAULT_FILE);
   assert(config, '[site-o-matic] Fatal Error: Failed to load config');
@@ -88,7 +88,9 @@ async function main() {
   vorpal.command('info', 'Show details about the site deployment').action(actionInfo(vorpal, config, globalState));
 
   vorpal.command('ls users', 'List users').action(actionListUsers(vorpal, config, globalState));
+  /*[XXX]
   vorpal.command('add user <username>', 'Add a user').action(actionAddUser(vorpal, config, globalState));
+  */
 
   // TODO: change this to SSM secure strings?
   vorpal.command('ls secrets', 'List secrets').action(actionListSecrets(vorpal, config, globalState));
@@ -121,7 +123,7 @@ async function main() {
     .action(actionDeleteCodeStarConnection(vorpal, config, globalState));
   */
 
-  vorpal.command('list', 'List the CDK stacks').action(actionList(vorpal, config, globalState));
+  vorpal.command('stacks', 'List the CDK stacks').action(actionStacks(vorpal, config, globalState));
   vorpal.command('synth', 'Synthesize the CDK stack').action(actionSynthesize(vorpal, config, globalState));
   vorpal
     .command('diff', 'Diff the CDK stack with the currently deployed resources,')
@@ -131,7 +133,7 @@ async function main() {
   vorpal
     .command('set nameservers', 'Set the nameservers automatically with the registrar, if configured')
     .action(actionSetNameServersWithRegistrar(vorpal, config, globalState));
-  vorpal.command('destroy [username]', 'Destroy the site').action(actionDestroy(vorpal, config, globalState));
+  vorpal.command('destroy', 'Destroy the site').action(actionDestroy(vorpal, config, globalState));
 
   const app = vorpal.delimiter(globalState.plumbing ? '' : `site-o-matic ${VERSION}>`);
   if (!globalState.plumbing) {
