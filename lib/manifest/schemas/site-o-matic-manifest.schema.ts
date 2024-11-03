@@ -65,7 +65,8 @@ export type RedirectClause = RedirectClauseEdgeCfFunction;
 export const AuthClauseBasicEdgeCfFunction = z.object({
   type: z.literal(AUTH_TYPE_BASIC_AUTH),
   implementation: z.literal(AUTH_IMPL_EDGE_CF_FUNCTION),
-  secretName: z.string().min(1),
+  usernameSecretName: z.string().min(1),
+  passwordSecretName: z.string().min(1),
 });
 export type AuthClauseBasicEdgeCfFunction = z.TypeOf<typeof AuthClauseBasicEdgeCfFunction>;
 

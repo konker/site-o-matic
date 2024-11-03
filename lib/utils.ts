@@ -4,6 +4,7 @@ import Handlebars from 'handlebars';
 
 import type { CertificateResources } from '../system/aws/defs/siteomatic/WebHostingBuilder/CertificateBuilder';
 import type { SiteOMaticConfig } from './config/schemas/site-o-matic-config.schema';
+import type { SomFunctionFragmentProducerDef } from './edge';
 import type { HasManifest, SomContext, SomParam } from './types';
 
 export function getParam(params: Array<SomParam> | undefined, name: string): string | undefined {
@@ -39,9 +40,19 @@ export function _somMeta(config: SiteOMaticConfig, resource: Resource, somId: st
   _somTag(config, resource, somId);
 }
 
-export function matchArraySorting<T>(sorted: Array<T>) {
-  return function (arr: Array<T>): Array<T> {
+export async function asyncCreateEmptyObject() {
+  return {};
+}
+
+export function matchArraySorting<T>(sorted: ReadonlyArray<T>) {
+  return function (arr: ReadonlyArray<T>): ReadonlyArray<T> {
     return [...arr].sort((a, b) => sorted.indexOf(a) - sorted.indexOf(b));
+  };
+}
+
+export function matchArraySortingFragmentProducerDefs(sorted: ReadonlyArray<string>) {
+  return function <T, C extends SomFunctionFragmentProducerDef<T>>(arr: ReadonlyArray<C>): ReadonlyArray<C> {
+    return [...arr].sort((a, b) => sorted.indexOf(a.id) - sorted.indexOf(b.id));
   };
 }
 
@@ -66,4 +77,8 @@ export function formulateIamUserName(somId: string, prefix: string): string {
 
 export async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export function fqdn(domainName: string): string {
+  return domainName.endsWith('.') ? domainName : domainName + '.';
 }

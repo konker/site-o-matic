@@ -51,8 +51,9 @@ async function main() {
   const vorpal = new Vorpal();
   vorpal.history(SOM);
 
-  const config = await loadConfig(SOM_CONFIG_PATH_TO_DEFAULT_FILE);
-  assert(config, '[site-o-matic] Fatal Error: Failed to load config');
+  const configLoad = await loadConfig(SOM_CONFIG_PATH_TO_DEFAULT_FILE);
+  assert(configLoad, '[site-o-matic] Fatal Error: Failed to load config');
+  const [config] = configLoad;
 
   const globalState = new SomGlobalState(config, values);
 

@@ -10,6 +10,7 @@ import type {
 } from './consts';
 import type { SiteOMaticManifest } from './manifest/schemas/site-o-matic-manifest.schema';
 import type { SomFacts } from './rules/site-o-matic.rules';
+import type { SecretsSetCollection } from './secrets/types';
 
 export type WwwConnectionStatus = {
   readonly statusCode: number;
@@ -81,6 +82,7 @@ export type SomContext = {
   // Manifest derived
   pathToManifestFile?: string;
   manifest?: SiteOMaticManifest;
+  manifestHash?: string;
   rootDomainName?: string;
   domainHash?: string;
   somId?: string;
@@ -91,6 +93,7 @@ export type SomContext = {
 
   // Network derived
   params?: Array<SomParam>;
+  secrets?: SecretsSetCollection;
   hostedZoneAttributes?: HostedZoneAttributes | undefined;
   hostedZoneNameservers?: Array<string>;
   registrarNameservers?: Array<string>;
@@ -107,6 +110,7 @@ export type SomContext = {
 export type HasManifest<T extends SomContext> = T & {
   readonly pathToManifestFile: string;
   readonly manifest: SiteOMaticManifest;
+  readonly manifestHash: string;
   readonly rootDomainName: string;
   readonly domainHash: string;
   readonly somId: string;
@@ -117,6 +121,7 @@ export type HasManifest<T extends SomContext> = T & {
 
 export type HasNetworkDerived<T extends SomContext> = HasManifest<T> & {
   readonly params: Array<SomParam>;
+  readonly secrets: SecretsSetCollection;
   readonly hostedZoneAttributes: HostedZoneAttributes | undefined;
   readonly hostedZoneNameservers: Array<string>;
   readonly registrarNameservers: Array<string>;
@@ -146,6 +151,7 @@ export type SomInfoSpec = {
     readonly lockedSsm: boolean;
   };
   readonly pathToManifestFile: SomParam;
+  readonly manifestHash: SomParam;
   readonly somId: SomParam;
 };
 

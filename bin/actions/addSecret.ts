@@ -27,7 +27,10 @@ export function actionAddSecret(vorpal: Vorpal, config: SiteOMaticConfig, state:
       vorpal,
       state,
       data.map((x) => ({ Name: x })),
-      ['Name']
+      ['Name'],
+      ['Name'],
+      false,
+      [60]
     );
   };
 }

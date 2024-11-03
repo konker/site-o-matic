@@ -102,8 +102,9 @@
         // Currently this is the only supported value
         implementation: 'edge-cf-function',
 
-        // Add this secret via the CLI
-        secretName: 'dev.example.com_basic_auth_secret',
+        // Add these site-o-matic secrets via the CLI
+        usernameSecretName: 'dev.example.com_basic_auth_username',
+        passwordSecretName: 'dev.example.com_basic_auth_password',
       },
     },
     {

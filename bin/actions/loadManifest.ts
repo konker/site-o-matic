@@ -14,13 +14,13 @@ export function actionLoadManifest(vorpal: Vorpal, config: SiteOMaticConfig, sta
     if (typeof args === 'string') throw new Error('Error: string args to action');
 
     const pathToManifestFile = path.resolve(args.pathToManifestFile);
-    const manifest = await loadManifest(pathToManifestFile);
-    if (!manifest) {
+    const manifestLoad = await loadManifest(pathToManifestFile);
+    if (!manifestLoad) {
       verror(vorpal, state, `Failed to load manifest from: ${pathToManifestFile}`);
       return;
     }
 
-    const context = manifestDerivedProps(config, state.context, pathToManifestFile, manifest);
+    const context = manifestDerivedProps(config, state.context, pathToManifestFile, ...manifestLoad);
     state.updateContext(context);
 
     if (!state.plumbing) {

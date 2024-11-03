@@ -2,30 +2,6 @@
 
 exports[`site-o-matic-manifest-schema should validate a complete example 1`] = `
 {
-  "certificate": {
-    "clones": [
-      {
-        "account": "111111111111",
-        "name": "eg-development",
-        "region": "eu-north-1",
-      },
-      {
-        "account": "222222222222",
-        "name": "eg-production",
-        "region": "eu-north-1",
-      },
-    ],
-  },
-  "crossAccountAccess": [
-    {
-      "arn": "arn:aws:sts::111111111111:role/OrganizationAccountAccessRole",
-      "name": "eg-development",
-    },
-    {
-      "arn": "arn:aws:iam::222222222222:role/OrganizationAccountAccessRole",
-      "name": "eg-production",
-    },
-  ],
   "domainName": "example.com",
   "extraDnsConfig": [
     {
@@ -51,38 +27,13 @@ exports[`site-o-matic-manifest-schema should validate a complete example 1`] = `
     "noSubscription": false,
     "subscriptionEmail": "webmaster+{{context.manifest.rootDomainName}}@example.com",
   },
-  "pipeline": {
-    "buildFiles": [
-      "www/**",
-    ],
-    "buildImage": "aws/codebuild/amazonlinux2-x86_64-standard:5.0",
-    "buildPhases": {
-      "build": {
-        "commands": [
-          "npm run build",
-        ],
-      },
-      "install": {
-        "commands": [
-          "npm install",
-        ],
-      },
-    },
-    "codestarConnectionArn": "arn:aws:codestar-connections:us-east-1:111111111111:connection/12345678-cafe-cafe-cafe-123456789012",
-    "owner": "example",
-    "repo": "example.com",
-    "type": "codestar-custom",
-  },
-  "redirect": {
-    "source": ".",
-    "target": "https://www.example.org/",
-    "type": "edge-cf-function",
-  },
   "registrar": "dynadot",
   "title": "example.com",
   "webHosting": [
     {
-      "branch": "main",
+      "content": {
+        "producerId": "default",
+      },
       "defaultRootObject": "index.html",
       "domainName": "example.com",
       "errorResponses": [
@@ -95,10 +46,18 @@ exports[`site-o-matic-manifest-schema should validate a complete example 1`] = `
           "responsePagePath": "/404.html",
         },
       ],
+      "originPath": "/main/www",
+      "redirect": {
+        "implementation": "edge-cf-function",
+        "source": ".",
+        "target": "https://www.example.org/",
+      },
       "type": "cloudfront-s3",
     },
     {
-      "branch": "main",
+      "content": {
+        "producerId": "default",
+      },
       "defaultRootObject": "index.html",
       "domainName": "www.example.com",
       "errorResponses": [
@@ -111,10 +70,32 @@ exports[`site-o-matic-manifest-schema should validate a complete example 1`] = `
           "responsePagePath": "/404.html",
         },
       ],
+      "originPath": "/main/www",
       "type": "cloudfront-s3",
+      "waf": {
+        "AWSManagedRules": [
+          {
+            "name": "AWSManagedRulesCommonRuleSet",
+            "priority": 10,
+          },
+          {
+            "name": "AWSManagedRulesBotControlRuleSet",
+            "priority": 20,
+          },
+        ],
+        "enabled": true,
+      },
     },
     {
-      "branch": "dev",
+      "auth": {
+        "implementation": "edge-cf-function",
+        "passwordSecretName": "dev.example.com_basic_auth_password",
+        "type": "basic-auth",
+        "usernameSecretName": "dev.example.com_basic_auth_username",
+      },
+      "content": {
+        "producerId": "default",
+      },
       "defaultRootObject": "index.html",
       "domainName": "dev.example.com",
       "errorResponses": [
@@ -127,6 +108,7 @@ exports[`site-o-matic-manifest-schema should validate a complete example 1`] = `
           "responsePagePath": "/404.html",
         },
       ],
+      "originPath": "/dev/www",
       "type": "cloudfront-s3",
     },
     {
@@ -141,6 +123,9 @@ exports[`site-o-matic-manifest-schema should validate a complete example 1`] = `
       "originPath": "/",
     },
     "cloudfront-s3": {
+      "content": {
+        "producerId": "default",
+      },
       "defaultRootObject": "index.html",
       "errorResponses": [
         {
@@ -152,6 +137,7 @@ exports[`site-o-matic-manifest-schema should validate a complete example 1`] = `
           "responsePagePath": "/404.html",
         },
       ],
+      "originPath": "/www",
     },
     "none": {},
   },

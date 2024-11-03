@@ -13,7 +13,8 @@ import type {
   WebHostingClauseCloudfrontHttps,
   WebHostingDefaultsClauseCloudfrontHttps,
 } from '../../../../../lib/manifest/schemas/site-o-matic-manifest.schema';
-import { _somMeta } from '../../../../../lib/utils';
+import type { SecretsSetCollection } from '../../../../../lib/secrets/types';
+import { _somMeta, fqdn } from '../../../../../lib/utils';
 import type { SiteResourcesStack } from '../SiteStack/SiteResourcesStack';
 import type { CertificateResources } from './CertificateBuilder';
 import type { CloudfrontFunctionsResources } from './CloudfrontFunctionsBuilder';
@@ -33,8 +34,10 @@ export type HttpsCloudfrontDistributionResources = {
 // ----------------------------------------------------------------------
 export async function build(
   siteResourcesStack: SiteResourcesStack,
+  secrets: SecretsSetCollection,
   webHostingSpec: WebHostingClauseCloudfrontHttps,
   _webHostingDefaults: WebHostingDefaultsClauseCloudfrontHttps,
+  localIdPostfix: string,
   certificateResources: CertificateResources,
   _wafResources: WafResources
 ): Promise<HttpsCloudfrontDistributionResources> {
@@ -51,9 +54,11 @@ export async function build(
 
   // ----------------------------------------------------------------------
   // Build cloudfront functions
-  const cloudfrontFunctionsDeps = await CloudfrontFunctionsLoader.load(siteResourcesStack, webHostingSpec);
+  const cloudfrontFunctionsDeps = await CloudfrontFunctionsLoader.load(siteResourcesStack, secrets, webHostingSpec);
   const cloudfrontFunctionsResources = await CloudfrontFunctionsBuilder.build(
     siteResourcesStack,
+    webHostingSpec,
+    localIdPostfix,
     [WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID, cloudfrontFunctionsDeps.cfFunctionViewerRequestTmpFilePath],
     [WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID, cloudfrontFunctionsDeps.cfFunctionViewerResponseTmpFilePath]
   );
@@ -113,23 +118,24 @@ export async function build(
 
   // ----------------------------------------------------------------------
   // DNS records
-  const dns1 = new route53.ARecord(siteResourcesStack, 'DnsRecordSet_A', {
+  const dns1 = new route53.ARecord(siteResourcesStack, `DnsRecordSet_A-${localIdPostfix}`, {
     zone: siteResourcesStack.hostedZoneResources.hostedZone,
-    recordName: webHostingSpec.domainName,
+    recordName: fqdn(webHostingSpec.domainName),
     target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(cloudfrontDistribution)),
   });
   _somMeta(siteResourcesStack.siteProps.config, dns1, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
 
-  const dns2 = new route53.AaaaRecord(siteResourcesStack, 'DnsRecordSet_AAAA', {
+  const dns2 = new route53.AaaaRecord(siteResourcesStack, `DnsRecordSet_AAAA-${localIdPostfix}`, {
     zone: siteResourcesStack.hostedZoneResources.hostedZone,
-    recordName: webHostingSpec.domainName,
+    recordName: fqdn(webHostingSpec.domainName),
+
     target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(cloudfrontDistribution)),
   });
   _somMeta(siteResourcesStack.siteProps.config, dns2, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
 
   // ----------------------------------------------------------------------
   // SSM Params
-  const ssm1 = new ssm.StringParameter(siteResourcesStack, 'SsmCloudfrontDistributionId', {
+  const ssm1 = new ssm.StringParameter(siteResourcesStack, `SsmCloudfrontDistributionId-${localIdPostfix}`, {
     parameterName: toSsmParamName(
       siteResourcesStack.siteProps.config,
       siteResourcesStack.somId,
@@ -141,7 +147,7 @@ export async function build(
   });
   _somMeta(siteResourcesStack.siteProps.config, ssm1, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
 
-  const ssm2 = new ssm.StringParameter(siteResourcesStack, 'SsmCloudfrontDomainName', {
+  const ssm2 = new ssm.StringParameter(siteResourcesStack, `SsmCloudfrontDomainName-${localIdPostfix}`, {
     parameterName: toSsmParamName(
       siteResourcesStack.siteProps.config,
       siteResourcesStack.somId,

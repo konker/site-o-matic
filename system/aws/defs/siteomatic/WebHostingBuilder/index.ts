@@ -1,8 +1,10 @@
+import { formulateSomId } from '../../../../../lib';
 import { WEB_HOSTING_TYPE_CLOUDFRONT_HTTPS, WEB_HOSTING_TYPE_CLOUDFRONT_S3 } from '../../../../../lib/consts';
 import type {
   WebHostingClauseWithResources,
   WebHostingType,
 } from '../../../../../lib/manifest/schemas/site-o-matic-manifest.schema';
+import type { SecretsSetCollection } from '../../../../../lib/secrets/types';
 import type { SiteResourcesStack } from '../SiteStack/SiteResourcesStack';
 import * as CertificateBuilder from './CertificateBuilder';
 import * as HttpsCloudfrontDistributionBuilder from './HttpsCloudfrontDistributionBuilder';
@@ -25,6 +27,7 @@ export type WebHostingResources = {
 // ----------------------------------------------------------------------
 export async function build(
   siteResourcesStack: SiteResourcesStack,
+  secrets: SecretsSetCollection,
   webHostingSpec: WebHostingClauseWithResources
 ): Promise<WebHostingResources> {
   // TODO: check for actual dependencies, if any
@@ -32,9 +35,11 @@ export async function build(
     throw new Error('[site-o-matic] Could not build web hosting resources when domainUser is missing');
   }
 
+  const localIdPostfix = formulateSomId(siteResourcesStack.siteProps.config, webHostingSpec.domainName);
+
   // ----------------------------------------------------------------------
   // TLS Certificate
-  const certificateResources = await CertificateBuilder.build(siteResourcesStack, webHostingSpec);
+  const certificateResources = await CertificateBuilder.build(siteResourcesStack, webHostingSpec, localIdPostfix);
 
   // ----------------------------------------------------------------------
   // WAF ACl
@@ -45,16 +50,20 @@ export async function build(
       case WEB_HOSTING_TYPE_CLOUDFRONT_S3:
         return S3CloudfrontDistributionBuilder.build(
           siteResourcesStack,
+          secrets,
           webHostingSpec,
           siteResourcesStack.siteProps.context.manifest.webHostingDefaults[WEB_HOSTING_TYPE_CLOUDFRONT_S3],
+          localIdPostfix,
           certificateResources,
           wafResources
         );
       case WEB_HOSTING_TYPE_CLOUDFRONT_HTTPS:
         return HttpsCloudfrontDistributionBuilder.build(
           siteResourcesStack,
+          secrets,
           webHostingSpec,
           siteResourcesStack.siteProps.context.manifest.webHostingDefaults[WEB_HOSTING_TYPE_CLOUDFRONT_HTTPS],
+          localIdPostfix,
           certificateResources,
           wafResources
         );

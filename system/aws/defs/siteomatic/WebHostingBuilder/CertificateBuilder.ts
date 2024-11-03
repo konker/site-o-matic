@@ -1,7 +1,6 @@
 import * as certificatemanager from 'aws-cdk-lib/aws-certificatemanager';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 
-import { formulateSomId } from '../../../../../lib';
 import { toSsmParamName } from '../../../../../lib/aws/ssm';
 import { SSM_PARAM_NAME_DOMAIN_CERTIFICATE_ARN } from '../../../../../lib/consts';
 import type { WebHostingClauseWithResources } from '../../../../../lib/manifest/schemas/site-o-matic-manifest.schema';
@@ -18,7 +17,8 @@ export type CertificateResources = {
 // ----------------------------------------------------------------------
 export async function build(
   siteResourcesStack: SiteResourcesStack,
-  webHostingSpec: WebHostingClauseWithResources
+  webHostingSpec: WebHostingClauseWithResources,
+  localIdPostfix: string
 ): Promise<CertificateResources> {
   // TODO: check for actual dependencies
   if (!siteResourcesStack.hostedZoneResources?.hostedZone) {
@@ -27,7 +27,6 @@ export async function build(
 
   // ----------------------------------------------------------------------
   // SSL certificate for apex and wildcard subdomains
-  const localIdPostfix = formulateSomId(siteResourcesStack.siteProps.config, webHostingSpec.domainName);
   const certificate = new certificatemanager.Certificate(siteResourcesStack, `DomainCertificate-${localIdPostfix}`, {
     domainName: webHostingSpec.domainName,
     subjectAlternativeNames: [`*.${webHostingSpec.domainName}`],
@@ -39,7 +38,7 @@ export async function build(
 
   // ----------------------------------------------------------------------
   // SSM Params
-  const res1 = new ssm.StringParameter(siteResourcesStack, 'DomainCertificateArn', {
+  const res1 = new ssm.StringParameter(siteResourcesStack, `SsmDomainCertificateArn-${localIdPostfix}`, {
     parameterName: toSsmParamName(
       siteResourcesStack.siteProps.config,
       siteResourcesStack.somId,

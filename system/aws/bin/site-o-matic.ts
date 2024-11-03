@@ -15,8 +15,9 @@ import { SiteResourcesStack } from '../defs/siteomatic/SiteStack/SiteResourcesSt
 
 async function main(): Promise<void> {
   const app = new cdk.App();
-  const config = await loadConfig(SOM_CONFIG_PATH_TO_DEFAULT_FILE);
-  assert(config, '[site-o-matic] Fatal Error: Failed to load config');
+  const configLoad = await loadConfig(SOM_CONFIG_PATH_TO_DEFAULT_FILE);
+  assert(configLoad, '[site-o-matic] Fatal Error: Failed to load config');
+  const [config] = configLoad;
 
   // ----------------------------------------------------------------------
   const paramKeys = app.node.tryGetContext('paramsKeys') ?? '[]';
@@ -30,12 +31,12 @@ async function main(): Promise<void> {
 
   // ----------------------------------------------------------------------
   const pathToManifestFile = contextParams.pathToManifestFile!;
-  const manifest = await loadManifest(pathToManifestFile);
-  if (!manifest) {
+  const manifestLoad = await loadManifest(pathToManifestFile);
+  if (!manifestLoad) {
     console.log(chalk.red(chalk.bold('Invalid manifest')));
     return;
   }
-  const context = await loadContext(config, pathToManifestFile, manifest);
+  const context = await loadContext(config, pathToManifestFile, ...manifestLoad);
   const facts = await siteOMaticRules(context);
 
   // ----------------------------------------------------------------------
@@ -46,7 +47,7 @@ async function main(): Promise<void> {
     facts,
     locked: context.manifest.locked ?? false,
     contextParams,
-    description: `Site-o-Matic Stack for ${manifest.domainName}`,
+    description: `Site-o-Matic Stack for ${context.manifest.domainName}`,
     env: {
       accountId: process.env.CDK_DEFAULT_ACCOUNT!,
       region: process.env.CDK_DEFAULT_REGION!,

@@ -80,6 +80,7 @@ export function actionInfo(vorpal: Vorpal, config: SiteOMaticConfig, state: SomG
           lockedSsm: facts.lockedSsm,
         },
         pathToManifestFile: { Param: 'pathToManifestFile', Value: context.pathToManifestFile ?? UNKNOWN },
+        manifestHash: { Param: 'manifestHash', Value: context.manifestHash ?? UNKNOWN },
         somId: { Param: 'somId', Value: context.somId ?? UNKNOWN },
       };
 

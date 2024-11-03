@@ -1,10 +1,31 @@
 import chalk from 'chalk';
 
 import { UNKNOWN } from '../consts';
+import type { AuthClause, RedirectClause, WafClause } from '../manifest/schemas/site-o-matic-manifest.schema';
 import { formatStatusBreadCrumbAndMessage } from '../status';
 import type { SomInfoSpec, SomInfoStatus } from '../types';
 import { tabulate } from './tables';
 import { ssmParamLabel } from './utils';
+
+export function renderWebHostingWaf(waf: WafClause): string {
+  return `${chalk.bold(chalk.white('WAF enabled'))}:\n ↪ ${waf.enabled}\n${chalk.bold(
+    chalk.white('WAF managed rules')
+  )}: ${waf.AWSManagedRules?.map((rule) => `\n ↪ ${rule.name}`).join('')}\n`;
+}
+
+export function renderWebHostingRedirect(redirect: RedirectClause): string {
+  return (
+    `${chalk.bold(chalk.white('source'))}:\n ↪ ${redirect.source}` +
+    `\n${chalk.bold(chalk.white('target'))}:\n ${redirect.target}`
+  );
+}
+
+export function renderWebHostingAuth(auth: AuthClause): string {
+  return (
+    `${chalk.bold(chalk.white('username secret'))}:\n ↪ ${auth.usernameSecretName}` +
+    `\n${chalk.bold(chalk.white('password secret'))}:\n ${auth.passwordSecretName}`
+  );
+}
 
 export function renderInfoSpec(infoSpec: SomInfoSpec): string {
   return tabulate(
@@ -29,11 +50,18 @@ export function renderInfoSpec(infoSpec: SomInfoSpec): string {
                     { Param: 'type', Value: x.type },
                     { Param: 'originPath', Value: x.originPath },
                     'content' in x ? { Param: 'content', Value: x.content } : { Param: 'content', Value: undefined },
-                    'redirect' in x
-                      ? { Param: 'redirect', Value: x.redirect }
+                    'redirect' in x && !!x.redirect
+                      ? { Param: 'redirect', Value: renderWebHostingRedirect(x.redirect as RedirectClause) }
                       : { Param: 'redirect', Value: undefined },
-                    'auth' in x ? { Param: 'auth', Value: x.auth } : { Param: 'auth', Value: undefined },
-                    'waf' in x ? { Param: 'WAF', Value: x.waf } : { Param: 'WAF', Value: undefined },
+                    'auth' in x && !!x.auth
+                      ? { Param: 'auth', Value: renderWebHostingAuth(x.auth as AuthClause) }
+                      : { Param: 'auth', Value: undefined },
+                    'waf' in x && !!x.waf
+                      ? {
+                          Param: 'WAF',
+                          Value: renderWebHostingWaf(x.waf as WafClause),
+                        }
+                      : { Param: 'WAF', Value: undefined },
                   ],
                   ['Param', 'Value'],
                   ['', x.domainName ?? ''],
@@ -112,6 +140,7 @@ export function renderInfoSpec(infoSpec: SomInfoSpec): string {
           }`,
         },
         infoSpec.pathToManifestFile,
+        infoSpec.manifestHash,
         infoSpec.somId,
       ]),
     ['Param', 'Value'],

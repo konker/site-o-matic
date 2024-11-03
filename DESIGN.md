@@ -1,6 +1,13 @@
 # Site-o-Matic
 
-## V2
+## V0.0.3
+
+- Add basic auth edge function
+  - username secret name
+  - password secret name
+  - Can edge function load this data?
+  - Or, just pre-compute the MD5 hash and embed that in the edge function?
+    - Requires re-deploy to change password
 
 ### Other
 
@@ -8,6 +15,8 @@
   - Current limitations with CDK:
     - Cannot create user resource and give it bucket permissions (DomainPublisher)
     - Cannot create access key for user and store it in SecureString SSM param
+      - Workaround in code and by splitting into two separate stack deployments per site
+        - Clunky: 2 deployments, access key secret exposed as cloudformation outputs
 - Add `config` echo param, like context/facts
 
 ### Pipeline reboot?

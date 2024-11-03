@@ -27,6 +27,7 @@ describe('site-o-matic-manifest-schema', () => {
       locked: false,
       webHosting: [
         {
+          originPath: '/www',
           defaultRootObject: 'index.html',
           domainName: 'minimal-example.com',
           errorResponses: [
@@ -40,6 +41,9 @@ describe('site-o-matic-manifest-schema', () => {
             },
           ],
           type: 'cloudfront-s3',
+          content: {
+            producerId: 'default',
+          },
         },
       ],
       webHostingDefaults: {
@@ -47,6 +51,7 @@ describe('site-o-matic-manifest-schema', () => {
           originPath: '/',
         },
         'cloudfront-s3': {
+          originPath: '/www',
           defaultRootObject: 'index.html',
           errorResponses: [
             {
@@ -58,6 +63,9 @@ describe('site-o-matic-manifest-schema', () => {
               responsePagePath: '/404.html',
             },
           ],
+          content: {
+            producerId: 'default',
+          },
         },
         none: {},
       },

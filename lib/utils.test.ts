@@ -92,6 +92,46 @@ describe('utils', () => {
     });
   });
 
+  describe('matchArraySortingFragmentProducerDefs', () => {
+    it('should work as expected', () => {
+      expect(
+        unit.matchArraySortingFragmentProducerDefs(['A', 'B', 'C'])([
+          { id: 'C', spec: undefined },
+          { id: 'B', spec: undefined },
+          { id: 'A', spec: undefined },
+        ])
+      ).toStrictEqual([
+        { id: 'A', spec: undefined },
+        { id: 'B', spec: undefined },
+        { id: 'C', spec: undefined },
+      ]);
+      expect(
+        unit.matchArraySortingFragmentProducerDefs(['A', 'B', 'C'])([
+          { id: 'A', spec: undefined },
+          { id: 'B', spec: undefined },
+          { id: 'C', spec: undefined },
+        ])
+      ).toStrictEqual([
+        { id: 'A', spec: undefined },
+        { id: 'B', spec: undefined },
+        { id: 'C', spec: undefined },
+      ]);
+      expect(
+        unit.matchArraySortingFragmentProducerDefs(['A', 'B', 'C'])([
+          { id: 'B', spec: undefined },
+          { id: 'A', spec: undefined },
+          { id: 'D', spec: undefined },
+          { id: 'C', spec: undefined },
+        ])
+      ).toStrictEqual([
+        { id: 'D', spec: undefined },
+        { id: 'A', spec: undefined },
+        { id: 'B', spec: undefined },
+        { id: 'C', spec: undefined },
+      ]);
+    });
+  });
+
   describe('contextTemplateString', () => {
     it('should work as expected', () => {
       expect(unit.contextTemplateString(undefined, {} as any)).toBeUndefined();

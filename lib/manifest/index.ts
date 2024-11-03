@@ -1,7 +1,9 @@
 import { loadValidData } from '../json5';
 import { SiteOMaticManifest } from './schemas/site-o-matic-manifest.schema';
 
-export async function loadManifest(pathToManifestFile: string): Promise<SiteOMaticManifest | undefined> {
+export type ManifestLoad<T> = [T, string];
+
+export async function loadManifest(pathToManifestFile: string): Promise<ManifestLoad<SiteOMaticManifest> | undefined> {
   return loadValidData(pathToManifestFile, SiteOMaticManifest);
 }
 

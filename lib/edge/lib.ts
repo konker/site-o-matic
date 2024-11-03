@@ -1,14 +1,18 @@
 import os from 'os';
 import path from 'path';
 
-export function getTmpFilePath(somId: string, functionProducerId?: string | undefined): string | undefined {
-  return functionProducerId ? path.join(os.tmpdir(), `${somId}-${functionProducerId}`) : undefined;
+import type { SomFunctionFragmentProducerDef } from './index';
+
+export function getTmpFilePath(somId: string, functionProducerId: string, postfix: string): string {
+  return path.join(os.tmpdir(), `${somId}-${functionProducerId}-${postfix}`);
 }
 
-export async function undefinedFunctionGenerator(): Promise<string | undefined> {
+export async function undefinedFunctionProducerExec(): Promise<string | undefined> {
   return undefined;
 }
 
-export function noopSubComponentIdSorter(subComponentIds: Array<string>): Array<string> {
+export function noopSubComponentIdSorter<T, C extends SomFunctionFragmentProducerDef<T>>(
+  subComponentIds: Array<C>
+): Array<C> {
   return subComponentIds;
 }

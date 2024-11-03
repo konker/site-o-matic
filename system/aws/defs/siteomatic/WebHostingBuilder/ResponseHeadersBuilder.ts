@@ -10,14 +10,17 @@ export type ResponseHeadersResources = {
 };
 
 // ----------------------------------------------------------------------
-export async function build(siteResourcesStack: SiteResourcesStack): Promise<ResponseHeadersResources> {
+export async function build(
+  siteResourcesStack: SiteResourcesStack,
+  localIdPostfix: string
+): Promise<ResponseHeadersResources> {
   if (!siteResourcesStack.domainUserResources?.domainUser) {
     throw new Error('[site-o-matic] Could not build response headers resources when domainUser is missing');
   }
 
   const responseHeadersPolicy = new cloudfront.ResponseHeadersPolicy(
     siteResourcesStack,
-    'SecurityHeadersResponseHeaderPolicy',
+    `SecurityHeadersResponseHeaderPolicy-${localIdPostfix}`,
     {
       securityHeadersBehavior: {
         contentSecurityPolicy: {

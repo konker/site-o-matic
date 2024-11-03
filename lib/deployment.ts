@@ -6,8 +6,11 @@ import {
   SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG,
   SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS,
   VERSION,
+  WEB_HOSTING_TYPE_CLOUDFRONT_S3,
+  WEB_HOSTING_TYPE_NONE,
 } from './consts';
 import { hasManifest } from './context';
+import { loadManifest } from './manifest';
 import { getRegistrarConnector } from './registrar';
 import { siteOMaticRules } from './rules/site-o-matic.rules';
 import * as secrets from './secrets';
@@ -38,6 +41,24 @@ export async function preDeploymentCheck(
     checkItems.push(checkPassed('Manifest Loaded'));
   }
 
+  if (hasManifest(context)) {
+    const manifestLoad = await loadManifest(context.pathToManifestFile);
+    if (!manifestLoad) {
+      checkItems.push(
+        checkFailed('Manifest change', `The site-o-matic manifest has changed on disk. Re-load it before deployment.`)
+      );
+    } else {
+      const [_, hash] = manifestLoad;
+      if (hash !== context.manifestHash) {
+        checkItems.push(
+          checkFailed('Manifest change', `The site-o-matic manifest has changed on disk. Re-load it before deployment.`)
+        );
+      } else {
+        checkItems.push(checkPassed('Manifest change'));
+      }
+    }
+  }
+
   if (context.somVersion !== VERSION) {
     checkItems.push(
       checkFailed(
@@ -48,15 +69,6 @@ export async function preDeploymentCheck(
   } else {
     checkItems.push(checkPassed('Site-O-Matic version'));
   }
-
-  /*[XXX]
-  const somUsers = await iam.listSomUsers(config, DEFAULT_AWS_REGION);
-  if (!somUsers.some((i) => i.UserName === somUser)) {
-    checkItems.push(checkFailed('User', `User ${somUser} does not exist`));
-  } else {
-    checkItems.push(checkPassed('User'));
-  }
-  */
 
   /*[XXX]
   if (context.manifest) {
@@ -79,9 +91,10 @@ export async function preDeploymentCheck(
   }
   */
 
+  const somSecrets = await secrets.getAllSomSecrets(config, DEFAULT_AWS_REGION, context.somId);
+
   if (context.registrar) {
     const registrarConnector = getRegistrarConnector(context.registrar);
-    const somSecrets = await secrets.getAllSomSecrets(config, DEFAULT_AWS_REGION, context.somId);
     if (!registrarConnector.SECRETS.every((secretName) => somSecrets.lookup[secretName])) {
       checkItems.push(
         checkFailed(
@@ -94,16 +107,48 @@ export async function preDeploymentCheck(
     }
   }
 
-  // if (context.manifest?.webHosting?.waf) {
-  //   if (
-  //     context.manifest?.webHosting?.waf?.enabled &&
-  //     (context.manifest?.webHosting?.waf?.AWSManagedRules?.length ?? 0) === 0
-  //   ) {
-  //     checkItems.push(checkFailed('WAF', 'WAF is enabled, but no AWS Managed Rules are configured'));
-  //   } else {
-  //     checkItems.push(checkPassed('WAF'));
-  //   }
-  // }
+  context.manifest?.webHosting?.forEach((webHostingClause) => {
+    if (webHostingClause.type === WEB_HOSTING_TYPE_CLOUDFRONT_S3) {
+      if (webHostingClause.auth) {
+        if (
+          ![webHostingClause.auth.usernameSecretName, webHostingClause.auth.passwordSecretName].every(
+            (secretName) => somSecrets.lookup[secretName]
+          )
+        ) {
+          checkItems.push(
+            checkFailed(
+              'WebHosting auth secrets',
+              `WebHosting ${webHostingClause.domainName} requires missing secret(s)`
+            )
+          );
+        } else {
+          checkItems.push(checkPassed('WebHosting auth secrets'));
+        }
+      }
+    }
+  });
+
+  if (
+    context.manifest?.webHosting &&
+    context.manifest.webHosting.length !==
+      new Set(context.manifest.webHosting.filter((x) => x.type !== WEB_HOSTING_TYPE_NONE).map((x) => x.domainName)).size
+  ) {
+    checkItems.push(checkFailed('WebHosting unique domain names', 'WebHosting clauses must have unique domain names'));
+  } else {
+    checkItems.push(checkPassed('WebHosting unique domain names'));
+  }
+
+  if (context.manifest?.webHosting) {
+    if (
+      context.manifest.webHosting
+        .filter((x) => x.type !== WEB_HOSTING_TYPE_NONE)
+        .some((x) => x.waf?.enabled && (x.waf?.AWSManagedRules?.length ?? 0) === 0)
+    ) {
+      checkItems.push(checkFailed('WAF', 'WAF is enabled, but no AWS Managed Rules are configured'));
+    } else {
+      checkItems.push(checkPassed('WAF'));
+    }
+  }
 
   if (status === SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG) {
     if (context.registrar) {

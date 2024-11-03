@@ -46,7 +46,7 @@ export class SiteResourcesStack extends cdk.Stack {
     this.webHostingResourcesList = await Promise.all(
       this.siteProps.context.manifest.webHosting
         .filter((webHostingSpec) => webHostingSpec.type !== WEB_HOSTING_TYPE_NONE)
-        .map((webHostingSpec) => WebHostingBuilder.build(this, webHostingSpec))
+        .map((webHostingSpec) => WebHostingBuilder.build(this, this.siteProps.context.secrets, webHostingSpec))
     );
     console.log(`Generated SiteResourcesStack [${this.somId}]`);
   }

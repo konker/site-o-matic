@@ -1,0 +1,12 @@
+
+  // Require Basic authentication
+  if (typeof request.headers.authorization === 'undefined' || typeof request.headers.authorization.value === 'undefined' || request.headers.authorization.value !== '{{ BASE64_AUTH_STRING }}') {
+    return {
+      statusCode: 401,
+      statusDescription: 'Unauthorized',
+      body: 'Unauthorized',
+      headers: {
+        'www-authenticate': { value: 'Basic' }
+      },
+    }
+  }

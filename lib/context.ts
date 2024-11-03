@@ -16,6 +16,7 @@ import type { SiteOMaticManifest } from './manifest/schemas/site-o-matic-manifes
 import { getRegistrarConnector } from './registrar';
 import type { SomFacts } from './rules/site-o-matic.rules';
 import * as secrets from './secrets';
+import { getAllSomSecrets } from './secrets';
 import type { HasManifest, HasNetworkDerived, SomContext } from './types';
 import { contextTemplateString, getContextParam, getParam } from './utils';
 
@@ -41,6 +42,7 @@ export function hasNetworkDerived(context: SomContext): context is HasNetworkDer
   return (
     hasManifest(context) &&
     context.params !== undefined &&
+    context.secrets !== undefined &&
     context.hostedZoneNameservers !== undefined &&
     context.registrarNameservers !== undefined &&
     context.dnsResolvedNameserverRecords !== undefined &&
@@ -80,6 +82,7 @@ export async function loadNetworkDerivedContext(
 ): Promise<HasNetworkDerived<SomContext>> {
   const [
     params,
+    secrets,
     hostedZoneAttributes,
     hostedZoneNameservers,
     dnsResolvedNameserverRecords,
@@ -88,6 +91,7 @@ export async function loadNetworkDerivedContext(
     connectionStatus,
   ] = await Promise.all([
     getSsmParams(config, DEFAULT_AWS_REGION, ssmBasePath(config, context.somId)),
+    getAllSomSecrets(config, DEFAULT_AWS_REGION, context.somId),
     findHostedZoneAttributes(config, context.rootDomainName),
     getNsRecordValuesForDomainName(config, context.rootDomainName),
     resolveDnsNameserverRecords(context.rootDomainName),
@@ -101,6 +105,7 @@ export async function loadNetworkDerivedContext(
   return {
     ...context,
     params,
+    secrets,
     hostedZoneAttributes,
     hostedZoneNameservers: hostedZoneNameservers ?? [],
     registrarNameservers,
@@ -115,12 +120,14 @@ export function manifestDerivedProps(
   config: SiteOMaticConfig,
   context: SomContext,
   pathToManifestFile: string,
-  manifest: SiteOMaticManifest
+  manifest: SiteOMaticManifest,
+  manifestHash: string
 ): HasManifest<SomContext> {
   const ret: HasManifest<SomContext> = {
     ...context,
     pathToManifestFile,
     manifest,
+    manifestHash,
     rootDomainName: manifest.domainName,
     domainHash: calculateDomainHash(manifest.domainName),
     somId: formulateSomId(config, manifest.domainName),
@@ -157,10 +164,11 @@ export async function refreshContextPass2(
 export async function loadContext(
   config: SiteOMaticConfig,
   pathToManifestFile: string,
-  manifest: SiteOMaticManifest
+  manifest: SiteOMaticManifest,
+  manifestHash: string
 ): Promise<HasNetworkDerived<SomContext>> {
   return refreshContextPass1(
     config,
-    manifestDerivedProps(config, DEFAULT_INITIAL_CONTEXT, pathToManifestFile, manifest)
+    manifestDerivedProps(config, DEFAULT_INITIAL_CONTEXT, pathToManifestFile, manifest, manifestHash)
   );
 }

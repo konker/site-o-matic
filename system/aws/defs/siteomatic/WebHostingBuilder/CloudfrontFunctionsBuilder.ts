@@ -1,5 +1,6 @@
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 
+import type { WebHostingClauseWithResources } from '../../../../../lib/manifest/schemas/site-o-matic-manifest.schema';
 import { _somMeta } from '../../../../../lib/utils';
 import type { SiteResourcesStack } from '../SiteStack/SiteResourcesStack';
 
@@ -11,6 +12,8 @@ export type CloudfrontFunctionsResources = {
 // ----------------------------------------------------------------------
 export async function build(
   siteResourcesStack: SiteResourcesStack,
+  webHostingSpec: WebHostingClauseWithResources,
+  localIdPostfix: string,
   cfFunctionViewerRequestTmpFilePath: [string, string | undefined],
   cfFunctionViewerResponseTmpFilePath: [string, string | undefined]
 ): Promise<CloudfrontFunctionsResources> {
@@ -26,12 +29,16 @@ export async function build(
   ].reduce(
     (acc, [cfFunctionId, cfFunctionTmpFilePath, cfFunctionEventType]) => {
       if (cfFunctionTmpFilePath) {
-        const func = new cloudfront.Function(siteResourcesStack, `CloudFrontFunction-${cfFunctionId}`, {
-          comment: `${cfFunctionId} function for ${siteResourcesStack.somId}`,
-          code: cloudfront.FunctionCode.fromFile({
-            filePath: cfFunctionTmpFilePath,
-          }),
-        });
+        const func = new cloudfront.Function(
+          siteResourcesStack,
+          `CloudFrontFunction-${cfFunctionId}-${localIdPostfix}`,
+          {
+            comment: `${cfFunctionId} function for ${webHostingSpec.domainName}`,
+            code: cloudfront.FunctionCode.fromFile({
+              filePath: cfFunctionTmpFilePath,
+            }),
+          }
+        );
         return [...acc, [func, cfFunctionEventType] as [cloudfront.Function, cloudfront.FunctionEventType]];
       }
       return acc;
