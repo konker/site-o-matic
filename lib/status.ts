@@ -28,7 +28,7 @@ export function getStatusMessage(_context: SomContext, facts: SomFacts, status: 
       if (facts.nameserversSetButNotPropagated) {
         return 'Waiting for nameserver propagation. Refresh the info periodically.';
       }
-      return 'Set the nameservers with the registrar: `> set nameservers`.';
+      return 'Set the nameservers with the registrar: `> nameservers set`.';
     }
     if (facts.dnsResolvedNameserversMatchHostedZoneNameServers && !facts.hostedZoneVerified) {
       return 'Waiting for DNS propagation. Refresh the info periodically.';

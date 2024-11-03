@@ -76,7 +76,7 @@ async function main() {
     .command('clear', 'Clear the screen')
     .alias('cls')
     .action(actionClearScreen(vorpal, config, globalState));
-  vorpal.command('ls sites', 'List deployed sites').action(actionListSites(vorpal, config, globalState));
+  vorpal.command('sites', 'List deployed sites').action(actionListSites(vorpal, config, globalState));
   vorpal
     .command('load <pathToManifestFile>', 'Load a manifest file')
     .action(actionLoadManifest(vorpal, config, globalState));
@@ -87,17 +87,12 @@ async function main() {
   vorpal.command('context', 'Show current context').action(actionShowContext(vorpal, config, globalState));
   vorpal.command('config', 'Show current config').action(actionShowCOnfig(vorpal, config, globalState));
   vorpal.command('info', 'Show details about the site deployment').action(actionInfo(vorpal, config, globalState));
+  vorpal.command('users', 'List users').action(actionListUsers(vorpal, config, globalState));
 
-  vorpal.command('ls users', 'List users').action(actionListUsers(vorpal, config, globalState));
-  /*[XXX]
-  vorpal.command('add user <username>', 'Add a user').action(actionAddUser(vorpal, config, globalState));
-  */
-
-  // TODO: change this to SSM secure strings?
-  vorpal.command('ls secrets', 'List secrets').action(actionListSecrets(vorpal, config, globalState));
-  vorpal.command('add secret <name> <value>', 'Add a secret').action(actionAddSecret(vorpal, config, globalState));
-  vorpal.command('show secret <name>', 'Reveal a secret value').action(actionShowSecret(vorpal, config, globalState));
-  vorpal.command('del secret <name>', 'Delete a secret').action(actionDeleteSecret(vorpal, config, globalState));
+  vorpal.command('secrets ls', 'List secrets').action(actionListSecrets(vorpal, config, globalState));
+  vorpal.command('secrets add <name> <value>', 'Add a secret').action(actionAddSecret(vorpal, config, globalState));
+  vorpal.command('secrets show <name>', 'Reveal a secret value').action(actionShowSecret(vorpal, config, globalState));
+  vorpal.command('secret del <name>', 'Delete a secret').action(actionDeleteSecret(vorpal, config, globalState));
 
   /*[XXX: do we need this really?]
   vorpal
@@ -132,7 +127,7 @@ async function main() {
   vorpal.command('check', 'Perform deployment checks').action(actionDeployCheck(vorpal, config, globalState));
   vorpal.command('deploy', 'Deploy the site').action(actionDeploy(vorpal, config, globalState));
   vorpal
-    .command('set nameservers', 'Set the nameservers automatically with the registrar, if configured')
+    .command('nameservers set', 'Set the nameservers automatically with the registrar, if configured')
     .action(actionSetNameServersWithRegistrar(vorpal, config, globalState));
   vorpal.command('destroy', 'Destroy the site').action(actionDestroy(vorpal, config, globalState));
 
