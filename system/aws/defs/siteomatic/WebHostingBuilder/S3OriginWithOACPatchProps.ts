@@ -1,7 +1,7 @@
 import type { Reference } from 'aws-cdk-lib';
 import type { OriginBindConfig, OriginBindOptions } from 'aws-cdk-lib/aws-cloudfront';
 import type { S3OriginProps } from 'aws-cdk-lib/aws-cloudfront-origins';
-import { S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins';
+import { S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import type { IBucket } from 'aws-cdk-lib/aws-s3';
 import type { Construct } from 'constructs';
 
@@ -12,7 +12,7 @@ export type S3OriginWithOACPatchProps = S3OriginProps & {
 /**
  * From: https://github.com/aws/aws-cdk/issues/21771
  */
-export class S3OriginWithOACPatch extends S3Origin {
+export class S3OriginWithOACPatch extends S3BucketOrigin {
   private readonly oacId: Reference;
 
   constructor(bucket: IBucket, props: S3OriginWithOACPatchProps) {
