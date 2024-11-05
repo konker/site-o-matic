@@ -35,7 +35,8 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Hos
     // Try to detect if an existing HostedZone exists with an SOA record
     const hostedZoneAttributes = await findHostedZoneAttributes(
       siteResourcesStack.siteProps.config,
-      siteResourcesStack.rootDomainName
+      siteResourcesStack.siteProps.context.manifest,
+      siteResourcesStack.siteProps.context.rootDomainName
     );
 
     // Special case for AWS Route53 registrar, as we expect this to be automatically created when the domain is registered
@@ -57,6 +58,7 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Hos
         // Only because CDK doesn't instantiate this fully via fromHostedZoneAttributes
         (ret as any).hostedZoneNameServers = await awsRoute53Registrar.getNameServers(
           siteResourcesStack.siteProps.config,
+          siteResourcesStack.siteProps.context.manifest,
           EMPTY_SECRETS_SETS_COLLECTION,
           siteResourcesStack.siteProps.context.rootDomainName
         );
@@ -66,12 +68,17 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Hos
     } else {
       const ret = new route53.PublicHostedZone(
         siteResourcesStack,
-        _id('HostedZone', siteResourcesStack.rootDomainName),
+        _id('HostedZone', siteResourcesStack.siteProps.context.rootDomainName),
         {
-          zoneName: siteResourcesStack.rootDomainName,
+          zoneName: siteResourcesStack.siteProps.context.rootDomainName,
         }
       );
-      _somMeta(siteResourcesStack.siteProps.config, ret, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
+      _somMeta(
+        siteResourcesStack.siteProps.config,
+        ret,
+        siteResourcesStack.siteProps.context.somId,
+        siteResourcesStack.siteProps.locked
+      );
       return ret;
     }
   })();
@@ -96,52 +103,71 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Hos
   _somMeta(
     siteResourcesStack.siteProps.config,
     verificationRecord,
-    siteResourcesStack.somId,
+    siteResourcesStack.siteProps.context.somId,
     siteResourcesStack.siteProps.locked
   );
 
   // ----------------------------------------------------------------------
   // SSM Params, only create for the top level
-  const ssm1 = new ssm.StringParameter(siteResourcesStack, _id('SsmHostedZoneId', siteResourcesStack.rootDomainName), {
-    parameterName: toSsmParamName(
-      siteResourcesStack.siteProps.config,
-      siteResourcesStack.somId,
-      SSM_PARAM_NAME_HOSTED_ZONE_ID
-    ),
-    stringValue: hostedZone.hostedZoneId,
-    tier: ssm.ParameterTier.STANDARD,
-  });
-  _somMeta(siteResourcesStack.siteProps.config, ssm1, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
-
-  const ssm2 = new ssm.StringParameter(
+  const ssm1 = new ssm.StringParameter(
     siteResourcesStack,
-    _id('SsmHostedZoneNameServers', siteResourcesStack.rootDomainName),
+    _id('SsmHostedZoneId', siteResourcesStack.siteProps.context.rootDomainName),
     {
       parameterName: toSsmParamName(
         siteResourcesStack.siteProps.config,
-        siteResourcesStack.somId,
+        siteResourcesStack.siteProps.context.somId,
+        SSM_PARAM_NAME_HOSTED_ZONE_ID
+      ),
+      stringValue: hostedZone.hostedZoneId,
+      tier: ssm.ParameterTier.STANDARD,
+    }
+  );
+  _somMeta(
+    siteResourcesStack.siteProps.config,
+    ssm1,
+    siteResourcesStack.siteProps.context.somId,
+    siteResourcesStack.siteProps.locked
+  );
+
+  const ssm2 = new ssm.StringParameter(
+    siteResourcesStack,
+    _id('SsmHostedZoneNameServers', siteResourcesStack.siteProps.context.rootDomainName),
+    {
+      parameterName: toSsmParamName(
+        siteResourcesStack.siteProps.config,
+        siteResourcesStack.siteProps.context.somId,
         SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS
       ),
       stringValue: cdk.Fn.join(',', hostedZone.hostedZoneNameServers ?? []),
       tier: ssm.ParameterTier.STANDARD,
     }
   );
-  _somMeta(siteResourcesStack.siteProps.config, ssm2, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
+  _somMeta(
+    siteResourcesStack.siteProps.config,
+    ssm2,
+    siteResourcesStack.siteProps.context.somId,
+    siteResourcesStack.siteProps.locked
+  );
 
   const ssm3 = new ssm.StringParameter(
     siteResourcesStack,
-    _id('SsmIsAwsRoute53RegisteredDomain', siteResourcesStack.rootDomainName),
+    _id('SsmIsAwsRoute53RegisteredDomain', siteResourcesStack.siteProps.context.rootDomainName),
     {
       parameterName: toSsmParamName(
         siteResourcesStack.siteProps.config,
-        siteResourcesStack.somId,
+        siteResourcesStack.siteProps.context.somId,
         SSM_PARAM_NAME_IS_AWS_ROUTE53_REGISTERED_DOMAIN
       ),
       stringValue: 'true',
       tier: ssm.ParameterTier.STANDARD,
     }
   );
-  _somMeta(siteResourcesStack.siteProps.config, ssm3, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
+  _somMeta(
+    siteResourcesStack.siteProps.config,
+    ssm3,
+    siteResourcesStack.siteProps.context.somId,
+    siteResourcesStack.siteProps.locked
+  );
 
   return {
     hostedZone,

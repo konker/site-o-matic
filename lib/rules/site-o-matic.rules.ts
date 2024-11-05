@@ -47,6 +47,7 @@ export const SOM_FACTS_NAMES = [
   'hostedZoneAttributesMatch',
   'hostedZoneDnsTxtRecordMatch',
   'hostedZoneVerified',
+  'shouldDeployAllResources',
   // 'hasCertificateClones',
   // 'shouldDeployCertificateClones',
   'needsCloudfrontDist',
@@ -137,6 +138,8 @@ export const siteOMaticRules = rulesEngineFactory<SomFactNames, SomContext>({
     (isNot(facts.hasHostedZoneIdParam) &&
       isNot(facts.hasRegistrarConfig) &&
       is(facts.dnsResolvedNameserversMatchHostedZoneNameServers)),
+
+  shouldDeployAllResources: async (facts, _context) => is(facts.registrarNameserversMatchHostedZoneNameServers),
 
   // hasCertificateClones: async (_facts, context) => isNonZero(context.manifest?.certificate?.clones?.length),
   // shouldDeployCertificateClones: async (facts, _context) =>

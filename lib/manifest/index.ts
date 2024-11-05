@@ -1,10 +1,14 @@
+import type { SiteOMaticConfig } from '../config/schemas/site-o-matic-config.schema';
 import { loadValidData } from '../json5';
 import { SiteOMaticManifest } from './schemas/site-o-matic-manifest.schema';
 
 export type ManifestLoad<T> = [T, string];
 
-export async function loadManifest(pathToManifestFile: string): Promise<ManifestLoad<SiteOMaticManifest> | undefined> {
-  return loadValidData(pathToManifestFile, SiteOMaticManifest);
+export async function loadManifest(
+  config: SiteOMaticConfig,
+  pathToManifestFile: string
+): Promise<ManifestLoad<SiteOMaticManifest> | undefined> {
+  return loadValidData(pathToManifestFile, SiteOMaticManifest(config));
 }
 
 export function sortObjectKeys(o: object): object {

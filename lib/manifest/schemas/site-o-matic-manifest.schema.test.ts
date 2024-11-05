@@ -4,15 +4,16 @@ import path from 'node:path';
 
 import JSON5 from 'json5';
 
+import MOCK_CONFIG from '../../test/mocks/mock-config.json';
 import * as unit from './site-o-matic-manifest.schema';
 
 describe('site-o-matic-manifest-schema', () => {
   it('should validate a complete example', async () => {
     const json = await fs.promises.readFile(path.join(__dirname, '../../../docs/site-o-matic.manifest.example.json5'));
     const data = JSON5.parse(json.toString());
-    const validation = unit.SiteOMaticManifest.parse(data);
-    // expect(validation.success).toEqual(true);
-    expect(validation).toMatchSnapshot();
+    const validation = unit.SiteOMaticManifest(MOCK_CONFIG).safeParse(data);
+    expect(validation.success).toEqual(true);
+    expect(validation.data).toMatchSnapshot();
   });
 
   it('should validate a minimal example', async () => {
@@ -20,9 +21,9 @@ describe('site-o-matic-manifest-schema', () => {
       path.join(__dirname, '../../../docs/site-o-matic.manifest.example.minimal.json5')
     );
     const data = JSON5.parse(json.toString());
-    const validation = unit.SiteOMaticManifest.parse(data);
-    // expect(validation.success).toEqual(true);
-    expect(validation).toStrictEqual({
+    const validation = unit.SiteOMaticManifest(MOCK_CONFIG).safeParse(data);
+    expect(validation.success).toEqual(true);
+    expect(validation.data).toStrictEqual({
       domainName: 'minimal-example.com',
       locked: false,
       webHosting: [

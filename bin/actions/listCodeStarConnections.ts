@@ -2,19 +2,25 @@ import type Vorpal from 'vorpal';
 
 import * as codestar from '../../lib/aws/codestar';
 import type { SiteOMaticConfig } from '../../lib/config/schemas/site-o-matic-config.schema';
-import { DEFAULT_AWS_REGION } from '../../lib/consts';
 import { tabulate } from '../../lib/ui/tables';
 import type { SomGlobalState } from '../SomGlobalState';
 
+/**
+ @deprecated
+ */
 export function actionListCodeStarConnections(vorpal: Vorpal, config: SiteOMaticConfig, state: SomGlobalState) {
   return async (_: Vorpal.Args | string): Promise<void> => {
     state.spinner.start();
-    const data = await codestar.listCodeStarConnections(config, DEFAULT_AWS_REGION);
+    const data = await codestar.listCodeStarConnections(
+      config,
+      state.context.manifest?.region ?? config.AWS_REGION_CONTROL_PLANE
+    );
     state.spinner.stop();
 
+    const region = state.context.manifest?.region ?? config.AWS_REGION_CONTROL_PLANE;
     const message = data.some((i) => i.ConnectionStatus === 'PENDING')
       ? `NOTE: Pending connections must be confirmed in the AWS console
-       https://${DEFAULT_AWS_REGION}.console.aws.amazon.com/codesuite/settings/connections?region=${DEFAULT_AWS_REGION}`
+       https://${region}.console.aws.amazon.com/codesuite/settings/connections?region=${region}`
       : null;
 
     if (!state.plumbing) {

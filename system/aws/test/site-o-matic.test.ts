@@ -17,7 +17,7 @@ test('Empty Stack', async () => {
   // WHEN
   const stack = new SiteStack(app, {
     config: {
-      SOM_ROLE_ARN: 'arn:aws:iam::123456789012:role/som-role',
+      SOM_ADMIN_ROLE_ARN: 'arn:aws:iam::123456789012:role/som-role',
       SOM_PREFIX: 'som-prefix',
       SOM_TAG_NAME: 'som-tag-name',
     },

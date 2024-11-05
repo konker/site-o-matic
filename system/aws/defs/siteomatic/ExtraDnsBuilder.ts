@@ -26,14 +26,23 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Ext
     ) as Array<DnsConfigMx>;
 
     if (mxConfigs.length > 0) {
-      const res = new route53.MxRecord(siteResourcesStack, _id('DnsRecordSet_MX', siteResourcesStack.rootDomainName), {
-        zone: hostedZone,
-        values: mxConfigs.map((i: DnsConfigMx) => ({
-          hostName: i.hostName,
-          priority: i.priority,
-        })),
-      });
-      _somMeta(siteResourcesStack.siteProps.config, res, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
+      const res = new route53.MxRecord(
+        siteResourcesStack,
+        _id('DnsRecordSet_MX', siteResourcesStack.siteProps.context.rootDomainName),
+        {
+          zone: hostedZone,
+          values: mxConfigs.map((i: DnsConfigMx) => ({
+            hostName: i.hostName,
+            priority: i.priority,
+          })),
+        }
+      );
+      _somMeta(
+        siteResourcesStack.siteProps.config,
+        res,
+        siteResourcesStack.siteProps.context.somId,
+        siteResourcesStack.siteProps.locked
+      );
       return [res];
     }
     return [];
@@ -46,7 +55,7 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Ext
         case 'CNAME':
           const res1 = new route53.CnameRecord(
             siteResourcesStack,
-            _id(`DnsRecordSet_CNAME_${i}`, siteResourcesStack.rootDomainName),
+            _id(`DnsRecordSet_CNAME_${i}`, siteResourcesStack.siteProps.context.rootDomainName),
             {
               zone: hostedZone,
               recordName: dnsConfig.recordName,
@@ -56,14 +65,14 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Ext
           _somMeta(
             siteResourcesStack.siteProps.config,
             res1,
-            siteResourcesStack.somId,
+            siteResourcesStack.siteProps.context.somId,
             siteResourcesStack.siteProps.locked
           );
           return res1;
         case 'TXT':
           const res2 = new route53.TxtRecord(
             siteResourcesStack,
-            _id(`DnsRecordSet_TXT_${i}`, siteResourcesStack.rootDomainName),
+            _id(`DnsRecordSet_TXT_${i}`, siteResourcesStack.siteProps.context.rootDomainName),
             {
               zone: hostedZone,
               recordName: dnsConfig.recordName,
@@ -73,7 +82,7 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Ext
           _somMeta(
             siteResourcesStack.siteProps.config,
             res2,
-            siteResourcesStack.somId,
+            siteResourcesStack.siteProps.context.somId,
             siteResourcesStack.siteProps.locked
           );
           return res2;

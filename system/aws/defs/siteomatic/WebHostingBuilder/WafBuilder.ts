@@ -34,7 +34,7 @@ export async function build(
     visibilityConfig: {
       cloudWatchMetricsEnabled: false,
       sampledRequestsEnabled: true,
-      metricName: `${siteResourcesStack.somId}-wafAcl`,
+      metricName: `${webHostingSpec.domainName}-wafAcl`,
     },
     rules: awsManagedRules.map((rule) => ({
       name: rule.name,
@@ -47,12 +47,14 @@ export async function build(
       },
       overrideAction: { none: {} },
       visibilityConfig: {
-        metricName: `${siteResourcesStack.somId}-AWSManagedRules`,
+        metricName: `${webHostingSpec.domainName}-AWSManagedRules`,
         cloudWatchMetricsEnabled: false,
         sampledRequestsEnabled: true,
       },
     })),
-    tags: [{ key: siteResourcesStack.siteProps.config.SOM_TAG_NAME, value: siteResourcesStack.somId }],
+    tags: [
+      { key: siteResourcesStack.siteProps.config.SOM_TAG_NAME, value: siteResourcesStack.siteProps.context.somId },
+    ],
   });
 
   return { wafEnabled: true, wafAcl };

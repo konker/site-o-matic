@@ -37,6 +37,7 @@ async function cdkExecProc(
 export async function cdkExec(
   vorpal: Vorpal,
   somId: string,
+  region: string,
   params: Record<string, string>,
   plumbing: boolean,
   cdkCmd: string,
@@ -53,6 +54,7 @@ export async function cdkExec(
       .concat(['--strict'])
       .concat(['--ci'])
       .concat(['--no-color'])
+      .concat(['--region', region])
       .concat(['--app', `npx node system/aws/bin/site-o-matic`])
       .concat(['--output', `system/aws/.cdk-${somId}.out`])
       .concat(['--context', `paramsKeys=${JSON.stringify(Object.keys(params))}`])
@@ -64,46 +66,51 @@ export async function cdkExec(
 export async function cdkList(
   vorpal: Vorpal,
   somId: string,
+  region: string,
   params: Record<string, string> | undefined = {},
   plumbing = false
 ): Promise<CdkExecResponse> {
-  return cdkExec(vorpal, somId, params, plumbing, 'list');
+  return cdkExec(vorpal, somId, region, params, plumbing, 'list');
 }
 
 export async function cdkSynth(
   vorpal: Vorpal,
   somId: string,
+  region: string,
   params: Record<string, string> | undefined = {},
   plumbing = false
 ): Promise<CdkExecResponse> {
-  return cdkExec(vorpal, somId, params, plumbing, 'synth');
+  return cdkExec(vorpal, somId, region, params, plumbing, 'synth');
 }
 
 export async function cdkDiff(
   vorpal: Vorpal,
+  region: string,
   somId: string,
   params: Record<string, string> | undefined = {},
   plumbing = false
 ): Promise<CdkExecResponse> {
-  return cdkExec(vorpal, somId, params, plumbing, 'diff');
+  return cdkExec(vorpal, somId, region, params, plumbing, 'diff');
 }
 
 export async function cdkDeploy(
   vorpal: Vorpal,
   somId: string,
+  region: string,
   params: Record<string, string> | undefined = {},
   plumbing = false,
   stackName?: string
 ): Promise<CdkExecResponse> {
-  return cdkExec(vorpal, somId, params, plumbing, 'deploy', stackName);
+  return cdkExec(vorpal, somId, region, params, plumbing, 'deploy', stackName);
 }
 
 export async function cdkDestroy(
   vorpal: Vorpal,
-  somId?: string,
+  somId: string,
+  region: string,
   params: Record<string, string> | undefined = {},
   plumbing = false
 ): Promise<CdkExecResponse> {
   if (!somId) return [1, []];
-  return cdkExec(vorpal, somId, params, plumbing, 'destroy', '--all', ['--force']);
+  return cdkExec(vorpal, somId, region, params, plumbing, 'destroy', '--all', ['--force']);
 }

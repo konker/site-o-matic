@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import type Vorpal from 'vorpal';
 
 import type { SiteOMaticConfig } from '../../lib/config/schemas/site-o-matic-config.schema';
-import { DEFAULT_AWS_REGION, SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS } from '../../lib/consts';
+import { SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS } from '../../lib/consts';
 import { hasManifest, refreshContextPass1, refreshContextPass2 } from '../../lib/context';
 import { getRegistrarConnector } from '../../lib/registrar';
 import { siteOMaticRules } from '../../lib/rules/site-o-matic.rules';
@@ -45,7 +45,7 @@ export function actionSetNameServersWithRegistrar(vorpal: Vorpal, config: SiteOM
       state.spinner.start();
       try {
         const registrarConnector = getRegistrarConnector(state.context.registrar);
-        const somSecrets = await secrets.getAllSomSecrets(config, DEFAULT_AWS_REGION, state.context.somId);
+        const somSecrets = await secrets.getAllSomSecrets(config, state.context.manifest.region, state.context.somId);
         if (!registrarConnector.SECRETS.every((secretName) => somSecrets.lookup[secretName])) {
           const errorMessage = `ERROR: secrets required by registrar connector missing: ${registrarConnector.SECRETS}`;
           verror(vorpal, state, errorMessage);
@@ -54,6 +54,7 @@ export function actionSetNameServersWithRegistrar(vorpal: Vorpal, config: SiteOM
 
         const result = await registrarConnector.setNameServers(
           config,
+          state.context.manifest,
           somSecrets,
           state.context.rootDomainName as string,
           nameservers

@@ -24,14 +24,14 @@ export type DomainPublisherBootstrapResources = {
 export async function build(siteBootstrapStack: SiteBootstrapStack): Promise<DomainPublisherBootstrapResources> {
   // ----------------------------------------------------------------------
   // Create domainPublisher user
-  const domainPublisherUserName = formulateIamUserName('publisher', siteBootstrapStack.somId);
+  const domainPublisherUserName = formulateIamUserName('publisher', siteBootstrapStack.siteProps.context.somId);
   const domainPublisher = new iam.User(siteBootstrapStack, 'BootstrapDomainPublisher', {
     userName: domainPublisherUserName,
   });
   _somMeta(
     siteBootstrapStack.siteProps.config,
     domainPublisher,
-    siteBootstrapStack.somId,
+    siteBootstrapStack.siteProps.context.somId,
     siteBootstrapStack.siteProps.locked
   );
 
@@ -45,15 +45,15 @@ export async function build(siteBootstrapStack: SiteBootstrapStack): Promise<Dom
   // Cloudformation Outputs
   new CfnOutput(siteBootstrapStack, 'OutputDomainPublisherUserName', {
     value: domainPublisherUserName,
-    exportName: BOOTSTRAP_DOMAIN_PUBLISHER_USER_NAME_OUTPUT_NAME(siteBootstrapStack.somId),
+    exportName: BOOTSTRAP_DOMAIN_PUBLISHER_USER_NAME_OUTPUT_NAME(siteBootstrapStack.siteProps.context.somId),
   });
   new CfnOutput(siteBootstrapStack, 'OutputDomainPublisherAccessKeyId', {
     value: domainPublisherAccessKey.accessKeyId,
-    exportName: BOOTSTRAP_DOMAIN_PUBLISHER_ACCESS_KEY_ID_OUTPUT_NAME(siteBootstrapStack.somId),
+    exportName: BOOTSTRAP_DOMAIN_PUBLISHER_ACCESS_KEY_ID_OUTPUT_NAME(siteBootstrapStack.siteProps.context.somId),
   });
   new CfnOutput(siteBootstrapStack, 'OutputDomainPublisherAccessKeySecret', {
     value: domainPublisherAccessKey.secretAccessKey.unsafeUnwrap(),
-    exportName: BOOTSTRAP_DOMAIN_PUBLISHER_ACCESS_KEY_SECRET_OUTPUT_NAME(siteBootstrapStack.somId),
+    exportName: BOOTSTRAP_DOMAIN_PUBLISHER_ACCESS_KEY_SECRET_OUTPUT_NAME(siteBootstrapStack.siteProps.context.somId),
   });
 
   // ----------------------------------------------------------------------
@@ -61,13 +61,18 @@ export async function build(siteBootstrapStack: SiteBootstrapStack): Promise<Dom
   const res1 = new ssm.StringParameter(siteBootstrapStack, 'SsmDomainPublisherUserName', {
     parameterName: toSsmParamName(
       siteBootstrapStack.siteProps.config,
-      siteBootstrapStack.somId,
+      siteBootstrapStack.siteProps.context.somId,
       SSM_PARAM_NAME_DOMAIN_PUBLISHER_USER_NAME
     ),
     stringValue: domainPublisherUserName,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(siteBootstrapStack.siteProps.config, res1, siteBootstrapStack.somId, siteBootstrapStack.siteProps.locked);
+  _somMeta(
+    siteBootstrapStack.siteProps.config,
+    res1,
+    siteBootstrapStack.siteProps.context.somId,
+    siteBootstrapStack.siteProps.locked
+  );
 
   return {
     domainPublisherUserName,

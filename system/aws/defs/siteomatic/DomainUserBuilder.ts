@@ -17,7 +17,7 @@ export type DomainUserResources = {
 // ----------------------------------------------------------------------
 export async function build(siteResourcesStack: SiteResourcesStack): Promise<DomainUserResources> {
   const importedDomainUserName = cdk.Fn.importValue(
-    BOOTSTRAP_DOMAIN_USER_USER_NAME_OUTPUT_NAME(siteResourcesStack.somId)
+    BOOTSTRAP_DOMAIN_USER_USER_NAME_OUTPUT_NAME(siteResourcesStack.siteProps.context.somId)
   );
 
   const domainUser = iam.User.fromUserName(siteResourcesStack, 'DomainUser', importedDomainUserName);
@@ -28,7 +28,7 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Dom
   _somMeta(
     siteResourcesStack.siteProps.config,
     domainUserPolicy,
-    siteResourcesStack.somId,
+    siteResourcesStack.siteProps.context.somId,
     siteResourcesStack.siteProps.locked
   );
 

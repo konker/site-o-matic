@@ -1,3 +1,5 @@
+import * as fs from 'node:fs/promises';
+
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as route53 from 'aws-cdk-lib/aws-route53';
@@ -138,7 +140,7 @@ export async function build(
   _somMeta(
     siteResourcesStack.siteProps.config,
     cloudfrontDistribution,
-    siteResourcesStack.somId,
+    siteResourcesStack.siteProps.context.somId,
     siteResourcesStack.siteProps.locked
   );
 
@@ -167,14 +169,24 @@ export async function build(
     recordName: fqdn(webHostingSpec.domainName),
     target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(cloudfrontDistribution)),
   });
-  _somMeta(siteResourcesStack.siteProps.config, dns1, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
+  _somMeta(
+    siteResourcesStack.siteProps.config,
+    dns1,
+    siteResourcesStack.siteProps.context.somId,
+    siteResourcesStack.siteProps.locked
+  );
 
   const dns2 = new route53.AaaaRecord(siteResourcesStack, `DnsRecordSet_AAAA-${localIdPostfix}`, {
     zone: siteResourcesStack.hostedZoneResources.hostedZone,
     recordName: fqdn(webHostingSpec.domainName),
     target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(cloudfrontDistribution)),
   });
-  _somMeta(siteResourcesStack.siteProps.config, dns2, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
+  _somMeta(
+    siteResourcesStack.siteProps.config,
+    dns2,
+    siteResourcesStack.siteProps.context.somId,
+    siteResourcesStack.siteProps.locked
+  );
 
   // ----------------------------------------------------------------------
   // Domain Publisher permissions
@@ -188,7 +200,9 @@ export async function build(
   ) {
     const siteContentDeps = await SiteContentLoader.load(siteResourcesStack, webHostingSpec);
     if (siteContentDeps.siteContentTmpDirPath) {
-      // Sleep to avoid race condition between creating the content, and deploying the content
+      await fs.rm(siteContentDeps.siteContentTmpDirPath, { recursive: true, force: true });
+
+      // Sleep to avoid race condition between creating the content, and deploying the content [?]
       await sleep(1000);
 
       new s3Deployment.BucketDeployment(siteResourcesStack, `S3BucketContentDeployment-${localIdPostfix}`, {
@@ -203,26 +217,36 @@ export async function build(
   const ssm1 = new ssm.StringParameter(siteResourcesStack, `SsmCloudfrontDistributionId-${localIdPostfix}`, {
     parameterName: toSsmParamName(
       siteResourcesStack.siteProps.config,
-      siteResourcesStack.somId,
+      siteResourcesStack.siteProps.context.somId,
       SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID,
       webHostingSpec.domainName
     ),
     stringValue: cloudfrontDistribution.distributionId,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(siteResourcesStack.siteProps.config, ssm1, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
+  _somMeta(
+    siteResourcesStack.siteProps.config,
+    ssm1,
+    siteResourcesStack.siteProps.context.somId,
+    siteResourcesStack.siteProps.locked
+  );
 
   const ssm2 = new ssm.StringParameter(siteResourcesStack, `SsmCloudfrontDomainName-${localIdPostfix}`, {
     parameterName: toSsmParamName(
       siteResourcesStack.siteProps.config,
-      siteResourcesStack.somId,
+      siteResourcesStack.siteProps.context.somId,
       SSM_PARAM_NAME_CLOUDFRONT_DOMAIN_NAME,
       webHostingSpec.domainName
     ),
     stringValue: cloudfrontDistribution.distributionDomainName,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(siteResourcesStack.siteProps.config, ssm2, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
+  _somMeta(
+    siteResourcesStack.siteProps.config,
+    ssm2,
+    siteResourcesStack.siteProps.context.somId,
+    siteResourcesStack.siteProps.locked
+  );
 
   return {
     cloudfrontDistribution,

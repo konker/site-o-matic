@@ -55,7 +55,7 @@ export async function build(
   _somMeta(
     siteResourcesStack.siteProps.config,
     responseHeadersPolicy,
-    siteResourcesStack.somId,
+    siteResourcesStack.siteProps.context.somId,
     siteResourcesStack.siteProps.locked
   );
 

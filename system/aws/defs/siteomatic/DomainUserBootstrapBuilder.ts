@@ -19,14 +19,14 @@ export type DomainUserBootstrapResources = {
 
 // ----------------------------------------------------------------------
 export async function build(siteBootstrapStack: SiteBootstrapStack): Promise<DomainUserBootstrapResources> {
-  const domainUserName = formulateIamUserName('user', siteBootstrapStack.somId);
+  const domainUserName = formulateIamUserName('user', siteBootstrapStack.siteProps.context.somId);
   const domainUser = new iam.User(siteBootstrapStack, 'BootstrapDomainUser', {
     userName: domainUserName,
   });
   _somMeta(
     siteBootstrapStack.siteProps.config,
     domainUser,
-    siteBootstrapStack.somId,
+    siteBootstrapStack.siteProps.context.somId,
     siteBootstrapStack.siteProps.locked
   );
 
@@ -34,7 +34,7 @@ export async function build(siteBootstrapStack: SiteBootstrapStack): Promise<Dom
   // Cloudformation Outputs
   new CfnOutput(siteBootstrapStack, 'OutputDomainUserName', {
     value: domainUserName,
-    exportName: BOOTSTRAP_DOMAIN_USER_USER_NAME_OUTPUT_NAME(siteBootstrapStack.somId),
+    exportName: BOOTSTRAP_DOMAIN_USER_USER_NAME_OUTPUT_NAME(siteBootstrapStack.siteProps.context.somId),
   });
 
   // ----------------------------------------------------------------------
@@ -42,13 +42,18 @@ export async function build(siteBootstrapStack: SiteBootstrapStack): Promise<Dom
   const res1 = new ssm.StringParameter(siteBootstrapStack, 'SsmDomainUserName', {
     parameterName: toSsmParamName(
       siteBootstrapStack.siteProps.config,
-      siteBootstrapStack.somId,
+      siteBootstrapStack.siteProps.context.somId,
       SSM_PARAM_NAME_DOMAIN_USER_USER_NAME
     ),
     stringValue: domainUserName,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(siteBootstrapStack.siteProps.config, res1, siteBootstrapStack.somId, siteBootstrapStack.siteProps.locked);
+  _somMeta(
+    siteBootstrapStack.siteProps.config,
+    res1,
+    siteBootstrapStack.siteProps.context.somId,
+    siteBootstrapStack.siteProps.locked
+  );
 
   return {
     domainUserName,

@@ -9,15 +9,6 @@ export function actionDeployCheck(vorpal: Vorpal, config: SiteOMaticConfig, stat
   return async (args: Vorpal.Args | string): Promise<void> => {
     if (typeof args === 'string') throw new Error('Error: string args to action');
 
-    /*[XXX]
-    const username = args.username ?? getContextParam(state.context, SSM_PARAM_NAME_DOMAIN_USER_NAME);
-    if (!username) {
-      const errorMessage = `ERROR: no username was resolved`;
-      verror(vorpal, state, errorMessage);
-      return;
-    }
-    */
-
     const checkItems = await preDeploymentCheck(config, state.context);
     const checksPassed = checkItems.every((checkItem) => checkItem.passed);
 

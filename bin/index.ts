@@ -10,24 +10,24 @@ import Vorpal from 'vorpal';
 
 import { loadConfig } from '../lib/config';
 import { SOM, SOM_CONFIG_PATH_TO_DEFAULT_FILE, VERSION } from '../lib/consts';
-import { actionAddSecret } from './actions/addSecret';
 import { actionClearScreen } from './actions/clearScreen';
-import { actionDeleteSecret } from './actions/deleteSecret';
 import { actionDeploy } from './actions/deploy';
 import { actionDeployCheck } from './actions/deployCheck';
 import { actionDestroy } from './actions/destroy';
 import { actionDiff } from './actions/diff';
 import { actionInfo } from './actions/info';
-import { actionListSecrets } from './actions/listSecrets';
 import { actionListSites } from './actions/listSites';
 import { actionListUsers } from './actions/listUsers';
 import { actionLoadManifest } from './actions/loadManifest';
+import { actionAddSecret } from './actions/secretsAdd';
+import { actionDeleteSecret } from './actions/secretsDelete';
+import { actionListSecrets } from './actions/secretsList';
+import { actionShowSecret } from './actions/secretsShow';
 import { actionSetNameServersWithRegistrar } from './actions/setNameserversWithRegistrar';
 import { actionShowCOnfig } from './actions/showConfig';
 import { actionShowContext } from './actions/showContext';
 import { actionShowFacts } from './actions/showFacts';
 import { actionShowManifest } from './actions/showManifest';
-import { actionShowSecret } from './actions/showSecret';
 import { actionStacks } from './actions/stacks';
 import { actionSynthesize } from './actions/synthesize';
 import { SomGlobalState } from './SomGlobalState';
@@ -92,7 +92,7 @@ async function main() {
   vorpal.command('secrets ls', 'List secrets').action(actionListSecrets(vorpal, config, globalState));
   vorpal.command('secrets add <name> <value>', 'Add a secret').action(actionAddSecret(vorpal, config, globalState));
   vorpal.command('secrets show <name>', 'Reveal a secret value').action(actionShowSecret(vorpal, config, globalState));
-  vorpal.command('secret del <name>', 'Delete a secret').action(actionDeleteSecret(vorpal, config, globalState));
+  vorpal.command('secrets del <name>', 'Delete a secret').action(actionDeleteSecret(vorpal, config, globalState));
 
   /*[XXX: do we need this really?]
   vorpal

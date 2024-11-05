@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 
+import MOCK_CONFIG from '../test/mocks/mock-config.json';
 import * as unit from './index';
 import { sortObjectKeys } from './index';
 
@@ -15,7 +16,7 @@ describe('manifest', () => {
 
   describe('loadManifest', () => {
     it('should return a valid manifest', async () => {
-      const result = await unit.loadManifest('/path/to/manifest.json');
+      const result = await unit.loadManifest(MOCK_CONFIG, '/path/to/manifest.json');
       expect(result).toBeDefined();
     });
   });

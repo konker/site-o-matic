@@ -4,7 +4,7 @@ import type { SiteOMaticConfig } from '../config/schemas/site-o-matic-config.sch
 
 export function stsAssumeRoleParams(config: SiteOMaticConfig) {
   return {
-    RoleArn: config.SOM_ROLE_ARN,
+    RoleArn: config.SOM_ADMIN_ROLE_ARN,
     DurationSeconds: 900,
     RoleSessionName: 'som-cli-session',
   };

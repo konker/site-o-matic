@@ -3,7 +3,6 @@ import { getIsS3BucketEmpty } from './aws/s3';
 import { getSsmParams, ssmBasePath } from './aws/ssm';
 import type { SiteOMaticConfig } from './config/schemas/site-o-matic-config.schema';
 import {
-  DEFAULT_AWS_REGION,
   REGISTRAR_ID_AWS_ROUTE53,
   SSM_PARAM_NAME_DOMAIN_BUCKET_NAME,
   SSM_PARAM_NAME_SOM_VERSION,
@@ -52,18 +51,21 @@ export function hasNetworkDerived(context: SomContext): context is HasNetworkDer
   );
 }
 
-export async function getRegistrarNameservers(config: SiteOMaticConfig, context: SomContext): Promise<Array<string>> {
+export async function getRegistrarNameservers(
+  config: SiteOMaticConfig,
+  context: HasManifest<SomContext>
+): Promise<Array<string>> {
   if (!context.rootDomainName || !context.registrar) {
     return [];
   }
   const registrarConnector = getRegistrarConnector(context.registrar);
-  const somSecrets = await secrets.getAllSomSecrets(config, DEFAULT_AWS_REGION, context.somId);
+  const somSecrets = await secrets.getAllSomSecrets(config, context.manifest.region, context.somId);
 
   if (!registrarConnector.SECRETS.every((secretName) => !!somSecrets.lookup[secretName])) {
     console.log(`WARNING: secrets required by registrar connector missing: ${registrarConnector.SECRETS}`);
     return [];
   } else {
-    return registrarConnector.getNameServers(config, somSecrets, context.rootDomainName);
+    return registrarConnector.getNameServers(config, context.manifest, somSecrets, context.rootDomainName);
   }
 }
 
@@ -90,17 +92,17 @@ export async function loadNetworkDerivedContext(
     dnsVerificationTxtRecord,
     connectionStatus,
   ] = await Promise.all([
-    getSsmParams(config, DEFAULT_AWS_REGION, ssmBasePath(config, context.somId)),
-    getAllSomSecrets(config, DEFAULT_AWS_REGION, context.somId),
-    findHostedZoneAttributes(config, context.rootDomainName),
-    getNsRecordValuesForDomainName(config, context.rootDomainName),
+    getSsmParams(config, context.manifest.region, ssmBasePath(config, context.somId)),
+    getAllSomSecrets(config, context.manifest.region, context.somId),
+    findHostedZoneAttributes(config, context.manifest, context.rootDomainName),
+    getNsRecordValuesForDomainName(config, context.manifest, context.rootDomainName),
     resolveDnsNameserverRecords(context.rootDomainName),
     getRegistrarNameservers(config, context),
     resolveDnsSomTxtRecord(context.rootDomainName),
     getSiteConnectionStatus(context.rootDomainName, context.siteUrl),
   ]);
   const s3BucketName = getParam(params, SSM_PARAM_NAME_DOMAIN_BUCKET_NAME);
-  const isS3BucketEmpty = !!s3BucketName ? await getIsS3BucketEmpty(config, s3BucketName) : false;
+  const isS3BucketEmpty = !!s3BucketName ? await getIsS3BucketEmpty(config, context.manifest, s3BucketName) : false;
 
   return {
     ...context,
@@ -137,7 +139,7 @@ export function manifestDerivedProps(
   };
   return {
     ...ret,
-    webmasterEmail: contextTemplateString(manifest.webmasterEmail ?? config.DEFAULT_WEBMASTER_EMAIL, ret),
+    webmasterEmail: contextTemplateString(manifest.webmasterEmail ?? config.WEBMASTER_EMAIL_DEFAULT, ret),
   };
 }
 

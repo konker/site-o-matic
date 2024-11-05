@@ -44,14 +44,14 @@ export function actionDestroy(vorpal: Vorpal, config: SiteOMaticConfig, state: S
       if (!facts.lockedSsm) {
         await removeVerificationCnameRecords(
           config,
+          state.context.manifest.region,
           getContextParam(state.context, SSM_PARAM_NAME_HOSTED_ZONE_ID) as string
         );
         const [code, log] = await cdkExec.cdkDestroy(
           vorpal,
           state.context.somId,
-          {
-            pathToManifestFile: state.context.pathToManifestFile,
-          },
+          state.context.manifest.region,
+          { pathToManifestFile: state.context.pathToManifestFile },
           state.plumbing
         );
 

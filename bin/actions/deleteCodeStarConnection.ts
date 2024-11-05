@@ -3,10 +3,12 @@ import type Vorpal from 'vorpal';
 
 import * as codestar from '../../lib/aws/codestar';
 import type { SiteOMaticConfig } from '../../lib/config/schemas/site-o-matic-config.schema';
-import { DEFAULT_AWS_REGION } from '../../lib/consts';
 import { verror, vtabulate } from '../../lib/ui/logging';
 import type { SomGlobalState } from '../SomGlobalState';
 
+/**
+ @deprecated
+ */
 export function actionDeleteCodeStarConnection(vorpal: Vorpal, config: SiteOMaticConfig, state: SomGlobalState) {
   return async (args: Vorpal.Args | string): Promise<void> => {
     if (typeof args === 'string') throw new Error('Error: string args to action');
@@ -22,7 +24,11 @@ export function actionDeleteCodeStarConnection(vorpal: Vorpal, config: SiteOMati
         });
     if (response.confirm === 'y') {
       state.spinner.start();
-      const data = await codestar.deleteCodeStarConnection(config, DEFAULT_AWS_REGION, args.connectionArn);
+      const data = await codestar.deleteCodeStarConnection(
+        config,
+        state.context.manifest?.region ?? config.AWS_REGION_CONTROL_PLANE,
+        args.connectionArn
+      );
       state.spinner.stop();
       vtabulate(vorpal, state, data, ['ConnectionName', 'ConnectionArn', 'ProviderType', 'ConnectionStatus']);
     } else {

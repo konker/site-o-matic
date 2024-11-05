@@ -2,7 +2,6 @@ import chalk from 'chalk';
 
 import type { SiteOMaticConfig } from './config/schemas/site-o-matic-config.schema';
 import {
-  DEFAULT_AWS_REGION,
   SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG,
   SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS,
   VERSION,
@@ -37,25 +36,26 @@ export async function preDeploymentCheck(
 
   if (!hasManifest(context)) {
     checkItems.push(checkFailed('Manifest Loaded'));
+
+    // Short-circuit immediately as there's no point carrying on without a manifest
+    return checkItems;
   } else {
     checkItems.push(checkPassed('Manifest Loaded'));
   }
 
-  if (hasManifest(context)) {
-    const manifestLoad = await loadManifest(context.pathToManifestFile);
-    if (!manifestLoad) {
+  const manifestLoad = await loadManifest(config, context.pathToManifestFile);
+  if (!manifestLoad) {
+    checkItems.push(
+      checkFailed('Manifest change', `The site-o-matic manifest has changed on disk. Re-load it before deployment.`)
+    );
+  } else {
+    const [_, hash] = manifestLoad;
+    if (hash !== context.manifestHash) {
       checkItems.push(
         checkFailed('Manifest change', `The site-o-matic manifest has changed on disk. Re-load it before deployment.`)
       );
     } else {
-      const [_, hash] = manifestLoad;
-      if (hash !== context.manifestHash) {
-        checkItems.push(
-          checkFailed('Manifest change', `The site-o-matic manifest has changed on disk. Re-load it before deployment.`)
-        );
-      } else {
-        checkItems.push(checkPassed('Manifest change'));
-      }
+      checkItems.push(checkPassed('Manifest change'));
     }
   }
 
@@ -77,7 +77,7 @@ export async function preDeploymentCheck(
       context.manifest.pipeline?.type === SITE_PIPELINE_TYPE_CODESTAR_S3 ||
       context.manifest.pipeline?.type === SITE_PIPELINE_TYPE_CODESTAR_CUSTOM
     ) {
-      const codestarConnections = await codestar.listCodeStarConnections(config, DEFAULT_AWS_REGION);
+      const codestarConnections = await codestar.listCodeStarConnections(config, AWS_REGION_CONTROL_PLANE);
       const manifestCodestarConnection = context.manifest?.pipeline?.codestarConnectionArn;
       const codestarConnection = codestarConnections.find(
         (i) => manifestCodestarConnection && i.ConnectionArn === manifestCodestarConnection
@@ -91,7 +91,7 @@ export async function preDeploymentCheck(
   }
   */
 
-  const somSecrets = await secrets.getAllSomSecrets(config, DEFAULT_AWS_REGION, context.somId);
+  const somSecrets = await secrets.getAllSomSecrets(config, context.manifest.region, context.somId);
 
   if (context.registrar) {
     const registrarConnector = getRegistrarConnector(context.registrar);

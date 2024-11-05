@@ -3,10 +3,12 @@ import type Vorpal from 'vorpal';
 import * as codestar from '../../lib/aws/codestar';
 import { CODESTAR_CONNECTION_PROVIDER_TYPES } from '../../lib/aws/codestar';
 import type { SiteOMaticConfig } from '../../lib/config/schemas/site-o-matic-config.schema';
-import { DEFAULT_AWS_REGION } from '../../lib/consts';
 import { verror, vtabulate } from '../../lib/ui/logging';
 import type { SomGlobalState } from '../SomGlobalState';
 
+/**
+ @deprecated
+ */
 export function actionAddCodeStarConnection(vorpal: Vorpal, config: SiteOMaticConfig, state: SomGlobalState) {
   return async (args: Vorpal.Args | string): Promise<void> => {
     if (typeof args === 'string') throw new Error('Error: string args to action');
@@ -27,7 +29,7 @@ export function actionAddCodeStarConnection(vorpal: Vorpal, config: SiteOMaticCo
     state.spinner.start();
     const data = await codestar.addCodeStarConnection(
       config,
-      DEFAULT_AWS_REGION,
+      state.context.manifest?.region ?? config.AWS_REGION_CONTROL_PLANE,
       args.connectionName,
       args.providerType
     );

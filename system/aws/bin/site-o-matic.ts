@@ -31,7 +31,7 @@ async function main(): Promise<void> {
 
   // ----------------------------------------------------------------------
   const pathToManifestFile = contextParams.pathToManifestFile!;
-  const manifestLoad = await loadManifest(pathToManifestFile);
+  const manifestLoad = await loadManifest(config, pathToManifestFile);
   if (!manifestLoad) {
     console.log(chalk.red(chalk.bold('Invalid manifest')));
     return;
@@ -41,6 +41,19 @@ async function main(): Promise<void> {
 
   // ----------------------------------------------------------------------
   // Generate the CDK Stacks
+  const bootstrapEnv = {
+    env: {
+      accountId: process.env.CDK_DEFAULT_ACCOUNT!,
+      region: context.manifest.region,
+    },
+  };
+  const resourcesEnv = {
+    env: {
+      accountId: process.env.CDK_DEFAULT_ACCOUNT!,
+      region: context.manifest.region,
+    },
+  };
+
   const siteProps = {
     config,
     context,
@@ -48,10 +61,6 @@ async function main(): Promise<void> {
     locked: context.manifest.locked ?? false,
     contextParams,
     description: `Site-o-Matic Stack for ${context.manifest.domainName}`,
-    env: {
-      accountId: process.env.CDK_DEFAULT_ACCOUNT!,
-      region: process.env.CDK_DEFAULT_REGION!,
-    },
   };
 
   /*[XXX]
@@ -60,11 +69,17 @@ async function main(): Promise<void> {
   _somTag(config, siteStack, context.somId);
   */
 
-  const bootstrapStack = new SiteBootstrapStack(app, BOOTSTRAP_STACK_ID(context.somId), siteProps);
+  const bootstrapStack = new SiteBootstrapStack(app, BOOTSTRAP_STACK_ID(context.somId), {
+    ...siteProps,
+    ...bootstrapEnv,
+  });
   await bootstrapStack.build();
   _somTag(config, bootstrapStack, context.somId);
 
-  const siteResourcesStack = new SiteResourcesStack(app, SITE_RESOURCES_STACK_ID(context.somId), siteProps);
+  const siteResourcesStack = new SiteResourcesStack(app, SITE_RESOURCES_STACK_ID(context.somId), {
+    ...siteProps,
+    ...resourcesEnv,
+  });
   await siteResourcesStack.build();
   siteResourcesStack.addDependency(bootstrapStack);
   _somTag(config, siteResourcesStack, context.somId);

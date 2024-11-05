@@ -26,66 +26,96 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Dom
 
   const res1 = new ssm.StringParameter(siteResourcesStack, 'SsmSiteEntryRootDomainName', {
     parameterName: `/som/site/root-domain-name/${siteResourcesStack.siteProps.context.rootDomainName}`,
-    stringValue: siteResourcesStack.somId,
+    stringValue: siteResourcesStack.siteProps.context.somId,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(siteResourcesStack.siteProps.config, res1, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
+  _somMeta(
+    siteResourcesStack.siteProps.config,
+    res1,
+    siteResourcesStack.siteProps.context.somId,
+    siteResourcesStack.siteProps.locked
+  );
 
   const res2 = new ssm.StringParameter(siteResourcesStack, 'SsmSiteEntrySomId', {
-    parameterName: `/som/site/som-id/${siteResourcesStack.somId}`,
+    parameterName: `/som/site/som-id/${siteResourcesStack.siteProps.context.somId}`,
     stringValue: siteResourcesStack.siteProps.context.rootDomainName,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(siteResourcesStack.siteProps.config, res2, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
+  _somMeta(
+    siteResourcesStack.siteProps.config,
+    res2,
+    siteResourcesStack.siteProps.context.somId,
+    siteResourcesStack.siteProps.locked
+  );
 
   const res3 = new ssm.StringParameter(siteResourcesStack, 'SsmRootDomain', {
     parameterName: toSsmParamName(
       siteResourcesStack.siteProps.config,
-      siteResourcesStack.somId,
+      siteResourcesStack.siteProps.context.somId,
       SSM_PARAM_NAME_ROOT_DOMAIN_NAME
     ),
     stringValue: siteResourcesStack.siteProps.context.rootDomainName,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(siteResourcesStack.siteProps.config, res3, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
+  _somMeta(
+    siteResourcesStack.siteProps.config,
+    res3,
+    siteResourcesStack.siteProps.context.somId,
+    siteResourcesStack.siteProps.locked
+  );
 
   const res4 = new ssm.StringParameter(siteResourcesStack, 'SsmWebmasterEmail', {
     parameterName: toSsmParamName(
       siteResourcesStack.siteProps.config,
-      siteResourcesStack.somId,
+      siteResourcesStack.siteProps.context.somId,
       SSM_PARAM_NAME_WEBMASTER_EMAIL
     ),
     stringValue:
       contextTemplateString(
         siteResourcesStack.siteProps.context.manifest.webmasterEmail ??
-          siteResourcesStack.siteProps.config.DEFAULT_WEBMASTER_EMAIL,
+          siteResourcesStack.siteProps.config.WEBMASTER_EMAIL_DEFAULT,
         siteResourcesStack.siteProps.context
       ) ?? UNKNOWN,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(siteResourcesStack.siteProps.config, res4, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
+  _somMeta(
+    siteResourcesStack.siteProps.config,
+    res4,
+    siteResourcesStack.siteProps.context.somId,
+    siteResourcesStack.siteProps.locked
+  );
 
   const res5 = new ssm.StringParameter(siteResourcesStack, 'SsmProtectedStatus', {
     parameterName: toSsmParamName(
       siteResourcesStack.siteProps.config,
-      siteResourcesStack.somId,
+      siteResourcesStack.siteProps.context.somId,
       SSM_PARAM_NAME_PROTECTED_STATUS
     ),
     stringValue: siteResourcesStack.siteProps.locked ? 'true' : 'false',
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(siteResourcesStack.siteProps.config, res5, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
+  _somMeta(
+    siteResourcesStack.siteProps.config,
+    res5,
+    siteResourcesStack.siteProps.context.somId,
+    siteResourcesStack.siteProps.locked
+  );
 
   const res6 = new ssm.StringParameter(siteResourcesStack, 'SsmSomVersion', {
     parameterName: toSsmParamName(
       siteResourcesStack.siteProps.config,
-      siteResourcesStack.somId,
+      siteResourcesStack.siteProps.context.somId,
       SSM_PARAM_NAME_SOM_VERSION
     ),
     stringValue: VERSION,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(siteResourcesStack.siteProps.config, res6, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
+  _somMeta(
+    siteResourcesStack.siteProps.config,
+    res6,
+    siteResourcesStack.siteProps.context.somId,
+    siteResourcesStack.siteProps.locked
+  );
 
   return [res1, res2, res3, res4, res5, res6];
 }

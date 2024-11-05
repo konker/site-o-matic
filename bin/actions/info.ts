@@ -35,6 +35,7 @@ export function actionInfo(vorpal: Vorpal, config: SiteOMaticConfig, state: SomG
         siteUrl: context.siteUrl ?? UNKNOWN,
         webmasterEmail: context.webmasterEmail,
         registrar: context.registrar,
+        region: context.manifest.region,
         subdomains: context.subdomains,
         webHosting: context.manifest.webHosting.map((x) =>
           Object.assign(

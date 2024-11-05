@@ -21,15 +21,6 @@ export function actionDeploy(vorpal: Vorpal, config: SiteOMaticConfig, state: So
   return async (args: Vorpal.Args | string): Promise<void> => {
     if (typeof args === 'string') throw new Error('Error: string args to action');
 
-    /*[XXX]
-    const username = args.username ?? getContextParam(state.context, SSM_PARAM_NAME_DOMAIN_USER_NAME);
-    if (!username) {
-      const errorMessage = `ERROR: no username was resolved`;
-      verror(vorpal, state, errorMessage);
-      return;
-    }
-    */
-
     if (!state.plumbing) {
       vorpal.log('Pre-flight checks...');
     }
@@ -108,9 +99,8 @@ export function actionDeploy(vorpal: Vorpal, config: SiteOMaticConfig, state: So
       const [codeBootstrap, logBootstrap] = await cdkExec.cdkDeploy(
         vorpal,
         state.context.somId,
-        {
-          pathToManifestFile: state.context.pathToManifestFile,
-        },
+        state.context.manifest.region,
+        { pathToManifestFile: state.context.pathToManifestFile },
         state.plumbing,
         BOOTSTRAP_STACK_ID(state.context.somId)
       );
@@ -121,9 +111,8 @@ export function actionDeploy(vorpal: Vorpal, config: SiteOMaticConfig, state: So
       const [codeSiteResources, logSiteResources] = await cdkExec.cdkDeploy(
         vorpal,
         state.context.somId,
-        {
-          pathToManifestFile: state.context.pathToManifestFile,
-        },
+        state.context.manifest.region,
+        { pathToManifestFile: state.context.pathToManifestFile },
         state.plumbing,
         SITE_RESOURCES_STACK_ID(state.context.somId)
       );

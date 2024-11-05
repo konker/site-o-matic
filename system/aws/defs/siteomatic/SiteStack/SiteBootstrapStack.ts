@@ -10,8 +10,6 @@ import * as DomainUserBootstrapBuilder from '../DomainUserBootstrapBuilder';
 export class SiteBootstrapStack extends cdk.Stack {
   public readonly siteProps: SiteStackProps;
   public readonly somPrefix: string;
-  public readonly rootDomainName: string;
-  public readonly somId: string;
 
   public domainUserBootstrapResources: DomainUserBootstrapBuilder.DomainUserBootstrapResources | undefined;
   public domainPublisherBootstrapResources:
@@ -22,8 +20,6 @@ export class SiteBootstrapStack extends cdk.Stack {
     super(scope, id, Object.assign({}, DEFAULT_STACK_PROPS(props.config, props.context.somId, props), props));
 
     this.somPrefix = props.config.SOM_PREFIX;
-    this.rootDomainName = props.context.rootDomainName;
-    this.somId = props.context.somId;
     this.siteProps = cloneDeep(props);
   }
 
@@ -31,6 +27,8 @@ export class SiteBootstrapStack extends cdk.Stack {
     this.domainUserBootstrapResources = await DomainUserBootstrapBuilder.build(this);
     this.domainPublisherBootstrapResources = await DomainPublisherBoostrapBuilder.build(this);
 
-    console.log(`Generated SiteBootstrapStack [${this.somId}]`);
+    console.log(
+      `Generated SiteBootstrapStack [${this.siteProps.context.somId}] in region: ${this.siteProps.env.region}`
+    );
   }
 }

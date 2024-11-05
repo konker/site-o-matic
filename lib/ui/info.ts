@@ -40,6 +40,10 @@ export function renderInfoSpec(infoSpec: SomInfoSpec): string {
         Value: infoSpec.registrar,
       },
       {
+        Param: chalk.bold(chalk.white('region')),
+        Value: infoSpec.region,
+      },
+      {
         Param: chalk.bold(chalk.white('web hosting')),
         Value: infoSpec.webHosting
           ? infoSpec.webHosting

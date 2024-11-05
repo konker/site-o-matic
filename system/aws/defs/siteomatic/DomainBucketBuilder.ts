@@ -28,7 +28,7 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Dom
   // Origin Access Control (OAC) which will govern the cloudfront distribution access to the S3 origin bucket
   const originAccessControl = new cloudfront.CfnOriginAccessControl(siteResourcesStack, 'OriginAccessControl', {
     originAccessControlConfig: {
-      name: `oac-${siteResourcesStack.somId}`,
+      name: `oac-${siteResourcesStack.siteProps.context.somId}`,
       originAccessControlOriginType: 's3',
       signingBehavior: 'always',
       signingProtocol: 'sigv4',
@@ -38,7 +38,7 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Dom
 
   // ----------------------------------------------------------------------
   // Domain www content bucket and bucket policy
-  const bucketName = `wwwbucket-${siteResourcesStack.somId}`;
+  const bucketName = `wwwbucket-${siteResourcesStack.siteProps.context.somId}`;
   const domainBucket = new s3.Bucket(siteResourcesStack, 'DomainBucket', {
     bucketName,
     blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
@@ -51,7 +51,7 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Dom
   _somMeta(
     siteResourcesStack.siteProps.config,
     domainBucket,
-    siteResourcesStack.somId,
+    siteResourcesStack.siteProps.context.somId,
     siteResourcesStack.siteProps.locked
   );
 
@@ -92,13 +92,18 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Dom
   const ssm1 = new ssm.StringParameter(siteResourcesStack, 'SsmDomainBucketName', {
     parameterName: toSsmParamName(
       siteResourcesStack.siteProps.config,
-      siteResourcesStack.somId,
+      siteResourcesStack.siteProps.context.somId,
       SSM_PARAM_NAME_DOMAIN_BUCKET_NAME
     ),
     stringValue: domainBucket.bucketName,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(siteResourcesStack.siteProps.config, ssm1, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
+  _somMeta(
+    siteResourcesStack.siteProps.config,
+    ssm1,
+    siteResourcesStack.siteProps.context.somId,
+    siteResourcesStack.siteProps.locked
+  );
 
   return {
     domainBucket,

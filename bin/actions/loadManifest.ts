@@ -14,7 +14,7 @@ export function actionLoadManifest(vorpal: Vorpal, config: SiteOMaticConfig, sta
     if (typeof args === 'string') throw new Error('Error: string args to action');
 
     const pathToManifestFile = path.resolve(args.pathToManifestFile);
-    const manifestLoad = await loadManifest(pathToManifestFile);
+    const manifestLoad = await loadManifest(config, pathToManifestFile);
     if (!manifestLoad) {
       verror(vorpal, state, `Failed to load manifest from: ${pathToManifestFile}`);
       return;

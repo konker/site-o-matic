@@ -8,7 +8,6 @@ import type { SiteStackProps } from './types';
 export const SOM = 'site-o-matic';
 export const UNKNOWN = 'UNKNOWN' as const;
 export const VERSION = '0.0.3' as const;
-export const DEFAULT_AWS_REGION = 'us-east-1' as const;
 export const DEFAULT_CERTIFICATE_REGION = 'us-east-1' as const;
 export const CLS = '\u001b[2J\u001b[0;0H' as const;
 export const SOM_ROOT_PATH = path.join(__dirname, '..');

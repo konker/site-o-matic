@@ -2,6 +2,22 @@
 
 ## V0.0.3
 
+- Refactor CLI UI to lead with entity, e.g. `secrets add`, `secrets list`, etc
+- Remove the use of `DEFAULT_AWS_REGION` as much as possible
+
+  - add `region` command to CLI -> "us-east-1 (default)" | "eu-west-1" (manifest)"
+  - Region must be set when starting SOM
+
+    - From credentials, or explicitly
+    - From manifest, default to config param?
+
+  - Are there some resources which must be in us-east-1?
+  - Experiment with `som.click` (or whatever)
+    - Have region (with default) in manifest
+    - Feed manifest region to all operations
+      - Feed manifest region to CDK invocation
+    - See what happens in e.g. `eu-west-1`
+
 - Add basic auth edge function
   - username secret name
   - password secret name

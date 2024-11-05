@@ -135,6 +135,7 @@ export type SomInfoSpec = {
   readonly siteUrl: string;
   readonly webmasterEmail: string | undefined;
   readonly registrar: string | undefined;
+  readonly region: string | undefined;
   readonly subdomains: Array<string> | undefined;
   readonly webHosting: Array<{
     readonly type: string;

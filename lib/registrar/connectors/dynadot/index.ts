@@ -2,6 +2,7 @@ import { XMLParser } from 'fast-xml-parser';
 import got from 'got';
 
 import type { SiteOMaticConfig } from '../../../config/schemas/site-o-matic-config.schema';
+import type { SiteOMaticManifest } from '../../../manifest/schemas/site-o-matic-manifest.schema';
 import type { SecretsSetCollection } from '../../../secrets/types';
 
 export const ID = 'dynadot';
@@ -14,6 +15,7 @@ const XML_PARSER = new XMLParser();
 
 export async function getNameServers(
   _config: SiteOMaticConfig,
+  _manifest: SiteOMaticManifest,
   secrets: SecretsSetCollection,
   domain: string
 ): Promise<Array<string>> {
@@ -36,6 +38,7 @@ export async function getNameServers(
 
 export async function setNameServers(
   config: SiteOMaticConfig,
+  manifest: SiteOMaticManifest,
   secrets: SecretsSetCollection,
   domain: string,
   hosts: Array<string>
@@ -51,7 +54,7 @@ export async function setNameServers(
       return undefined;
     }
 
-    return getNameServers(config, secrets, domain);
+    return getNameServers(config, manifest, secrets, domain);
   } catch (ex) {
     console.log(`[registrar/dynadot] ERROR: ${ex}`);
     return undefined;

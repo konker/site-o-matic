@@ -8,7 +8,6 @@ import {
   BOOTSTRAP_DOMAIN_PUBLISHER_ACCESS_KEY_ID_OUTPUT_NAME,
   BOOTSTRAP_DOMAIN_PUBLISHER_ACCESS_KEY_SECRET_OUTPUT_NAME,
   BOOTSTRAP_DOMAIN_PUBLISHER_USER_NAME_OUTPUT_NAME,
-  DEFAULT_AWS_REGION,
   SSM_PARAM_NAME_DOMAIN_PUBLISHER_SECRET_NAME_ACCESS_KEY_ID,
   SSM_PARAM_NAME_DOMAIN_PUBLISHER_SECRET_NAME_ACCESS_KEY_SECRET,
 } from '../../../../lib/consts';
@@ -30,7 +29,7 @@ export type DomainPublisherResources = {
 // ----------------------------------------------------------------------
 export async function build(siteResourcesStack: SiteResourcesStack): Promise<DomainPublisherResources> {
   const importedDomainPublisherUserName = cdk.Fn.importValue(
-    BOOTSTRAP_DOMAIN_PUBLISHER_USER_NAME_OUTPUT_NAME(siteResourcesStack.somId)
+    BOOTSTRAP_DOMAIN_PUBLISHER_USER_NAME_OUTPUT_NAME(siteResourcesStack.siteProps.context.somId)
   );
 
   const domainPublisher = iam.User.fromUserName(siteResourcesStack, 'DomainPublisher', importedDomainPublisherUserName);
@@ -40,22 +39,22 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Dom
   _somMeta(
     siteResourcesStack.siteProps.config,
     domainPublisherPolicy,
-    siteResourcesStack.somId,
+    siteResourcesStack.siteProps.context.somId,
     siteResourcesStack.siteProps.locked
   );
 
   const domainPublisherAccessKeyIdSecretName = 'DOMAIN_PUBLISHER_AWS_ACCESS_KEY_ID';
   const manuallyImportedDomainPublisherAccessKeyId = await cloudformation.getCloudformationExport(
     siteResourcesStack.siteProps.config,
-    DEFAULT_AWS_REGION,
-    BOOTSTRAP_DOMAIN_PUBLISHER_ACCESS_KEY_ID_OUTPUT_NAME(siteResourcesStack.somId)
+    siteResourcesStack.siteProps.context.manifest.region,
+    BOOTSTRAP_DOMAIN_PUBLISHER_ACCESS_KEY_ID_OUTPUT_NAME(siteResourcesStack.siteProps.context.somId)
   );
 
   const domainPublisherAccessKeySecretSecretName = 'DOMAIN_PUBLISHER_AWS_ACCESS_KEY_SECRET';
   const manuallyImportedDomainPublisherAccessKeySecret = await cloudformation.getCloudformationExport(
     siteResourcesStack.siteProps.config,
-    DEFAULT_AWS_REGION,
-    BOOTSTRAP_DOMAIN_PUBLISHER_ACCESS_KEY_SECRET_OUTPUT_NAME(siteResourcesStack.somId)
+    siteResourcesStack.siteProps.context.manifest.region,
+    BOOTSTRAP_DOMAIN_PUBLISHER_ACCESS_KEY_SECRET_OUTPUT_NAME(siteResourcesStack.siteProps.context.somId)
   );
 
   if (manuallyImportedDomainPublisherAccessKeyId && manuallyImportedDomainPublisherAccessKeySecret) {
@@ -63,10 +62,10 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Dom
     // Create a secret for the accessKeyId
     await secrets.addSomSecret(
       siteResourcesStack.siteProps.config,
-      DEFAULT_AWS_REGION,
-      siteResourcesStack.somId,
+      siteResourcesStack.siteProps.context.manifest.region,
+      siteResourcesStack.siteProps.context.somId,
       DEFAULT_SECRETS_SOURCE,
-      siteResourcesStack.somId,
+      siteResourcesStack.siteProps.context.somId,
       domainPublisherAccessKeyIdSecretName,
       manuallyImportedDomainPublisherAccessKeyId.value
     );
@@ -74,10 +73,10 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Dom
     // Create a secret for the accessKeySecret
     await secrets.addSomSecret(
       siteResourcesStack.siteProps.config,
-      DEFAULT_AWS_REGION,
-      siteResourcesStack.somId,
+      siteResourcesStack.siteProps.context.manifest.region,
+      siteResourcesStack.siteProps.context.somId,
       DEFAULT_SECRETS_SOURCE,
-      siteResourcesStack.somId,
+      siteResourcesStack.siteProps.context.somId,
       domainPublisherAccessKeySecretSecretName,
       manuallyImportedDomainPublisherAccessKeySecret.value
     );
@@ -88,24 +87,34 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Dom
   const res1 = new ssm.StringParameter(siteResourcesStack, 'SsmDomainPublisherAccessKeySecretIdSecretName', {
     parameterName: toSsmParamName(
       siteResourcesStack.siteProps.config,
-      siteResourcesStack.somId,
+      siteResourcesStack.siteProps.context.somId,
       SSM_PARAM_NAME_DOMAIN_PUBLISHER_SECRET_NAME_ACCESS_KEY_ID
     ),
     stringValue: domainPublisherAccessKeyIdSecretName,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(siteResourcesStack.siteProps.config, res1, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
+  _somMeta(
+    siteResourcesStack.siteProps.config,
+    res1,
+    siteResourcesStack.siteProps.context.somId,
+    siteResourcesStack.siteProps.locked
+  );
 
   const res2 = new ssm.StringParameter(siteResourcesStack, 'SsmDomainPublisherAccessKeySecretSecretSecretName', {
     parameterName: toSsmParamName(
       siteResourcesStack.siteProps.config,
-      siteResourcesStack.somId,
+      siteResourcesStack.siteProps.context.somId,
       SSM_PARAM_NAME_DOMAIN_PUBLISHER_SECRET_NAME_ACCESS_KEY_SECRET
     ),
     stringValue: domainPublisherAccessKeySecretSecretName,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(siteResourcesStack.siteProps.config, res2, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
+  _somMeta(
+    siteResourcesStack.siteProps.config,
+    res2,
+    siteResourcesStack.siteProps.context.somId,
+    siteResourcesStack.siteProps.locked
+  );
 
   return {
     domainPublisherUserName: importedDomainPublisherUserName,

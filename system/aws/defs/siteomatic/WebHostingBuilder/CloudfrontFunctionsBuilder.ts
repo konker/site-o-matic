@@ -50,7 +50,7 @@ export async function build(
     _somMeta(
       siteResourcesStack.siteProps.config,
       cfFunction,
-      siteResourcesStack.somId,
+      siteResourcesStack.siteProps.context.somId,
       siteResourcesStack.siteProps.locked
     );
   });

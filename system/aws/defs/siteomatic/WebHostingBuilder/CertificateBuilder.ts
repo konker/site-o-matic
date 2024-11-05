@@ -32,7 +32,7 @@ export async function build(
     subjectAlternativeNames: [`*.${webHostingSpec.domainName}`],
     validation: certificatemanager.CertificateValidation.fromDns(siteResourcesStack.hostedZoneResources.hostedZone),
   });
-  _somTag(siteResourcesStack.siteProps.config, certificate, siteResourcesStack.somId);
+  _somTag(siteResourcesStack.siteProps.config, certificate, siteResourcesStack.siteProps.context.somId);
   // Setting removalPolicy does not work: https://github.com/aws/aws-cdk/issues/20649
   // _somMeta(domainCertificate, siteStack.somId, siteStack.siteProps.locked);
 
@@ -41,14 +41,19 @@ export async function build(
   const res1 = new ssm.StringParameter(siteResourcesStack, `SsmDomainCertificateArn-${localIdPostfix}`, {
     parameterName: toSsmParamName(
       siteResourcesStack.siteProps.config,
-      siteResourcesStack.somId,
+      siteResourcesStack.siteProps.context.somId,
       SSM_PARAM_NAME_DOMAIN_CERTIFICATE_ARN,
       webHostingSpec.domainName
     ),
     stringValue: certificate.certificateArn,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(siteResourcesStack.siteProps.config, res1, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
+  _somMeta(
+    siteResourcesStack.siteProps.config,
+    res1,
+    siteResourcesStack.siteProps.context.somId,
+    siteResourcesStack.siteProps.locked
+  );
 
   return {
     domainName: webHostingSpec.domainName,

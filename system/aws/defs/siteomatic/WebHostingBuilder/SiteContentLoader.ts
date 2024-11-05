@@ -25,10 +25,11 @@ export async function load(
       const contentProducerId = webHostingSpec.content.producerId;
       const contentGenerator: SomContentGenerator = getContentProducer(contentProducerId);
       const ret = await contentGenerator(
-        siteResourcesStack.somId,
+        siteResourcesStack.siteProps.context.somId,
         webHostingSpec,
         siteResourcesStack.siteProps.context
       );
+
       if (ret) {
         console.log(chalk.blue(chalk.bold(`Created content dir: ${ret}`)));
       } else {

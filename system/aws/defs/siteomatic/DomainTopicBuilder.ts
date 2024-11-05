@@ -27,13 +27,13 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Dom
   // ----------------------------------------------------------------------
   // SNS topic for pipeline notifications
   const notificationsSnsTopic = new sns.Topic(siteResourcesStack, 'NotificationsSnsTopic', {
-    displayName: `NotificationsSnsTopic-${siteResourcesStack.somId}`,
-    topicName: `NotificationsSnsTopic-${siteResourcesStack.somId}`,
+    displayName: `NotificationsSnsTopic-${siteResourcesStack.siteProps.context.somId}`,
+    topicName: `NotificationsSnsTopic-${siteResourcesStack.siteProps.context.somId}`,
   });
   _somMeta(
     siteResourcesStack.siteProps.config,
     notificationsSnsTopic,
-    siteResourcesStack.somId,
+    siteResourcesStack.siteProps.context.somId,
     siteResourcesStack.siteProps.locked
   );
 
@@ -46,24 +46,34 @@ export async function build(siteResourcesStack: SiteResourcesStack): Promise<Dom
   const ssm1 = new ssm.StringParameter(siteResourcesStack, 'SsmSnsTopicName', {
     parameterName: toSsmParamName(
       siteResourcesStack.siteProps.config,
-      siteResourcesStack.somId,
+      siteResourcesStack.siteProps.context.somId,
       SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_NAME
     ),
     stringValue: notificationsSnsTopic.topicName,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(siteResourcesStack.siteProps.config, ssm1, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
+  _somMeta(
+    siteResourcesStack.siteProps.config,
+    ssm1,
+    siteResourcesStack.siteProps.context.somId,
+    siteResourcesStack.siteProps.locked
+  );
 
   const ssm2 = new ssm.StringParameter(siteResourcesStack, 'SsmSnsTopicArn', {
     parameterName: toSsmParamName(
       siteResourcesStack.siteProps.config,
-      siteResourcesStack.somId,
+      siteResourcesStack.siteProps.context.somId,
       SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN
     ),
     stringValue: notificationsSnsTopic.topicArn,
     tier: ssm.ParameterTier.STANDARD,
   });
-  _somMeta(siteResourcesStack.siteProps.config, ssm2, siteResourcesStack.somId, siteResourcesStack.siteProps.locked);
+  _somMeta(
+    siteResourcesStack.siteProps.config,
+    ssm2,
+    siteResourcesStack.siteProps.context.somId,
+    siteResourcesStack.siteProps.locked
+  );
 
   return {
     domainTopic: notificationsSnsTopic,

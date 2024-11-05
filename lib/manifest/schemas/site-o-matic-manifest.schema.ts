@@ -2,6 +2,7 @@ import { Duration } from 'aws-cdk-lib';
 import type { ErrorResponse } from 'aws-cdk-lib/aws-cloudfront';
 import * as z from 'zod';
 
+import type { SiteOMaticConfig } from '../../config/schemas/site-o-matic-config.schema';
 import {
   AUTH_IMPL_EDGE_CF_FUNCTION,
   AUTH_TYPE_BASIC_AUTH,
@@ -263,40 +264,43 @@ export const NotificationsClause = z.object({
 export type NotificationsClause = z.TypeOf<typeof NotificationsClause>;
 
 // ----------------------------------------------------------------------
-export const SiteOMaticManifest = z
-  .object({
-    domainName: z.string().min(1),
-    title: z.string().optional(),
-    extraDnsConfig: ExtraDnsClause.optional(),
-    webmasterEmail: z.string().email().optional(),
-    registrar: z.enum(['aws-route53', 'dynadot']).optional(),
-    locked: z.boolean().optional(),
+export const SiteOMaticManifest = (config: SiteOMaticConfig) =>
+  z
+    .object({
+      domainName: z.string().min(1),
+      title: z.string().optional(),
+      region: z.string().optional(),
+      extraDnsConfig: ExtraDnsClause.optional(),
+      webmasterEmail: z.string().email().optional(),
+      registrar: z.enum(['aws-route53', 'dynadot']).optional(),
+      locked: z.boolean().optional(),
 
-    webHostingDefaults: WebHostingDefaultsClause.optional(),
-    webHosting: z.array(WebHostingClause).optional(),
+      webHostingDefaults: WebHostingDefaultsClause.optional(),
+      webHosting: z.array(WebHostingClause).optional(),
 
-    notifications: NotificationsClause.optional(),
+      notifications: NotificationsClause.optional(),
 
-    // pipeline: PipelineClause.optional(),
-    // certificate: CertificateClause.optional(),
-    // crossAccountAccess: z.array(CrossAccountAccessSpec).optional(),
-  })
-  // Apply defaults
-  .transform((x) => {
-    const webHostingDefaults = x.webHostingDefaults ?? WEB_HOSTING_DEFAULTS_DEFAULT;
-    const applyWebHostingDefaults = (x: WebHostingClause) => ({
-      ...webHostingDefaults[x.type],
-      ...x,
+      // pipeline: PipelineClause.optional(),
+      // certificate: CertificateClause.optional(),
+      // crossAccountAccess: z.array(CrossAccountAccessSpec).optional(),
+    })
+    // Apply defaults
+    .transform((x) => {
+      const webHostingDefaults = x.webHostingDefaults ?? WEB_HOSTING_DEFAULTS_DEFAULT;
+      const applyWebHostingDefaults = (x: WebHostingClause) => ({
+        ...webHostingDefaults[x.type],
+        ...x,
+      });
+
+      return {
+        ...x,
+        region: x.region ?? config.AWS_REGION_DEPLOYMENT_DEFAULT,
+        locked: x.locked ?? false,
+        webHostingDefaults,
+        webHosting: (x.webHosting && x.webHosting.length > 0
+          ? x.webHosting.map(applyWebHostingDefaults)
+          : [WEB_HOSTING_DEFAULT(x.domainName)]
+        ).map(applyWebHostingDefaults),
+      };
     });
-
-    return {
-      ...x,
-      locked: x.locked ?? false,
-      webHostingDefaults,
-      webHosting: (x.webHosting && x.webHosting.length > 0
-        ? x.webHosting.map(applyWebHostingDefaults)
-        : [WEB_HOSTING_DEFAULT(x.domainName)]
-      ).map(applyWebHostingDefaults),
-    };
-  });
-export type SiteOMaticManifest = z.TypeOf<typeof SiteOMaticManifest>;
+export type SiteOMaticManifest = z.TypeOf<ReturnType<typeof SiteOMaticManifest>>;

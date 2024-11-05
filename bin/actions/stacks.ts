@@ -10,15 +10,6 @@ export function actionStacks(vorpal: Vorpal, _: SiteOMaticConfig, state: SomGlob
   return async (args: Vorpal.Args | string): Promise<void> => {
     if (typeof args === 'string') throw new Error('Error: string args to action');
 
-    /*[XXX]
-    const username = args.username ?? getContextParam(state.context, SSM_PARAM_NAME_DOMAIN_USER_NAME);
-    if (!username) {
-      const errorMessage = `ERROR: no username was resolved`;
-      verror(vorpal, state, errorMessage);
-      return;
-    }
-    */
-
     if (!hasManifest(state.context)) {
       const errorMessage = `ERROR: no manifest loaded`;
       verror(vorpal, state, errorMessage);
@@ -28,9 +19,8 @@ export function actionStacks(vorpal: Vorpal, _: SiteOMaticConfig, state: SomGlob
     const [code, log] = await cdkExec.cdkList(
       vorpal,
       state.context.somId,
-      {
-        pathToManifestFile: state.context.pathToManifestFile,
-      },
+      state.context.manifest.region,
+      { pathToManifestFile: state.context.pathToManifestFile },
       state.plumbing
     );
 
