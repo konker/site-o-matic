@@ -14,6 +14,12 @@
   // A registrar ID from the list of supported registrars, currently [dynadot, awsRoute53]
   registrar: 'dynadot',
 
+  // Region to deploy resources, other than: global resources, certificates
+  // XXX: Currently this must be us-east-1, major refactor needed to support
+  // XXX: multi-region deployment, given that certificates must be in us-east-1
+  // XXX: and CDK does not allow a single stack to mix regions.
+  region: 'us-east-1',
+
   // Whether to add protection rules to resources created by the tool
   locked: false,
 

@@ -2,6 +2,21 @@
 
 ## V0.0.3
 
+- Global:
+  - IAM
+  - Route53
+  - Cloudfront
+- us-east-1
+  - CertificateManager
+- regional
+
+  - S3
+  - SSM
+  - SNS
+  - ???
+
+---
+
 - Refactor CLI UI to lead with entity, e.g. `secrets add`, `secrets list`, etc
 - Remove the use of `DEFAULT_AWS_REGION` as much as possible
 

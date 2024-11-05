@@ -160,7 +160,8 @@ export const siteOMaticRules = rulesEngineFactory<SomFactNames, SomContext>({
 
   // SOM_STATUS_HOSTED_ZONE_OK
   isStatusHostedZoneOk: async (facts, _context) =>
-    is(facts.hostedZoneVerified) && isNot(facts.isStatusHostedZoneAwaitingNsConfig),
+    (is(facts.hostedZoneVerified) && isNot(facts.isStatusHostedZoneAwaitingNsConfig)) ||
+    (is(facts.isAwsRoute53RegisteredDomain) && is(facts.registrarNameserversMatchHostedZoneNameServers)),
 
   // SOM_STATUS_SITE_FUNCTIONAL
   isStatusSiteFunctional: async (facts, _context) => is(facts.isStatusHostedZoneOk) && is(facts.has200ConnectionStatus),

@@ -27,7 +27,7 @@ exports[`site-o-matic-manifest-schema should validate a complete example 1`] = `
     "noSubscription": false,
     "subscriptionEmail": "webmaster+{{context.manifest.rootDomainName}}@example.com",
   },
-  "region": "eu-west-1",
+  "region": "us-east-1",
   "registrar": "dynadot",
   "title": "example.com",
   "webHosting": [

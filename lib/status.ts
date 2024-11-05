@@ -12,10 +12,10 @@ import type { SomFacts } from './rules/site-o-matic.rules';
 import type { SomContext, SomStatus } from './types';
 
 export function getStatus(facts: SomFacts): SomStatus {
-  if (facts.isStatusNotStarted) return SOM_STATUS_NOT_STARTED;
   if (facts.isStatusSiteFunctional) return SOM_STATUS_SITE_FUNCTIONAL;
   if (facts.isStatusHostedZoneOk) return SOM_STATUS_HOSTED_ZONE_OK;
   if (facts.isStatusHostedZoneAwaitingNsConfig) return SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG;
+  if (facts.isStatusNotStarted) return SOM_STATUS_NOT_STARTED;
   return SOM_STATUS_NOT_STARTED;
 }
 

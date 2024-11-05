@@ -5,10 +5,10 @@ import { SiteOMaticManifest } from './schemas/site-o-matic-manifest.schema';
 export type ManifestLoad<T> = [T, string];
 
 export async function loadManifest(
-  config: SiteOMaticConfig,
+  _config: SiteOMaticConfig,
   pathToManifestFile: string
 ): Promise<ManifestLoad<SiteOMaticManifest> | undefined> {
-  return loadValidData(pathToManifestFile, SiteOMaticManifest(config));
+  return loadValidData(pathToManifestFile, SiteOMaticManifest);
 }
 
 export function sortObjectKeys(o: object): object {
