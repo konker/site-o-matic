@@ -2,14 +2,10 @@ import assert from 'assert';
 import chalk from 'chalk';
 import type Vorpal from 'vorpal';
 
-import * as cdkExec from '../../lib/aws/cdkExec';
 import { postToSnsTopic } from '../../lib/aws/sns';
+import * as cdkTfExec from '../../lib/cdkTfExec';
 import type { SiteOMaticConfig } from '../../lib/config/schemas/site-o-matic-config.schema';
-import {
-  BOOTSTRAP_STACK_ID,
-  SITE_RESOURCES_STACK_ID,
-  SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN,
-} from '../../lib/consts';
+import { SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN } from '../../lib/consts';
 import { hasManifest, refreshContextPass1, refreshContextPass2 } from '../../lib/context';
 import { preDeploymentCheck } from '../../lib/deployment';
 import { siteOMaticRules } from '../../lib/rules/site-o-matic.rules';
@@ -96,28 +92,14 @@ export function actionDeploy(vorpal: Vorpal, config: SiteOMaticConfig, state: So
 
     // Engage
     try {
-      const [codeBootstrap, logBootstrap] = await cdkExec.cdkDeploy(
+      const [code, log] = await cdkTfExec.cdkDeploy(
         vorpal,
         state.context.somId,
-        state.context.manifest.region,
         { pathToManifestFile: state.context.pathToManifestFile },
-        state.plumbing,
-        BOOTSTRAP_STACK_ID(state.context.somId)
+        state.plumbing
       );
       if (state.plumbing) {
-        vorpal.log(JSON.stringify({ context: state.context, codeBootstrap, logBootstrap }));
-      }
-
-      const [codeSiteResources, logSiteResources] = await cdkExec.cdkDeploy(
-        vorpal,
-        state.context.somId,
-        state.context.manifest.region,
-        { pathToManifestFile: state.context.pathToManifestFile },
-        state.plumbing,
-        SITE_RESOURCES_STACK_ID(state.context.somId)
-      );
-      if (state.plumbing) {
-        vorpal.log(JSON.stringify({ context: state.context, codeSiteResources, logSiteResources }));
+        vorpal.log(JSON.stringify({ context: state.context, code, log }));
       }
 
       const contextPass1 = await refreshContextPass1(config, state.context);
@@ -131,7 +113,7 @@ export function actionDeploy(vorpal: Vorpal, config: SiteOMaticConfig, state: So
           {
             somId: state.context.somId,
             message: 'Site-O-Matic deployment completed',
-            codeSiteResources,
+            code,
           }
         );
         if (resp) {

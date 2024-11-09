@@ -9,18 +9,14 @@ import type { SiteOMaticConfig } from '../config/schemas/site-o-matic-config.sch
 import type { SiteOMaticManifest } from '../manifest/schemas/site-o-matic-manifest.schema';
 import type { HostedZoneAttributes } from '../types';
 import { nsRecordValueToHost } from '../utils';
-import { assumeSomRole } from './sts';
 
 export async function findHostedZoneAttributes(
   config: SiteOMaticConfig,
   manifest: SiteOMaticManifest,
   domainName: string
 ): Promise<HostedZoneAttributes | undefined> {
-  const somRoleCredentials = await assumeSomRole(config, manifest.region);
-  const client = new Route53Client({
-    region: manifest.region,
-    credentials: somRoleCredentials,
-  });
+  const client = new Route53Client({ region: manifest.region });
+
   try {
     const cmd1 = new ListHostedZonesByNameCommand({
       DNSName: domainName,
@@ -52,17 +48,14 @@ export async function findHostedZoneAttributes(
 }
 
 export async function removeVerificationCnameRecords(
-  config: SiteOMaticConfig,
+  _config: SiteOMaticConfig,
   region: string,
   hostedZoneId: string
 ): Promise<void> {
   if (!hostedZoneId) return;
 
-  const somRoleCredentials = await assumeSomRole(config, region);
-  const client = new Route53Client({
-    region: region,
-    credentials: somRoleCredentials,
-  });
+  const client = new Route53Client({ region: region });
+
   try {
     const cmd1 = new ListResourceRecordSetsCommand({
       HostedZoneId: hostedZoneId,
@@ -96,16 +89,12 @@ export async function removeVerificationCnameRecords(
 }
 
 export async function getRecordsForHostedZoneId(
-  config: SiteOMaticConfig,
+  _config: SiteOMaticConfig,
   manifest: SiteOMaticManifest,
   hostedZoneId: string,
   recordType: string
 ): Promise<Record<string, Array<string>> | undefined> {
-  const somRoleCredentials = await assumeSomRole(config, manifest.region);
-  const client = new Route53Client({
-    region: manifest.region,
-    credentials: somRoleCredentials,
-  });
+  const client = new Route53Client({ region: manifest.region });
   try {
     const cmd1 = new ListResourceRecordSetsCommand({
       HostedZoneId: hostedZoneId,

@@ -1,5 +1,3 @@
-import { RemovalPolicy, Tags } from 'aws-cdk-lib';
-
 import * as unit from './utils';
 
 describe('utils', () => {
@@ -29,57 +27,11 @@ describe('utils', () => {
     });
   });
 
-  describe('_removalPolicyFromBoolean', () => {
-    it('should work as expected', async () => {
-      expect(unit._removalPolicyFromBoolean(true)).toBe(RemovalPolicy.RETAIN);
-      expect(unit._removalPolicyFromBoolean(false)).toBe(RemovalPolicy.DESTROY);
-    });
-  });
-
-  describe('_somRemovalPolicy', () => {
-    it('should work as expected', async () => {
-      const applyRemovalPolicy = jest.fn();
-
-      unit._somRemovalPolicy({ applyRemovalPolicy } as any, true);
-      expect(applyRemovalPolicy).toHaveBeenCalledWith(RemovalPolicy.RETAIN);
-
-      unit._somRemovalPolicy({ applyRemovalPolicy } as any, false);
-      expect(applyRemovalPolicy).toHaveBeenCalledWith(RemovalPolicy.DESTROY);
-    });
-  });
-
   describe('_somTag', () => {
-    beforeAll(() => {
-      jest.spyOn(Tags, 'of').mockImplementation((x) => x as any);
-    });
-    afterAll(() => {
-      jest.restoreAllMocks();
-    });
     it('should work as expected', async () => {
       const add = jest.fn();
 
-      unit._somTag({ SOM_TAG_NAME: 'TAG_NAME' } as any, { add } as any, 'foo');
-      expect(add).toHaveBeenCalledWith('TAG_NAME', 'foo');
-    });
-  });
-
-  describe('_somMeta', () => {
-    beforeAll(() => {
-      jest.spyOn(Tags, 'of').mockImplementation((x) => x as any);
-    });
-    afterAll(() => {
-      jest.restoreAllMocks();
-    });
-    it('should work as expected', async () => {
-      const applyRemovalPolicy = jest.fn();
-      const add = jest.fn();
-
-      unit._somMeta({ SOM_TAG_NAME: 'TAG_NAME' } as any, { applyRemovalPolicy, add } as any, 'foo', true);
-      expect(applyRemovalPolicy).toHaveBeenCalledWith(RemovalPolicy.RETAIN);
-      expect(add).toHaveBeenCalledWith('TAG_NAME', 'foo');
-
-      unit._somMeta({ SOM_TAG_NAME: 'TAG_NAME' } as any, { applyRemovalPolicy, add } as any, 'foo', false);
-      expect(applyRemovalPolicy).toHaveBeenCalledWith(RemovalPolicy.DESTROY);
+      unit._somTag({ SOM_TAG_NAME: 'TAG_NAME' } as any, { add } as any, 'foo', false);
       expect(add).toHaveBeenCalledWith('TAG_NAME', 'foo');
     });
   });

@@ -1,5 +1,3 @@
-import { Duration } from 'aws-cdk-lib';
-import type { ErrorResponse } from 'aws-cdk-lib/aws-cloudfront';
 import * as z from 'zod';
 
 import {
@@ -95,18 +93,17 @@ export const ContentClause = z.object({
 export type ContentClause = z.TypeOf<typeof ContentClause>;
 
 // ----------------------------------------------------------------------
-export const WebHostingErrorResponse = z
-  .object({
-    ttl: z
-      .number()
-      .min(1)
-      .transform((x) => Duration.seconds(x))
-      .optional(),
-    httpStatus: z.number().min(100).max(599),
-    responseHttpStatus: z.number().min(100).max(599).optional(),
-    responsePagePath: z.string().min(1),
-  })
-  .transform((x) => x as ErrorResponse);
+export const WebHostingErrorResponse = z.object({
+  ttl: z
+    .number()
+    .min(1)
+    // .transform((x) => Duration.seconds(x))
+    .optional(),
+  httpStatus: z.number().min(100).max(599),
+  responseHttpStatus: z.number().min(100).max(599).optional(),
+  responsePagePath: z.string().min(1),
+});
+// .transform((x) => x as ErrorResponse);
 export type WebHostingErrorResponse = z.TypeOf<typeof WebHostingErrorResponse>;
 
 // ----------------------------------------------------------------------

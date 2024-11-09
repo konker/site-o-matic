@@ -1,9 +1,9 @@
 import chalk from 'chalk';
 import type Vorpal from 'vorpal';
 
-import * as cdkExec from '../../lib/aws/cdkExec';
 import { removeVerificationCnameRecords } from '../../lib/aws/route53';
 import { postToSnsTopic } from '../../lib/aws/sns';
+import * as cdkTfExec from '../../lib/cdkTfExec';
 import type { SiteOMaticConfig } from '../../lib/config/schemas/site-o-matic-config.schema';
 import { SSM_PARAM_NAME_HOSTED_ZONE_ID, SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN } from '../../lib/consts';
 import { hasNetworkDerived, refreshContextPass1, refreshContextPass2 } from '../../lib/context';
@@ -47,10 +47,9 @@ export function actionDestroy(vorpal: Vorpal, config: SiteOMaticConfig, state: S
           state.context.manifest.region,
           getContextParam(state.context, SSM_PARAM_NAME_HOSTED_ZONE_ID) as string
         );
-        const [code, log] = await cdkExec.cdkDestroy(
+        const [code, log] = await cdkTfExec.cdkDestroy(
           vorpal,
           state.context.somId,
-          state.context.manifest.region,
           { pathToManifestFile: state.context.pathToManifestFile },
           state.plumbing
         );

@@ -1,0 +1,11 @@
+{
+  "language": "typescript",
+  "app": "CALLED_DYNAMICALLY",
+  "projectId": "04122ab8-fa6d-4fae-ad0c-02fc80c4b173",
+  "sendCrashReports": "false",
+  "terraformProviders": [],
+  "terraformModules": [],
+  "context": {
+
+  }
+}

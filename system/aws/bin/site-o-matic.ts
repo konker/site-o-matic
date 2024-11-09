@@ -1,36 +1,40 @@
 #!/usr/bin/env node
 
-import assert from 'assert';
-import * as cdk from 'aws-cdk-lib';
+import assert from 'node:assert';
+
+import { App } from 'cdktf';
 import chalk from 'chalk';
 
 import { loadConfig } from '../../../lib/config';
-import { BOOTSTRAP_STACK_ID, SITE_RESOURCES_STACK_ID, SOM_CONFIG_PATH_TO_DEFAULT_FILE } from '../../../lib/consts';
+import { SOM, SOM_CONFIG_PATH_TO_DEFAULT_FILE } from '../../../lib/consts';
 import { loadContext } from '../../../lib/context';
 import { loadManifest } from '../../../lib/manifest';
 import { siteOMaticRules } from '../../../lib/rules/site-o-matic.rules';
-import { _somTag } from '../../../lib/utils';
-import { SiteBootstrapStack } from '../defs/siteomatic/SiteStack/SiteBootstrapStack';
-import { SiteResourcesStack } from '../defs/siteomatic/SiteStack/SiteResourcesStack';
+import type { SiteStackProps } from '../../../lib/types';
+import { SiteStack } from '../defs/siteomatic/SiteStack';
 
 async function main(): Promise<void> {
-  const app = new cdk.App();
+  const app = new App();
   const configLoad = await loadConfig(SOM_CONFIG_PATH_TO_DEFAULT_FILE);
   assert(configLoad, '[site-o-matic] Fatal Error: Failed to load config');
   const [config] = configLoad;
 
   // ----------------------------------------------------------------------
-  const paramKeys = app.node.tryGetContext('paramsKeys') ?? '[]';
+  const paramKeys = process.env.paramKeys ?? '[]';
   const contextParams: Record<string, string> = JSON.parse(paramKeys).reduce(
     (acc: Record<string, string>, val: string) => {
-      acc[val] = app.node.tryGetContext(val);
+      acc[val] = process.env[val]!;
       return acc;
     },
     {}
   );
 
   // ----------------------------------------------------------------------
-  const pathToManifestFile = contextParams.pathToManifestFile!;
+  if (!contextParams.pathToManifestFile) {
+    console.error(`[${SOM}] Error: Bad context: missing pathToManifestFile`);
+    return;
+  }
+  const pathToManifestFile = contextParams.pathToManifestFile;
   const manifestLoad = await loadManifest(config, pathToManifestFile);
   if (!manifestLoad) {
     console.log(chalk.red(chalk.bold('Invalid manifest')));
@@ -41,48 +45,23 @@ async function main(): Promise<void> {
 
   // ----------------------------------------------------------------------
   // Generate the CDK Stacks
-  const bootstrapEnv = {
-    env: {
-      accountId: process.env.CDK_DEFAULT_ACCOUNT!,
-      region: context.manifest.region,
-    },
-  };
-  const resourcesEnv = {
-    env: {
-      accountId: process.env.CDK_DEFAULT_ACCOUNT!,
-      region: context.manifest.region,
-    },
-  };
-
-  const siteProps = {
+  const siteProps: SiteStackProps = {
     config,
     context,
     facts,
     locked: context.manifest.locked ?? false,
     contextParams,
     description: `Site-o-Matic Stack for ${context.manifest.domainName}`,
+    env: {
+      accountId: process.env.CDK_DEFAULT_ACCOUNT!,
+    },
   };
 
-  /*[XXX]
   const siteStack = new SiteStack(app, siteProps);
   await siteStack.build();
-  _somTag(config, siteStack, context.somId);
-  */
 
-  const bootstrapStack = new SiteBootstrapStack(app, BOOTSTRAP_STACK_ID(context.somId), {
-    ...siteProps,
-    ...bootstrapEnv,
-  });
-  await bootstrapStack.build();
-  _somTag(config, bootstrapStack, context.somId);
-
-  const siteResourcesStack = new SiteResourcesStack(app, SITE_RESOURCES_STACK_ID(context.somId), {
-    ...siteProps,
-    ...resourcesEnv,
-  });
-  await siteResourcesStack.build();
-  siteResourcesStack.addDependency(bootstrapStack);
-  _somTag(config, siteResourcesStack, context.somId);
+  // Engage
+  app.synth();
 }
 
 main().catch((err) => {

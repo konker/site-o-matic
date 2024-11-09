@@ -1,7 +1,6 @@
 import { CloudFormationClient, ListExportsCommand } from '@aws-sdk/client-cloudformation';
 
 import type { SiteOMaticConfig } from '../config/schemas/site-o-matic-config.schema';
-import { assumeSomRole } from './sts';
 
 // ----------------------------------------------------------------------
 export type CloudFormationExport = {
@@ -10,14 +9,10 @@ export type CloudFormationExport = {
 };
 
 export async function getCloudformationExports(
-  config: SiteOMaticConfig,
+  _config: SiteOMaticConfig,
   region: string
 ): Promise<Array<CloudFormationExport>> {
-  const somRoleCredentials = await assumeSomRole(config, region);
-  const client = new CloudFormationClient({
-    region,
-    credentials: somRoleCredentials,
-  });
+  const client = new CloudFormationClient({ region });
 
   async function _fetchCloudformationExports(
     nextToken: string | undefined = undefined

@@ -9,11 +9,9 @@ import {
 
 import type { SiteOMaticConfig } from '../config/schemas/site-o-matic-config.schema';
 import type { SecretsPlain } from '../secrets/types';
-import { assumeSomRole } from './sts';
 
-export async function readSecret(config: SiteOMaticConfig, region: string, secretName: string): Promise<SecretsPlain> {
-  const somRoleCredentials = await assumeSomRole(config, region);
-  const client = new SecretsManagerClient({ region, credentials: somRoleCredentials });
+export async function readSecret(_config: SiteOMaticConfig, region: string, secretName: string): Promise<SecretsPlain> {
+  const client = new SecretsManagerClient({ region });
 
   // Try to describe the secret, if it doesn't exist, return empty secrets
   try {
@@ -46,8 +44,7 @@ export async function upsertSecret(
   secretName: string,
   secretsPlain: SecretsPlain
 ): Promise<SecretsPlain> {
-  const somRoleCredentials = await assumeSomRole(config, region);
-  const client = new SecretsManagerClient({ region, credentials: somRoleCredentials });
+  const client = new SecretsManagerClient({ region });
   const secretPersisted = JSON.stringify(secretsPlain);
 
   // Try to describe the secret, if it doesn't exist, insert it

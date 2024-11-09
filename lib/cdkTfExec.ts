@@ -2,12 +2,13 @@ import { spawn } from 'child_process';
 import path from 'path';
 import type Vorpal from 'vorpal';
 
-import { sanitizeOutput } from '../sanitization';
+import { sanitizeOutput } from './sanitization';
 
 export type CdkExecResponse = [number, Array<string>];
 
 async function cdkExecProc(
   vorpal: Vorpal,
+  params: Record<string, string>,
   command: string,
   args: Array<string>,
   plumbing = false
@@ -15,7 +16,12 @@ async function cdkExecProc(
   const log: Array<string> = [];
   return new Promise((resolve, reject) => {
     const proc = spawn(command, args, {
-      cwd: path.join(__dirname, '..', '..'),
+      cwd: path.join(__dirname, '..'),
+      env: {
+        ...process.env,
+        ...params,
+        paramKeys: JSON.stringify(Object.keys(params)),
+      },
     });
     proc.stdout.on('data', (data: Buffer) => {
       const s = sanitizeOutput(data.toString('utf-8'));
@@ -37,28 +43,24 @@ async function cdkExecProc(
 export async function cdkExec(
   vorpal: Vorpal,
   somId: string,
-  region: string,
   params: Record<string, string>,
   plumbing: boolean,
   cdkCmd: string,
-  stackName = '--all',
+  _stackName = '--all',
   extraArgs: Array<string> = []
 ): Promise<CdkExecResponse> {
   if (!somId) return [1, []];
   return cdkExecProc(
     vorpal,
-    'npx',
-    ['cdk', cdkCmd]
-      .concat([stackName])
+    params,
+    'pnpm',
+    ['cdktf', cdkCmd]
       .concat(extraArgs)
-      .concat(['--strict'])
-      .concat(['--ci'])
-      .concat(['--no-color'])
-      .concat(['--region', region])
       .concat(['--app', `npx node system/aws/bin/site-o-matic`])
       .concat(['--output', `system/aws/.cdk-${somId}.out`])
-      .concat(['--context', `paramsKeys=${JSON.stringify(Object.keys(params))}`])
-      .concat(...Object.entries(params).map(([k, v]) => ['--context', `${k}=${v}`])),
+      .concat(['--outputs-file', `system/aws/.cdk-${somId}.out/outputs.json`])
+      .concat(['--auto-approve'])
+      .concat(['--no-color']),
     plumbing
   );
 }
@@ -66,51 +68,46 @@ export async function cdkExec(
 export async function cdkList(
   vorpal: Vorpal,
   somId: string,
-  region: string,
   params: Record<string, string> | undefined = {},
   plumbing = false
 ): Promise<CdkExecResponse> {
-  return cdkExec(vorpal, somId, region, params, plumbing, 'list');
+  return cdkExec(vorpal, somId, params, plumbing, 'list');
 }
 
 export async function cdkSynth(
   vorpal: Vorpal,
   somId: string,
-  region: string,
   params: Record<string, string> | undefined = {},
   plumbing = false
 ): Promise<CdkExecResponse> {
-  return cdkExec(vorpal, somId, region, params, plumbing, 'synth');
+  return cdkExec(vorpal, somId, params, plumbing, 'synth');
 }
 
 export async function cdkDiff(
   vorpal: Vorpal,
-  region: string,
   somId: string,
   params: Record<string, string> | undefined = {},
   plumbing = false
 ): Promise<CdkExecResponse> {
-  return cdkExec(vorpal, somId, region, params, plumbing, 'diff');
+  return cdkExec(vorpal, somId, params, plumbing, 'diff');
 }
 
 export async function cdkDeploy(
   vorpal: Vorpal,
   somId: string,
-  region: string,
   params: Record<string, string> | undefined = {},
   plumbing = false,
   stackName?: string
 ): Promise<CdkExecResponse> {
-  return cdkExec(vorpal, somId, region, params, plumbing, 'deploy', stackName);
+  return cdkExec(vorpal, somId, params, plumbing, 'deploy', stackName);
 }
 
 export async function cdkDestroy(
   vorpal: Vorpal,
   somId: string,
-  region: string,
   params: Record<string, string> | undefined = {},
   plumbing = false
 ): Promise<CdkExecResponse> {
   if (!somId) return [1, []];
-  return cdkExec(vorpal, somId, region, params, plumbing, 'destroy', '--all', ['--force']);
+  return cdkExec(vorpal, somId, params, plumbing, 'destroy', '--all', ['--force']);
 }

@@ -9,7 +9,6 @@ import {
 
 import type { SiteOMaticConfig } from '../config/schemas/site-o-matic-config.schema';
 import type { SomParam } from '../types';
-import { assumeSomRole } from './sts';
 
 // --------------------------------------------------------------------------
 export function ssmBasePath(config: SiteOMaticConfig, somId: string): string {
@@ -22,12 +21,8 @@ export function toSsmParamName(config: SiteOMaticConfig, somId: string, name: st
 }
 
 // --------------------------------------------------------------------------
-export async function getSsmParams(config: SiteOMaticConfig, region: string, path: string): Promise<Array<SomParam>> {
-  const somRoleCredentials = await assumeSomRole(config, region);
-  const client = new SSMClient({
-    region,
-    credentials: somRoleCredentials,
-  });
+export async function getSsmParams(_config: SiteOMaticConfig, region: string, path: string): Promise<Array<SomParam>> {
+  const client = new SSMClient({ region });
 
   async function _fetchSsmParams(nextToken: string | undefined = undefined): Promise<Array<SomParam>> {
     const cmd1 = new GetParametersByPathCommand(
@@ -67,12 +62,11 @@ export async function getSsmParams(config: SiteOMaticConfig, region: string, pat
 
 // --------------------------------------------------------------------------
 export async function getSsmParam(
-  config: SiteOMaticConfig,
+  _config: SiteOMaticConfig,
   region: string,
   paramName: string
 ): Promise<string | undefined> {
-  const somRoleCredentials = await assumeSomRole(config, region);
-  const client = new SSMClient({ region, credentials: somRoleCredentials });
+  const client = new SSMClient({ region });
   try {
     const cmd1 = new GetParameterCommand({
       Name: paramName,
@@ -95,8 +89,7 @@ export async function createSsmParam(
   value: string,
   secure = false
 ): Promise<void> {
-  const somRoleCredentials = await assumeSomRole(config, region);
-  const client = new SSMClient({ region, credentials: somRoleCredentials });
+  const client = new SSMClient({ region });
 
   try {
     const cmd1 = new PutParameterCommand({
@@ -113,9 +106,8 @@ export async function createSsmParam(
 }
 
 // --------------------------------------------------------------------------
-export async function deleteSsmParam(config: SiteOMaticConfig, region: string, paramName: string): Promise<void> {
-  const somRoleCredentials = await assumeSomRole(config, region);
-  const client = new SSMClient({ region, credentials: somRoleCredentials });
+export async function deleteSsmParam(_config: SiteOMaticConfig, region: string, paramName: string): Promise<void> {
+  const client = new SSMClient({ region });
   try {
     const cmd1 = new DeleteParameterCommand({
       Name: paramName,

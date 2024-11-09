@@ -2,17 +2,13 @@ import { ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
 
 import type { SiteOMaticConfig } from '../config/schemas/site-o-matic-config.schema';
 import type { SiteOMaticManifest } from '../manifest/schemas/site-o-matic-manifest.schema';
-import { assumeSomRole } from './sts';
 
 export async function getIsS3BucketEmpty(
-  config: SiteOMaticConfig,
+  _config: SiteOMaticConfig,
   manifest: SiteOMaticManifest,
   bucketName: string
 ): Promise<boolean> {
-  const somRoleCredentials = await assumeSomRole(config, manifest.region);
-  const client = new S3Client({
-    credentials: somRoleCredentials,
-  });
+  const client = new S3Client({ region: manifest.region });
   const cmd1 = new ListObjectsV2Command({
     Bucket: bucketName,
     MaxKeys: 1,

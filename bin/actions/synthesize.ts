@@ -1,6 +1,6 @@
 import type Vorpal from 'vorpal';
 
-import * as cdkExec from '../../lib/aws/cdkExec';
+import * as cdkTfExec from '../../lib/cdkTfExec';
 import type { SiteOMaticConfig } from '../../lib/config/schemas/site-o-matic-config.schema';
 import { hasManifest } from '../../lib/context';
 import { verror } from '../../lib/ui/logging';
@@ -16,10 +16,9 @@ export function actionSynthesize(vorpal: Vorpal, _: SiteOMaticConfig, state: Som
       return;
     }
 
-    const [code, log] = await cdkExec.cdkSynth(
+    const [code, log] = await cdkTfExec.cdkSynth(
       vorpal,
       state.context.somId,
-      state.context.manifest.region,
       { pathToManifestFile: state.context.pathToManifestFile },
       state.plumbing
     );

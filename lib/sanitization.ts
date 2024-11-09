@@ -1,6 +1,7 @@
 export const SANITIZATION_CHECKS: ReadonlyArray<[RegExp, string]> = [
   [/AccessKeyId = .*\n/, 'AccessKeyId = ***\n'],
   [/AccessKeySecret = .*\n/, 'AccessKeySecret = ****\n'],
+  [/^\n+$/, '.'],
 ] as const;
 
 export function sanitizeOutput(s: string): string {

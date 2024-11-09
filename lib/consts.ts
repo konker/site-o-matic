@@ -1,4 +1,3 @@
-import type * as cdk from 'aws-cdk-lib';
 import path from 'path';
 
 import type { SiteOMaticConfig } from './config/schemas/site-o-matic-config.schema';
@@ -69,7 +68,7 @@ export const DEFAULT_STACK_PROPS = (
   config: SiteOMaticConfig,
   somId: string,
   siteProps?: SiteStackProps
-): cdk.StackProps => ({
+): Record<string, unknown> => ({
   env: {
     account: siteProps?.env?.account ?? (process.env.CDK_DEFAULT_ACCOUNT as string),
     region: siteProps?.env?.region ?? (process.env.CDK_DEFAULT_REGION as string),

@@ -1,8 +1,8 @@
-import type { Resource, Stack } from 'aws-cdk-lib';
-import { RemovalPolicy, Tags } from 'aws-cdk-lib';
+import type { TerraformStack } from 'cdktf';
+import type { IConstruct } from 'constructs';
 import Handlebars from 'handlebars';
 
-import type { CertificateResources } from '../system/aws/defs/siteomatic/WebHostingBuilder/CertificateBuilder';
+import type { SiteStack } from '../system/aws/defs/siteomatic/SiteStack';
 import type { SiteOMaticConfig } from './config/schemas/site-o-matic-config.schema';
 import type { SomFunctionFragmentProducerDef } from './edge';
 import type { HasManifest, SomContext, SomParam } from './types';
@@ -23,21 +23,37 @@ export function _id(prefix: string, postfix: string, isRoot = true): string {
   return isRoot ? prefix : `${prefix}-${postfix}`;
 }
 
-export function _removalPolicyFromBoolean(protect: boolean): RemovalPolicy {
-  return protect ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY;
+// Not all constructs are taggable, so we need to filter it
+type TaggableConstruct = IConstruct & {
+  tags?: Record<string, string>;
+  tagsInput?: Record<string, string>;
+};
+
+function isTaggableConstruct(x: IConstruct): x is TaggableConstruct {
+  return 'tags' in x && 'tagsInput' in x;
 }
 
-export function _somRemovalPolicy(resource: Resource, protect: boolean) {
-  resource.applyRemovalPolicy(_removalPolicyFromBoolean(protect));
+/**
+ * @deprecated: use https://developer.hashicorp.com/terraform/cdktf/concepts/aspects
+ */
+export function _somTag(
+  config: SiteOMaticConfig,
+  resource: IConstruct | TerraformStack,
+  somId: string,
+  _protected: boolean
+) {
+  if (isTaggableConstruct(resource)) {
+    resource.tags = {
+      ...resource.tags,
+      [config.SOM_TAG_NAME]: somId,
+    };
+  }
 }
 
-export function _somTag(config: SiteOMaticConfig, resource: Resource | Stack, somId: string) {
-  Tags.of(resource).add(config.SOM_TAG_NAME, somId);
-}
-
-export function _somMeta(config: SiteOMaticConfig, resource: Resource, somId: string, protect: boolean) {
-  _somRemovalPolicy(resource, protect);
-  _somTag(config, resource, somId);
+export function _somTags(siteStack: SiteStack) {
+  return {
+    [siteStack.siteProps.config.SOM_TAG_NAME]: siteStack.siteProps.context.somId,
+  };
 }
 
 export async function asyncCreateEmptyObject() {
@@ -63,6 +79,7 @@ export function contextTemplateString(s: string | undefined, context: HasManifes
   return compliedTemplate({ context });
 }
 
+/*[XXX]
 export function searchCertificates(
   certificateResources: CertificateResources | undefined,
   domainName: string
@@ -70,6 +87,7 @@ export function searchCertificates(
   if (certificateResources?.domainName === domainName) return certificateResources;
   return undefined;
 }
+*/
 
 export function formulateIamUserName(somId: string, prefix: string): string {
   return `${prefix}_${somId}`.replace(/--/g, '_').replace(/-/g, '_');

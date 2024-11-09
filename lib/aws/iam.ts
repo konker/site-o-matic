@@ -9,12 +9,9 @@ import {
 } from '@aws-sdk/client-iam';
 
 import type { SiteOMaticConfig } from '../config/schemas/site-o-matic-config.schema';
-import { assumeSomRole } from './sts';
 
 export async function listSomUsers(config: SiteOMaticConfig, region: string): Promise<Array<Record<string, string>>> {
-  const somRoleCredentials = await assumeSomRole(config, region);
-
-  const client = new IAMClient({ region, credentials: somRoleCredentials });
+  const client = new IAMClient({ region });
 
   const cmd1 = new ListUsersCommand({});
   const users = await client.send(cmd1);
@@ -43,8 +40,7 @@ export async function addSomUser(
   region: string,
   username: string
 ): Promise<Array<{ [key: string]: string }>> {
-  const somRoleCredentials = await assumeSomRole(config, region);
-  const client = new IAMClient({ region, credentials: somRoleCredentials });
+  const client = new IAMClient({ region });
 
   const cmd1 = new CreateUserCommand({
     UserName: username,
@@ -56,12 +52,11 @@ export async function addSomUser(
 }
 
 export async function listPublicKeys(
-  config: SiteOMaticConfig,
+  _config: SiteOMaticConfig,
   region: string,
   userName: string
 ): Promise<Array<Record<string, string>>> {
-  const somRoleCredentials = await assumeSomRole(config, region);
-  const client = new IAMClient({ region, credentials: somRoleCredentials });
+  const client = new IAMClient({ region });
 
   const cmd1 = new ListSSHPublicKeysCommand({ UserName: userName });
   const result = await client.send(cmd1);
@@ -81,8 +76,7 @@ export async function addPublicKey(
   userName: string,
   publicKey: string
 ): Promise<Array<{ [key: string]: string }>> {
-  const somRoleCredentials = await assumeSomRole(config, region);
-  const client = new IAMClient({ region, credentials: somRoleCredentials });
+  const client = new IAMClient({ region });
 
   const cmd1 = new UploadSSHPublicKeyCommand({ UserName: userName, SSHPublicKeyBody: publicKey });
   await client.send(cmd1);
@@ -96,8 +90,7 @@ export async function deletePublicKey(
   userName: string,
   publicKeyId: string
 ): Promise<Array<{ [key: string]: string }>> {
-  const somRoleCredentials = await assumeSomRole(config, region);
-  const client = new IAMClient({ region, credentials: somRoleCredentials });
+  const client = new IAMClient({ region });
 
   const cmd1 = new DeleteSSHPublicKeyCommand({ UserName: userName, SSHPublicKeyId: publicKeyId });
   await client.send(cmd1);
@@ -108,8 +101,7 @@ export async function deletePublicKey(
 export async function deleteAllPublicKeys(config: SiteOMaticConfig, region: string, userName: string): Promise<void> {
   if (!userName) return;
 
-  const somRoleCredentials = await assumeSomRole(config, region);
-  const client = new IAMClient({ region, credentials: somRoleCredentials });
+  const client = new IAMClient({ region });
 
   try {
     const publicKeys = await listPublicKeys(config, region, userName);

@@ -1,5 +1,3 @@
-import type * as cdk from 'aws-cdk-lib';
-
 import type { SiteOMaticConfig } from './config/schemas/site-o-matic-config.schema';
 import type {
   SOM_STATUS_BREADCRUMB,
@@ -25,7 +23,7 @@ export type HostedZoneAttributes = {
 };
 
 // ----------------------------------------------------------------------
-export type SiteStackProps = cdk.StackProps & {
+export type SiteStackProps = {
   readonly config: SiteOMaticConfig;
   readonly context: HasNetworkDerived<SomContext>;
   readonly facts: SomFacts;
