@@ -10,7 +10,7 @@ import type { SomFunctionFragmentProducerDef } from '../../../../../lib/edge';
 import { getFunctionProducer } from '../../../../../lib/edge';
 import type { WebHostingClauseWithResources } from '../../../../../lib/manifest/schemas/site-o-matic-manifest.schema';
 import type { SecretsSetCollection } from '../../../../../lib/secrets/types';
-import type { SiteResourcesStack } from '../SiteStack/SiteResourcesStack';
+import type { SiteStack } from '../SiteStack';
 
 export type CloudfrontFunctionsLoaderResources = {
   readonly cfFunctionViewerRequestTmpFilePath: string | undefined;
@@ -19,11 +19,11 @@ export type CloudfrontFunctionsLoaderResources = {
 
 // ----------------------------------------------------------------------
 export async function load(
-  siteResourcesStack: SiteResourcesStack,
+  siteStack: SiteStack,
   secrets: SecretsSetCollection,
   webHostingSpec: WebHostingClauseWithResources
 ): Promise<CloudfrontFunctionsLoaderResources> {
-  if (!siteResourcesStack.domainUserResources?.domainUser) {
+  if (!siteStack.domainUserResources?.domainUser) {
     throw new Error('[site-o-matic] Could not build cloudfront functions resources when domainUser is missing');
   }
 
@@ -45,9 +45,9 @@ export async function load(
   const viewerRequestFunctionProducer = getFunctionProducer(
     WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID,
     cfFunctionViewerRequestSubComponentIds,
-    siteResourcesStack.siteProps.context.somId,
+    siteStack.siteProps.context.somId,
     secrets,
-    siteResourcesStack.siteProps.context.manifest,
+    siteStack.siteProps.context.manifest,
     webHostingSpec
   );
   if (!viewerRequestFunctionProducer) throw new Error(`Could not get functionProducer for Cloudfront viewer request`);
@@ -61,9 +61,9 @@ export async function load(
   const viewerResponseFunctionProducer = getFunctionProducer(
     WEB_HOSTING_VIEWER_RESPONSE_FUNCTION_PRODUCER_ID,
     cfFunctionViewerResponseSubComponentIds,
-    siteResourcesStack.siteProps.context.somId,
+    siteStack.siteProps.context.somId,
     secrets,
-    siteResourcesStack.siteProps.context.manifest,
+    siteStack.siteProps.context.manifest,
     webHostingSpec
   );
   if (!viewerResponseFunctionProducer) throw new Error(`Could not get functionProducer for Cloudfront viewer response`);

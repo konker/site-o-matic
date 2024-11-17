@@ -265,7 +265,10 @@ export const SiteOMaticManifest = z
   .object({
     domainName: z.string().min(1),
     title: z.string().optional(),
-    region: z.literal(DEFAULT_CERTIFICATE_REGION).optional(),
+    region: z
+      .string()
+      .regex(/..-[a-z]+-\d+[a-z]?/)
+      .optional(),
     extraDnsConfig: ExtraDnsClause.optional(),
     webmasterEmail: z.string().email().optional(),
     registrar: z.enum(['aws-route53', 'dynadot']).optional(),

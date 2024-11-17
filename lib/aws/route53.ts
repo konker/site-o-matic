@@ -34,8 +34,8 @@ export async function findHostedZoneAttributes(
           if (!bareHostedZoneId) continue;
 
           return {
-            zoneName: hostedZone.Name,
-            hostedZoneId: bareHostedZoneId,
+            name: hostedZone.Name,
+            zoneId: bareHostedZoneId,
           };
         }
       }
@@ -129,7 +129,7 @@ export async function getRecordsForDomainName(
   const hostedZoneAttributes = await findHostedZoneAttributes(config, manifest, domainName);
   if (!hostedZoneAttributes) return undefined;
 
-  return getRecordsForHostedZoneId(config, manifest, hostedZoneAttributes.hostedZoneId, recordType);
+  return getRecordsForHostedZoneId(config, manifest, hostedZoneAttributes.zoneId, recordType);
 }
 
 export async function getNsRecordValuesForDomainName(

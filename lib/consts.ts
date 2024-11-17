@@ -6,10 +6,12 @@ import type { SiteStackProps } from './types';
 
 export const SOM = 'site-o-matic';
 export const UNKNOWN = 'UNKNOWN' as const;
-export const VERSION = '0.0.3' as const;
+export const VERSION = '0.0.4' as const;
 export const DEFAULT_CERTIFICATE_REGION = 'us-east-1' as const;
 export const CLS = '\u001b[2J\u001b[0;0H' as const;
 export const SOM_ROOT_PATH = path.join(__dirname, '..');
+
+export const CDK_COMMAND_NOTHING = 'nothing' as const;
 
 export const SOM_CONFIG_DEFAULT_FILE_NAME = 'site-o-matic.config.json5' as const;
 export const SOM_CONFIG_PATH_TO_DEFAULT_FILE = path.join(SOM_ROOT_PATH, SOM_CONFIG_DEFAULT_FILE_NAME);
@@ -19,6 +21,12 @@ export const SOM_CONFIG_DEFAULT_SOM_TAG_NAME = 'Site-o-Matic' as const;
 export const MAX_SOM_ID_LEN = 48 as const;
 
 export const GLOBAL_SECRETS_SCOPE = 'global';
+
+export const ONE_MINUTE_IN_SECS = 60 * 60;
+export const ONE_HOUR_IN_SECS = ONE_MINUTE_IN_SECS * 60;
+export const ONE_DAY_IN_SECS = ONE_HOUR_IN_SECS * 24;
+
+export const SSM_PARAM_PATH_ROOT_DOMAIN_NAME = '/som/site/root-domain-name';
 
 export const SSM_PARAM_NAME_SOM_VERSION = 'som-version' as const;
 export const SSM_PARAM_NAME_ROOT_DOMAIN_NAME = 'root-domain-name' as const;
@@ -67,12 +75,9 @@ export const SITE_PIPELINE_TYPE_CODESTAR_CUSTOM = 'codestar-custom' as const;
 export const DEFAULT_STACK_PROPS = (
   config: SiteOMaticConfig,
   somId: string,
-  siteProps?: SiteStackProps
+  _siteProps?: SiteStackProps
 ): Record<string, unknown> => ({
-  env: {
-    account: siteProps?.env?.account ?? (process.env.CDK_DEFAULT_ACCOUNT as string),
-    region: siteProps?.env?.region ?? (process.env.CDK_DEFAULT_REGION as string),
-  },
+  env: {},
   tags: { [config.SOM_TAG_NAME]: somId },
 });
 

@@ -1,7 +1,7 @@
-import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
-import * as route53 from 'aws-cdk-lib/aws-route53';
-import * as targets from 'aws-cdk-lib/aws-route53-targets';
-import * as ssm from 'aws-cdk-lib/aws-ssm';
+import { CloudfrontDistribution } from '@cdktf/provider-aws/lib/cloudfront-distribution';
+import { DataAwsIamPolicyDocument } from '@cdktf/provider-aws/lib/data-aws-iam-policy-document';
+import { Route53Record } from '@cdktf/provider-aws/lib/route53-record';
+import { SsmParameter } from '@cdktf/provider-aws/lib/ssm-parameter';
 
 import { toSsmParamName } from '../../../../../lib/aws/ssm';
 import {
@@ -14,49 +14,49 @@ import type {
   WebHostingDefaultsClauseCloudfrontHttps,
 } from '../../../../../lib/manifest/schemas/site-o-matic-manifest.schema';
 import type { SecretsSetCollection } from '../../../../../lib/secrets/types';
-import { _somMeta, fqdn } from '../../../../../lib/utils';
-import type { SiteResourcesStack } from '../SiteStack/SiteResourcesStack';
+import { _somTags, fqdn } from '../../../../../lib/utils';
+import type { SiteStack } from '../SiteStack';
 import type { CertificateResources } from './CertificateBuilder';
 import type { CloudfrontFunctionsResources } from './CloudfrontFunctionsBuilder';
 import * as CloudfrontFunctionsBuilder from './CloudfrontFunctionsBuilder';
 import * as CloudfrontFunctionsLoader from './CloudfrontFunctionsLoader';
-import { ExistingRestApiOrigin } from './ExistingRestApiOrigin';
-import type { WafResources } from './WafBuilder';
+import * as CloudfrontSubResourcesBuilder from './CloudfrontSubResourcesBuilder';
+import * as WafBuilder from './WafBuilder';
 
 // ----------------------------------------------------------------------
 export type HttpsCloudfrontDistributionResources = {
+  readonly cloudfrontDistribution: CloudfrontDistribution;
   readonly cloudfrontFunctionsResources: CloudfrontFunctionsResources;
-  cloudfrontDistribution: cloudfront.Distribution;
-  dnsRecords: Array<route53.RecordSet>;
-  ssmParams: Array<ssm.StringParameter>;
+  readonly wafResources: WafBuilder.WafResources;
+  readonly dnsRecords: Array<Route53Record>;
+  readonly ssmParams: Array<SsmParameter>;
 };
 
 // ----------------------------------------------------------------------
 export async function build(
-  siteResourcesStack: SiteResourcesStack,
+  siteStack: SiteStack,
   secrets: SecretsSetCollection,
   webHostingSpec: WebHostingClauseCloudfrontHttps,
   _webHostingDefaults: WebHostingDefaultsClauseCloudfrontHttps,
   localIdPostfix: string,
-  certificateResources: CertificateResources,
-  _wafResources: WafResources
+  certificateResources: CertificateResources
 ): Promise<HttpsCloudfrontDistributionResources> {
-  if (!siteResourcesStack.hostedZoneResources?.hostedZone) {
+  if (!siteStack.hostedZoneResources?.hostedZone) {
     throw new Error(
-      '[site-o-matic] Could not build https Cloudfront distribution resources when hostedZone is missing'
+      '[site-o-matic] Could not build HTTPS Cloudfront distribution resources when hostedZone is missing'
     );
   }
-  if (!siteResourcesStack.domainUserResources?.domainUser) {
+  if (!siteStack.domainUserResources?.domainUser) {
     throw new Error(
-      '[site-o-matic] Could not build https Cloudfront distribution resources when domainUser is missing'
+      '[site-o-matic] Could not build HTTPS Cloudfront distribution resources when domainUser is missing'
     );
   }
 
   // ----------------------------------------------------------------------
   // Build cloudfront functions
-  const cloudfrontFunctionsDeps = await CloudfrontFunctionsLoader.load(siteResourcesStack, secrets, webHostingSpec);
+  const cloudfrontFunctionsDeps = await CloudfrontFunctionsLoader.load(siteStack, secrets, webHostingSpec);
   const cloudfrontFunctionsResources = await CloudfrontFunctionsBuilder.build(
-    siteResourcesStack,
+    siteStack,
     webHostingSpec,
     localIdPostfix,
     [WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID, cloudfrontFunctionsDeps.cfFunctionViewerRequestTmpFilePath],
@@ -64,124 +64,144 @@ export async function build(
   );
 
   // ----------------------------------------------------------------------
-  // Origin access identity which will be used by the cloudfront distribution
-  const originAccessIdentity = new cloudfront.OriginAccessIdentity(siteResourcesStack, 'OriginAccessIdentity', {
-    comment: `OriginAccessIdentity for ${webHostingSpec.domainName}`,
-  });
-  _somMeta(
-    siteResourcesStack.siteProps.config,
-    originAccessIdentity,
-    siteResourcesStack.siteProps.context.somId,
-    siteResourcesStack.siteProps.locked
-  );
+  // WAF ACl
+  const wafResources = await WafBuilder.build(siteStack, webHostingSpec, localIdPostfix);
 
   // ----------------------------------------------------------------------
-  // Origin
-  const origin = new ExistingRestApiOrigin(webHostingSpec.url);
+  // Sub-resources
+  const cloudfrontSubResources = await CloudfrontSubResourcesBuilder.build(siteStack, localIdPostfix);
 
   // ----------------------------------------------------------------------
   // Cloudfront distribution
-  const cloudfrontDistribution = new cloudfront.Distribution(
-    siteResourcesStack,
-    `CloudFrontDistribution-${webHostingSpec.domainName}`,
-    {
-      defaultBehavior: Object.assign(
-        {
-          origin,
-          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+  const cloudfrontDistribution = new CloudfrontDistribution(
+    siteStack,
+    `CloudFrontDistribution-${localIdPostfix}`,
+    Object.assign(
+      {
+        enabled: true,
+        isIpv6Enabled: true,
+        priceClass: 'PriceClass_100',
+        domainNames: [webHostingSpec.domainName],
+        origin: [
+          {
+            originId: `originId-${localIdPostfix}`,
+            domainName: webHostingSpec.url,
+            originShield: {
+              enabled: false,
+              originShieldRegion: siteStack.siteProps.context.manifest.region,
+            },
+          },
+        ],
+        restrictions: {
+          geoRestriction: {
+            restrictionType: 'none',
+          },
+        },
+        viewerCertificate: {
+          acmCertificateArn: certificateResources.certificate.arn,
+          sslSupportMethod: 'sni-only',
+        },
+        defaultCacheBehavior: {
+          targetOriginId: `originId-${localIdPostfix}`,
+          allowedMethods: ['GET', 'HEAD', 'OPTIONS', 'PUT', 'PATCH', 'POST', 'DELETE'],
+          cachedMethods: [],
+          viewerProtocolPolicy: 'redirect-to-https',
+          responseHeadersPolicyId: cloudfrontSubResources.responseHeadersPolicy.id,
+          cachePolicyId: cloudfrontSubResources.cachePolicy.id,
+          originRequestPolicy: cloudfrontSubResources.originRequestPolicyHttps,
           compress: true,
         },
-        cloudfrontFunctionsResources.functions.length > 0
-          ? {
-              functionAssociations: cloudfrontFunctionsResources.functions.map(([cfFunction, cfFunctionEventType]) => ({
-                function: cfFunction,
-                eventType: cfFunctionEventType,
-              })),
-            }
-          : {}
-      ),
-      domainNames: [webHostingSpec.domainName],
-      certificate: certificateResources.certificate,
-      priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
-      enableIpv6: true,
-    }
-  );
-  _somMeta(
-    siteResourcesStack.siteProps.config,
-    cloudfrontDistribution,
-    siteResourcesStack.siteProps.context.somId,
-    siteResourcesStack.siteProps.locked
+      },
+      cloudfrontFunctionsResources.functions.length > 0
+        ? {
+            functionAssociations: cloudfrontFunctionsResources.functions.map(([cfFunction, cfFunctionEventType]) => ({
+              function: cfFunction,
+              eventType: cfFunctionEventType,
+            })),
+          }
+        : {},
+      wafResources.wafEnabled && wafResources.wafAcl ? { webAclId: wafResources.wafAcl.arn } : {},
+      {
+        provider: siteStack.providerManifestRegion,
+        tags: _somTags(siteStack),
+      }
+    )
   );
 
   // ----------------------------------------------------------------------
   // DNS records
-  const dns1 = new route53.ARecord(siteResourcesStack, `DnsRecordSet_A-${localIdPostfix}`, {
-    zone: siteResourcesStack.hostedZoneResources.hostedZone,
-    recordName: fqdn(webHostingSpec.domainName),
-    target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(cloudfrontDistribution)),
+  const dns1 = new Route53Record(siteStack, `DnsRecordSet_A-${localIdPostfix}`, {
+    type: 'A',
+    zoneId: siteStack.hostedZoneResources.hostedZone.zoneId,
+    name: fqdn(webHostingSpec.domainName),
+    alias: {
+      name: cloudfrontDistribution.domainName,
+      zoneId: cloudfrontDistribution.hostedZoneId,
+      evaluateTargetHealth: false,
+    },
+    provider: siteStack.providerManifestRegion,
   });
-  _somMeta(
-    siteResourcesStack.siteProps.config,
-    dns1,
-    siteResourcesStack.siteProps.context.somId,
-    siteResourcesStack.siteProps.locked
-  );
 
-  const dns2 = new route53.AaaaRecord(siteResourcesStack, `DnsRecordSet_AAAA-${localIdPostfix}`, {
-    zone: siteResourcesStack.hostedZoneResources.hostedZone,
-    recordName: fqdn(webHostingSpec.domainName),
-
-    target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(cloudfrontDistribution)),
+  const dns2 = new Route53Record(siteStack, `DnsRecordSet_AAAA-${localIdPostfix}`, {
+    type: 'AAAA',
+    zoneId: siteStack.hostedZoneResources.hostedZone.zoneId,
+    name: fqdn(webHostingSpec.domainName),
+    alias: {
+      name: cloudfrontDistribution.domainName,
+      zoneId: cloudfrontDistribution.hostedZoneId,
+      evaluateTargetHealth: false,
+    },
+    provider: siteStack.providerManifestRegion,
   });
-  _somMeta(
-    siteResourcesStack.siteProps.config,
-    dns2,
-    siteResourcesStack.siteProps.context.somId,
-    siteResourcesStack.siteProps.locked
+
+  // ----------------------------------------------------------------------
+  // Domain user permissions
+  siteStack.domainUserPolicyDocuments.push(
+    new DataAwsIamPolicyDocument(siteStack, `cloudFrontPolicyDocument-${localIdPostfix}`, {
+      statement: [
+        {
+          effect: 'Allow',
+          actions: ['cloudfront:CreateInvalidation'],
+          resources: [cloudfrontDistribution.arn],
+        },
+      ],
+    })
   );
 
   // ----------------------------------------------------------------------
   // SSM Params
-  const ssm1 = new ssm.StringParameter(siteResourcesStack, `SsmCloudfrontDistributionId-${localIdPostfix}`, {
-    parameterName: toSsmParamName(
-      siteResourcesStack.siteProps.config,
-      siteResourcesStack.siteProps.context.somId,
+  const ssm1 = new SsmParameter(siteStack, `SsmCloudfrontDistributionId-${localIdPostfix}`, {
+    type: 'String',
+    name: toSsmParamName(
+      siteStack.siteProps.config,
+      siteStack.siteProps.context.somId,
       SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID,
       webHostingSpec.domainName
     ),
-    stringValue: cloudfrontDistribution.distributionId,
-    tier: ssm.ParameterTier.STANDARD,
+    value: cloudfrontDistribution.id,
+    provider: siteStack.providerCertificateRegion,
+    tags: _somTags(siteStack),
   });
-  _somMeta(
-    siteResourcesStack.siteProps.config,
-    ssm1,
-    siteResourcesStack.siteProps.context.somId,
-    siteResourcesStack.siteProps.locked
-  );
 
-  const ssm2 = new ssm.StringParameter(siteResourcesStack, `SsmCloudfrontDomainName-${localIdPostfix}`, {
-    parameterName: toSsmParamName(
-      siteResourcesStack.siteProps.config,
-      siteResourcesStack.siteProps.context.somId,
+  const ssm2 = new SsmParameter(siteStack, `SsmCloudfrontDomainName-${localIdPostfix}`, {
+    type: 'String',
+    name: toSsmParamName(
+      siteStack.siteProps.config,
+      siteStack.siteProps.context.somId,
       SSM_PARAM_NAME_CLOUDFRONT_DOMAIN_NAME,
       webHostingSpec.domainName
     ),
-    stringValue: cloudfrontDistribution.distributionDomainName,
-    tier: ssm.ParameterTier.STANDARD,
+    value: cloudfrontDistribution.domainName,
+    provider: siteStack.providerCertificateRegion,
+    tags: _somTags(siteStack),
   });
-  _somMeta(
-    siteResourcesStack.siteProps.config,
-    ssm2,
-    siteResourcesStack.siteProps.context.somId,
-    siteResourcesStack.siteProps.locked
-  );
+
+  console.log(`Generated Cloudfront distribution for ${webHostingSpec.domainName}`);
 
   return {
-    cloudfrontFunctionsResources,
     cloudfrontDistribution,
+    cloudfrontFunctionsResources,
+    wafResources,
     dnsRecords: [dns1, dns2],
     ssmParams: [ssm1, ssm2],
   };

@@ -44,6 +44,9 @@ importers:
       '@cdktf/provider-aws':
         specifier: 19.40.0
         version: 19.40.0(cdktf@0.20.9(constructs@10.4.2))(constructs@10.4.2)
+      '@cdktf/provider-local':
+        specifier: ^10.1.1
+        version: 10.1.1(cdktf@0.20.9(constructs@10.4.2))(constructs@10.4.2)
       '@metalsmith/in-place':
         specifier: ^4.6.0
         version: 4.6.0(metalsmith@2.6.3)
@@ -587,6 +590,13 @@ packages:
 
   '@cdktf/provider-generator@0.20.9':
     resolution: {integrity: sha512-hKbIeqrbPA9bAscbKTDs40iTTy/C93mCwAKLXxg553AkQ2EepNyU1ojnrZYaLpNfRAu1gb+gRO+DoWuNMUaZ1Q==}
+
+  '@cdktf/provider-local@10.1.1':
+    resolution: {integrity: sha512-m1nJadesvpmGj/IFAM1n3TPqIPzB7I1Tc4csHwCRkddoPcDOvZJHbbmzJPy8Wn5HJZ+Y+5+IAfsghwHV5p9Z6A==}
+    engines: {node: '>= 18.12.0'}
+    peerDependencies:
+      cdktf: ^0.20.0
+      constructs: ^10.3.0
 
   '@cdktf/provider-schema@0.20.9':
     resolution: {integrity: sha512-/9qyrbMT2KXm3tX3ySD3iP745LAmHSAg1l2XR/kBJozXgac8tfi6OhaJ8jOv6GNErX0/uydDjkkntuyJRVLT8Q==}
@@ -5495,6 +5505,11 @@ snapshots:
       - constructs
       - debug
       - supports-color
+
+  '@cdktf/provider-local@10.1.1(cdktf@0.20.9(constructs@10.4.2))(constructs@10.4.2)':
+    dependencies:
+      cdktf: 0.20.9(constructs@10.4.2)
+      constructs: 10.4.2
 
   '@cdktf/provider-schema@0.20.9(constructs@10.3.0)':
     dependencies:

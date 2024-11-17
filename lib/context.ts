@@ -1,5 +1,5 @@
 import { findHostedZoneAttributes, getNsRecordValuesForDomainName } from './aws/route53';
-import { getIsS3BucketEmpty } from './aws/s3';
+import { getDoesBucketExist, getIsS3BucketEmpty } from './aws/s3';
 import { getSsmParams, ssmBasePath } from './aws/ssm';
 import type { SiteOMaticConfig } from './config/schemas/site-o-matic-config.schema';
 import {
@@ -102,7 +102,12 @@ export async function loadNetworkDerivedContext(
     getSiteConnectionStatus(context.rootDomainName, context.siteUrl),
   ]);
   const s3BucketName = getParam(params, SSM_PARAM_NAME_DOMAIN_BUCKET_NAME);
-  const isS3BucketEmpty = !!s3BucketName ? await getIsS3BucketEmpty(config, context.manifest, s3BucketName) : false;
+  const doesS3BucketExist = !!s3BucketName
+    ? await getDoesBucketExist(config, context.manifest.region, s3BucketName)
+    : false;
+  const isS3BucketEmpty = !!s3BucketName
+    ? await getIsS3BucketEmpty(config, context.manifest.region, s3BucketName)
+    : false;
 
   return {
     ...context,
@@ -114,6 +119,7 @@ export async function loadNetworkDerivedContext(
     dnsResolvedNameserverRecords,
     dnsVerificationTxtRecord,
     connectionStatus,
+    doesS3BucketExist,
     isS3BucketEmpty,
   };
 }
@@ -122,12 +128,14 @@ export function manifestDerivedProps(
   config: SiteOMaticConfig,
   context: SomContext,
   pathToManifestFile: string,
+  cdkCommand: string,
   manifest: SiteOMaticManifest,
   manifestHash: string
 ): HasManifest<SomContext> {
   const ret: HasManifest<SomContext> = {
     ...context,
     pathToManifestFile,
+    cdkCommand,
     manifest,
     manifestHash,
     rootDomainName: manifest.domainName,
@@ -166,11 +174,12 @@ export async function refreshContextPass2(
 export async function loadContext(
   config: SiteOMaticConfig,
   pathToManifestFile: string,
+  cdkCommand: string,
   manifest: SiteOMaticManifest,
   manifestHash: string
 ): Promise<HasNetworkDerived<SomContext>> {
   return refreshContextPass1(
     config,
-    manifestDerivedProps(config, DEFAULT_INITIAL_CONTEXT, pathToManifestFile, manifest, manifestHash)
+    manifestDerivedProps(config, DEFAULT_INITIAL_CONTEXT, pathToManifestFile, cdkCommand, manifest, manifestHash)
   );
 }

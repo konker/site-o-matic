@@ -5,11 +5,10 @@ import type {
   WebHostingType,
 } from '../../../../../lib/manifest/schemas/site-o-matic-manifest.schema';
 import type { SecretsSetCollection } from '../../../../../lib/secrets/types';
-import type { SiteResourcesStack } from '../SiteStack/SiteResourcesStack';
+import type { SiteStack } from '../SiteStack';
 import * as CertificateBuilder from './CertificateBuilder';
 import * as HttpsCloudfrontDistributionBuilder from './HttpsCloudfrontDistributionBuilder';
 import * as S3CloudfrontDistributionBuilder from './S3CloudfrontDistributionBuilder';
-import * as WafBuilder from './WafBuilder';
 
 // ----------------------------------------------------------------------
 export type CloudfrontDistributionResources =
@@ -26,7 +25,7 @@ export type WebHostingResources = {
 
 // ----------------------------------------------------------------------
 export async function build(
-  siteResourcesStack: SiteResourcesStack,
+  siteResourcesStack: SiteStack,
   secrets: SecretsSetCollection,
   webHostingSpec: WebHostingClauseWithResources
 ): Promise<WebHostingResources> {
@@ -41,10 +40,6 @@ export async function build(
   // TLS Certificate
   const certificateResources = await CertificateBuilder.build(siteResourcesStack, webHostingSpec, localIdPostfix);
 
-  // ----------------------------------------------------------------------
-  // WAF ACl
-  const wafResources = await WafBuilder.build(siteResourcesStack, webHostingSpec);
-
   const cloudfrontDistributionResources: CloudfrontDistributionResources = await (async () => {
     switch (webHostingSpec.type) {
       case WEB_HOSTING_TYPE_CLOUDFRONT_S3:
@@ -54,8 +49,7 @@ export async function build(
           webHostingSpec,
           siteResourcesStack.siteProps.context.manifest.webHostingDefaults[WEB_HOSTING_TYPE_CLOUDFRONT_S3],
           localIdPostfix,
-          certificateResources,
-          wafResources
+          certificateResources
         );
       case WEB_HOSTING_TYPE_CLOUDFRONT_HTTPS:
         return HttpsCloudfrontDistributionBuilder.build(
@@ -64,11 +58,12 @@ export async function build(
           webHostingSpec,
           siteResourcesStack.siteProps.context.manifest.webHostingDefaults[WEB_HOSTING_TYPE_CLOUDFRONT_HTTPS],
           localIdPostfix,
-          certificateResources,
-          wafResources
+          certificateResources
         );
     }
   })();
+
+  console.log(`Generated WebHostingResources for ${webHostingSpec.domainName}`);
 
   return {
     type: webHostingSpec.type,

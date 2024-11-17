@@ -1,14 +1,13 @@
-import { ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
+import { HeadBucketCommand, ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
 
 import type { SiteOMaticConfig } from '../config/schemas/site-o-matic-config.schema';
-import type { SiteOMaticManifest } from '../manifest/schemas/site-o-matic-manifest.schema';
 
 export async function getIsS3BucketEmpty(
   _config: SiteOMaticConfig,
-  manifest: SiteOMaticManifest,
+  region: string,
   bucketName: string
 ): Promise<boolean> {
-  const client = new S3Client({ region: manifest.region });
+  const client = new S3Client({ region });
   const cmd1 = new ListObjectsV2Command({
     Bucket: bucketName,
     MaxKeys: 1,
@@ -24,6 +23,24 @@ export async function getIsS3BucketEmpty(
     }
 
     // If some other error occurred, assume the bucket is not empty for safety
+    return false;
+  }
+}
+
+export async function getDoesBucketExist(
+  _config: SiteOMaticConfig,
+  region: string,
+  bucketName: string
+): Promise<boolean> {
+  const client = new S3Client({ region });
+  const cmd1 = new HeadBucketCommand({
+    Bucket: bucketName,
+  });
+
+  try {
+    await client.send(cmd1);
+    return true;
+  } catch (err: any) {
     return false;
   }
 }

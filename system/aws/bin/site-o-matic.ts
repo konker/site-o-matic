@@ -15,6 +15,7 @@ import { SiteStack } from '../defs/siteomatic/SiteStack';
 
 async function main(): Promise<void> {
   const app = new App();
+
   const configLoad = await loadConfig(SOM_CONFIG_PATH_TO_DEFAULT_FILE);
   assert(configLoad, '[site-o-matic] Fatal Error: Failed to load config');
   const [config] = configLoad;
@@ -34,13 +35,18 @@ async function main(): Promise<void> {
     console.error(`[${SOM}] Error: Bad context: missing pathToManifestFile`);
     return;
   }
+  if (!contextParams.cdkCommand) {
+    console.error(`[${SOM}] Error: Bad context: missing cdkCommand`);
+    return;
+  }
   const pathToManifestFile = contextParams.pathToManifestFile;
+  const cdkCommand = contextParams.cdkCommand;
   const manifestLoad = await loadManifest(config, pathToManifestFile);
   if (!manifestLoad) {
     console.log(chalk.red(chalk.bold('Invalid manifest')));
     return;
   }
-  const context = await loadContext(config, pathToManifestFile, ...manifestLoad);
+  const context = await loadContext(config, pathToManifestFile, cdkCommand, ...manifestLoad);
   const facts = await siteOMaticRules(context);
 
   // ----------------------------------------------------------------------
@@ -52,9 +58,7 @@ async function main(): Promise<void> {
     locked: context.manifest.locked ?? false,
     contextParams,
     description: `Site-o-Matic Stack for ${context.manifest.domainName}`,
-    env: {
-      accountId: process.env.CDK_DEFAULT_ACCOUNT!,
-    },
+    env: {},
   };
 
   const siteStack = new SiteStack(app, siteProps);

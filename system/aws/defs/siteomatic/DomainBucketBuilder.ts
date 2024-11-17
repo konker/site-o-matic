@@ -1,112 +1,129 @@
-import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as ssm from 'aws-cdk-lib/aws-ssm';
+import { CloudfrontOriginAccessControl } from '@cdktf/provider-aws/lib/cloudfront-origin-access-control';
+import { DataAwsIamPolicyDocument } from '@cdktf/provider-aws/lib/data-aws-iam-policy-document';
+import { S3Bucket } from '@cdktf/provider-aws/lib/s3-bucket';
+import { S3BucketPublicAccessBlock } from '@cdktf/provider-aws/lib/s3-bucket-public-access-block';
+import { S3BucketServerSideEncryptionConfigurationA } from '@cdktf/provider-aws/lib/s3-bucket-server-side-encryption-configuration';
+import { S3BucketVersioningA } from '@cdktf/provider-aws/lib/s3-bucket-versioning';
+import { SsmParameter } from '@cdktf/provider-aws/lib/ssm-parameter';
 
 import { toSsmParamName } from '../../../../lib/aws/ssm';
 import { SSM_PARAM_NAME_DOMAIN_BUCKET_NAME } from '../../../../lib/consts';
-import { _removalPolicyFromBoolean, _somMeta } from '../../../../lib/utils';
-import type { SiteResourcesStack } from './SiteStack/SiteResourcesStack';
+import { _somTags } from '../../../../lib/utils';
+import type { SiteStack } from './SiteStack';
 
 // ----------------------------------------------------------------------
 export type DomainBucketResources = {
-  readonly domainBucket: s3.Bucket;
-  readonly originAccessControl: cloudfront.CfnOriginAccessControl;
-  readonly ssmParams: Array<ssm.StringParameter>;
+  readonly domainBucket: S3Bucket;
+  readonly domainBucketVersioning: S3BucketVersioningA;
+  readonly domainBucketServerSideEncryptionConfiguration: S3BucketServerSideEncryptionConfigurationA;
+  readonly domainBucketPublicAccessBlock: S3BucketPublicAccessBlock;
+  readonly originAccessControl: CloudfrontOriginAccessControl;
+  readonly ssmParams: Array<SsmParameter>;
 };
 
 // ----------------------------------------------------------------------
-export async function build(siteResourcesStack: SiteResourcesStack): Promise<DomainBucketResources> {
-  if (!siteResourcesStack.domainUserResources?.domainUser) {
+export async function build(siteStack: SiteStack): Promise<DomainBucketResources> {
+  if (!siteStack.domainUserResources?.domainUser) {
     throw new Error('[site-o-matic] Could not build domain bucket resources when domainUser is missing');
-  }
-  if (!siteResourcesStack.domainPublisherResources?.domainPublisher) {
-    throw new Error('[site-o-matic] Could not build domain bucket resources when domainPublisher is missing');
   }
 
   // ----------------------------------------------------------------------
   // Origin Access Control (OAC) which will govern the cloudfront distribution access to the S3 origin bucket
-  const originAccessControl = new cloudfront.CfnOriginAccessControl(siteResourcesStack, 'OriginAccessControl', {
-    originAccessControlConfig: {
-      name: `oac-${siteResourcesStack.siteProps.context.somId}`,
-      originAccessControlOriginType: 's3',
-      signingBehavior: 'always',
-      signingProtocol: 'sigv4',
-      description: 'Origin access control provisioned by site-o-matic',
-    },
+  const originAccessControl = new CloudfrontOriginAccessControl(siteStack, 'OriginAccessControl', {
+    name: `oac-${siteStack.siteProps.context.somId}`,
+    originAccessControlOriginType: 's3',
+    signingBehavior: 'always',
+    signingProtocol: 'sigv4',
+    description: 'Origin access control provisioned by site-o-matic',
   });
 
   // ----------------------------------------------------------------------
   // Domain www content bucket and bucket policy
-  const bucketName = `wwwbucket-${siteResourcesStack.siteProps.context.somId}`;
-  const domainBucket = new s3.Bucket(siteResourcesStack, 'DomainBucket', {
-    bucketName,
-    blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-    publicReadAccess: false,
-    encryption: s3.BucketEncryption.S3_MANAGED,
-    versioned: false,
-    removalPolicy: _removalPolicyFromBoolean(siteResourcesStack.siteProps.locked),
-    autoDeleteObjects: !siteResourcesStack.siteProps.locked,
+  const bucketName = `wwwbucket-${siteStack.siteProps.context.somId}`;
+  const domainBucket = new S3Bucket(siteStack, 'DomainBucket', {
+    bucket: bucketName,
+    provider: siteStack.providerManifestRegion,
+    tags: _somTags(siteStack),
   });
-  _somMeta(
-    siteResourcesStack.siteProps.config,
-    domainBucket,
-    siteResourcesStack.siteProps.context.somId,
-    siteResourcesStack.siteProps.locked
+
+  const domainBucketVersioning = new S3BucketVersioningA(siteStack, 'domainBucketVersioning', {
+    bucket: domainBucket.id,
+    versioningConfiguration: {
+      status: 'Disabled',
+    },
+  });
+
+  const domainBucketServerSideEncryptionConfiguration = new S3BucketServerSideEncryptionConfigurationA(
+    siteStack,
+    'DomainBucketServerSideEncryptionConfiguration',
+    {
+      bucket: domainBucket.id,
+      rule: [
+        {
+          applyServerSideEncryptionByDefault: {
+            sseAlgorithm: 'AES256',
+          },
+        },
+      ],
+      provider: siteStack.providerManifestRegion,
+    }
   );
 
-  // Add to domain policy permissions for domainUser
-  domainBucket.addToResourcePolicy(
-    new iam.PolicyStatement({
-      actions: ['s3:DeleteObject', 's3:GetObject', 's3:GetObjectVersion', 's3:PutObject', 's3:PutObjectAcl'],
-      resources: [`${domainBucket.bucketArn}/*`],
-      principals: [siteResourcesStack.domainUserResources.domainUser],
-    })
-  );
-  domainBucket.addToResourcePolicy(
-    new iam.PolicyStatement({
-      actions: ['s3:ListBucket'],
-      resources: [domainBucket.bucketArn],
-      principals: [siteResourcesStack.domainUserResources.domainUser],
+  siteStack.domainUserPolicyDocuments.push(
+    new DataAwsIamPolicyDocument(siteStack, 'DomainBucketPolicyDocument', {
+      statement: [
+        {
+          effect: 'Allow',
+          actions: ['s3:DeleteObject', 's3:GetObject', 's3:GetObjectVersion', 's3:PutObject', 's3:PutObjectAcl'],
+          resources: [`${domainBucket.arn}/*`],
+        },
+        {
+          effect: 'Allow',
+          actions: ['s3:ListBucket'],
+          resources: [domainBucket.arn],
+        },
+        {
+          effect: 'Allow',
+          actions: ['s3:DeleteObject', 's3:GetObject', 's3:GetObjectVersion', 's3:PutObject', 's3:PutObjectAcl'],
+          resources: [`${domainBucket.arn}/*`],
+        },
+        {
+          effect: 'Allow',
+          actions: ['s3:ListBucket'],
+          resources: [domainBucket.arn],
+        },
+      ],
     })
   );
 
-  // Add to domain policy permissions for domainPublisher to write to domain bucket
-  domainBucket.addToResourcePolicy(
-    new iam.PolicyStatement({
-      actions: ['s3:DeleteObject', 's3:GetObject', 's3:GetObjectVersion', 's3:PutObject', 's3:PutObjectAcl'],
-      resources: [`${domainBucket.bucketArn}/*`],
-      principals: [siteResourcesStack.domainPublisherResources.domainPublisher],
-    })
-  );
-  domainBucket.addToResourcePolicy(
-    new iam.PolicyStatement({
-      actions: ['s3:ListBucket'],
-      resources: [domainBucket.bucketArn],
-      principals: [siteResourcesStack.domainPublisherResources.domainPublisher],
-    })
-  );
+  const domainBucketPublicAccessBlock = new S3BucketPublicAccessBlock(siteStack, 'DomainBucketPublicAccessBlock', {
+    bucket: domainBucket.id,
+    blockPublicAcls: true,
+    blockPublicPolicy: true,
+    ignorePublicAcls: true,
+    restrictPublicBuckets: true,
+    provider: siteStack.providerManifestRegion,
+  });
 
   // ----------------------------------------------------------------------
   // SSM Params
-  const ssm1 = new ssm.StringParameter(siteResourcesStack, 'SsmDomainBucketName', {
-    parameterName: toSsmParamName(
-      siteResourcesStack.siteProps.config,
-      siteResourcesStack.siteProps.context.somId,
+  const ssm1 = new SsmParameter(siteStack, 'SsmDomainBucketName', {
+    type: 'String',
+    name: toSsmParamName(
+      siteStack.siteProps.config,
+      siteStack.siteProps.context.somId,
       SSM_PARAM_NAME_DOMAIN_BUCKET_NAME
     ),
-    stringValue: domainBucket.bucketName,
-    tier: ssm.ParameterTier.STANDARD,
+    value: domainBucket.bucket,
+    provider: siteStack.providerManifestRegion,
+    tags: _somTags(siteStack),
   });
-  _somMeta(
-    siteResourcesStack.siteProps.config,
-    ssm1,
-    siteResourcesStack.siteProps.context.somId,
-    siteResourcesStack.siteProps.locked
-  );
 
   return {
     domainBucket,
+    domainBucketVersioning,
+    domainBucketServerSideEncryptionConfiguration,
+    domainBucketPublicAccessBlock,
     originAccessControl,
     ssmParams: [ssm1],
   };

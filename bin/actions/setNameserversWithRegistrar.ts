@@ -59,7 +59,7 @@ export function actionSetNameServersWithRegistrar(vorpal: Vorpal, config: SiteOM
           state.context.rootDomainName as string,
           nameservers
         );
-        vlog(vorpal, state, `Set nameservers: ${result}`);
+        vlog(vorpal, state, `Set nameservers: [${state.context.registrar}]: ${result}`);
 
         const contextPass1 = await refreshContextPass1(config, state.context);
         const facts = await siteOMaticRules(contextPass1);

@@ -1,8 +1,17 @@
 # site-o-matic.tf
------------------------------------------------------------------------------
+
+---
+
 Port of site-o-matic to cdktf (from standard cdk)
 
 ## Strategy for Port
+
+- Content upload flip-flopping (upload/delete)
+- Access key + secrets
+- S3 bucket block public access all
+- Cf access denied to S3 [?]
+- Check Cf functions
+- Check extra DNS, e.g. MX records
 - Attempt single stack
 - Amend somMetadata helper to work with cdktf, if needed
 - First: gather regions, and instantiate providers:
@@ -22,10 +31,11 @@ Port of site-o-matic to cdktf (from standard cdk)
       - call it domainUser, but give it the current permissions of domainPublisher
 
 ## Analysis
+
 - PRO: Allows for different resources to be in different regions, in the same stack/deployment
   - Allows e.g.: Route53(global), CertificateManager(us-east-1), S3(eu-west-1)
     - i.e. site resources are in a desired/specified region, except for those which _must_ be in another region (or are global/region agnostic)
-      - ~~Could we even have more than one manifest region?! E.g. bucket in eu-west-1,~~ 
+      - ~~Could we even have more than one manifest region?! E.g. bucket in eu-west-1,~~
 - PRO: Allows for programmatic creation of SecureString SSM params (impossible in CDK)
 - PRO: Eliminates multiple-deployment setup, bootstrap stack -> certificates stack -> resources stack
 - CON: Resources are no longer self-contained in a Cloudformation stack(s)
@@ -34,6 +44,7 @@ Port of site-o-matic to cdktf (from standard cdk)
   - Create a tag scheme which will allow for direct identification of related resources
     - Do this anyway?
 - CON: Is the TF/HCL which defines the resources "hidden" inside cdktf?
+
   - Could it be e.g. extracted to be vanilla TF?
     - JSON representation of TF is synthesized (I believe), and persisted?
   - Is there some question of "local vs remote" tracking of metadata?
@@ -45,6 +56,7 @@ Port of site-o-matic to cdktf (from standard cdk)
   - Will need to check if all resources are supported (seems so, nothing that exotic anyway)
 
 ## Resources
+
 - domainUser: iam.User // What is this for actually? Check.
 - domainUserPolicy: iam.Policy
 - ssmDomainUserName: string
@@ -95,4 +107,5 @@ Port of site-o-matic to cdktf (from standard cdk)
   - ssmCloudfrontDomainName
 
 ### Notes
+
 - Biggest questions are around OAC?

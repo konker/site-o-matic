@@ -18,8 +18,8 @@ export type WwwConnectionStatus = {
 
 // ----------------------------------------------------------------------
 export type HostedZoneAttributes = {
-  zoneName: string;
-  hostedZoneId: string;
+  name: string;
+  zoneId: string;
 };
 
 // ----------------------------------------------------------------------
@@ -79,6 +79,7 @@ export type SomParam = {
 export type SomContext = {
   // Manifest derived
   pathToManifestFile?: string;
+  cdkCommand?: string;
   manifest?: SiteOMaticManifest;
   manifestHash?: string;
   rootDomainName?: string;
@@ -99,6 +100,7 @@ export type SomContext = {
   dnsVerificationTxtRecord?: string | undefined;
   certificateStatus?: boolean;
   connectionStatus?: WwwConnectionStatus;
+  doesS3BucketExist?: boolean;
   isS3BucketEmpty?: boolean;
 
   // Rest of context derived
@@ -107,6 +109,7 @@ export type SomContext = {
 
 export type HasManifest<T extends SomContext> = T & {
   readonly pathToManifestFile: string;
+  readonly cdkCommand: string;
   readonly manifest: SiteOMaticManifest;
   readonly manifestHash: string;
   readonly rootDomainName: string;
@@ -126,6 +129,7 @@ export type HasNetworkDerived<T extends SomContext> = HasManifest<T> & {
   readonly dnsResolvedNameserverRecords: Array<string>;
   readonly dnsVerificationTxtRecord: string | undefined;
   readonly connectionStatus: WwwConnectionStatus;
+  readonly doesS3BucketExist: boolean;
   readonly isS3BucketEmpty: boolean;
 };
 

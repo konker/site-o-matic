@@ -2,7 +2,7 @@ import path from 'path';
 import type Vorpal from 'vorpal';
 
 import type { SiteOMaticConfig } from '../../lib/config/schemas/site-o-matic-config.schema';
-import { VERSION } from '../../lib/consts';
+import { CDK_COMMAND_NOTHING, VERSION } from '../../lib/consts';
 import { manifestDerivedProps } from '../../lib/context';
 import { loadManifest } from '../../lib/manifest';
 import { verror } from '../../lib/ui/logging';
@@ -20,7 +20,13 @@ export function actionLoadManifest(vorpal: Vorpal, config: SiteOMaticConfig, sta
       return;
     }
 
-    const context = manifestDerivedProps(config, state.context, pathToManifestFile, ...manifestLoad);
+    const context = manifestDerivedProps(
+      config,
+      state.context,
+      pathToManifestFile,
+      CDK_COMMAND_NOTHING,
+      ...manifestLoad
+    );
     state.updateContext(context);
 
     if (!state.plumbing) {

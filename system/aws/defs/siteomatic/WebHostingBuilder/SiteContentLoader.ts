@@ -1,10 +1,9 @@
-// ----------------------------------------------------------------------
 import chalk from 'chalk';
 
 import type { SomContentGenerator } from '../../../../../lib/content';
 import { getContentProducer } from '../../../../../lib/content';
 import type { WebHostingClauseWithResources } from '../../../../../lib/manifest/schemas/site-o-matic-manifest.schema';
-import type { SiteResourcesStack } from '../SiteStack/SiteResourcesStack';
+import type { SiteStack } from '../SiteStack';
 
 // ----------------------------------------------------------------------
 export type CloudfrontFunctionsLoaderResources = {
@@ -13,21 +12,17 @@ export type CloudfrontFunctionsLoaderResources = {
 
 // ----------------------------------------------------------------------
 export async function load(
-  siteResourcesStack: SiteResourcesStack,
+  siteStack: SiteStack,
   webHostingSpec: WebHostingClauseWithResources
 ): Promise<CloudfrontFunctionsLoaderResources> {
   const siteContentTmpDirPath = await (async () => {
-    if (
-      siteResourcesStack.siteProps.facts.shouldDeployS3Content &&
-      'content' in webHostingSpec &&
-      webHostingSpec.content
-    ) {
+    if (siteStack.siteProps.facts.shouldDeployS3Content && 'content' in webHostingSpec && webHostingSpec.content) {
       const contentProducerId = webHostingSpec.content.producerId;
       const contentGenerator: SomContentGenerator = getContentProducer(contentProducerId);
       const ret = await contentGenerator(
-        siteResourcesStack.siteProps.context.somId,
+        siteStack.siteProps.context.somId,
         webHostingSpec,
-        siteResourcesStack.siteProps.context
+        siteStack.siteProps.context
       );
 
       if (ret) {

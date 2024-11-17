@@ -1,5 +1,5 @@
 describe('lib/ui/logging.ts', () => {
-  it('should FIXME', () => {
+  it('should TODO', () => {
     expect(true).toBe(true);
   });
 });

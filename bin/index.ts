@@ -19,6 +19,7 @@ import { actionInfo } from './actions/info';
 import { actionListSites } from './actions/listSites';
 import { actionListUsers } from './actions/listUsers';
 import { actionLoadManifest } from './actions/loadManifest';
+import { actionPlan } from './actions/plan';
 import { actionAddSecret } from './actions/secretsAdd';
 import { actionDeleteSecret } from './actions/secretsDelete';
 import { actionListSecrets } from './actions/secretsList';
@@ -121,6 +122,7 @@ async function main() {
 
   vorpal.command('stacks', 'List the CDK stacks').action(actionStacks(vorpal, config, globalState));
   vorpal.command('synth', 'Synthesize the CDK stack').action(actionSynthesize(vorpal, config, globalState));
+  vorpal.command('plan', 'Plan the CDK stack changes').action(actionPlan(vorpal, config, globalState));
   vorpal
     .command('diff', 'Diff the CDK stack with the currently deployed resources,')
     .action(actionDiff(vorpal, config, globalState));

@@ -1,121 +1,73 @@
-import * as ssm from 'aws-cdk-lib/aws-ssm';
+import { SsmParameter } from '@cdktf/provider-aws/lib/ssm-parameter';
 
 import { toSsmParamName } from '../../../../lib/aws/ssm';
 import {
-  SSM_PARAM_NAME_PROTECTED_STATUS,
   SSM_PARAM_NAME_ROOT_DOMAIN_NAME,
   SSM_PARAM_NAME_SOM_VERSION,
   SSM_PARAM_NAME_WEBMASTER_EMAIL,
+  SSM_PARAM_PATH_ROOT_DOMAIN_NAME,
   UNKNOWN,
   VERSION,
 } from '../../../../lib/consts';
-import { _somMeta, contextTemplateString } from '../../../../lib/utils';
-import type { SiteResourcesStack } from './SiteStack/SiteResourcesStack';
+import { _somTags, contextTemplateString } from '../../../../lib/utils';
+import type { SiteStack } from './SiteStack';
 
 // ----------------------------------------------------------------------
-export type DomainParametersResources = Array<ssm.StringParameter>;
+export type DomainParametersResources = Array<SsmParameter>;
 
 // ----------------------------------------------------------------------
-export async function build(siteResourcesStack: SiteResourcesStack): Promise<DomainParametersResources> {
-  if (!siteResourcesStack.domainUserResources?.domainUserName) {
+export async function build(siteStack: SiteStack): Promise<DomainParametersResources> {
+  if (!siteStack.domainUserResources?.domainUserName) {
     throw new Error('[site-o-matic] Could not build parameter resources when domainUserName is missing');
   }
-  if (!siteResourcesStack.domainPublisherResources?.domainPublisherUserName) {
-    throw new Error('[site-o-matic] Could not build parameter resources when domainPublisherUserName is missing');
-  }
 
-  const res1 = new ssm.StringParameter(siteResourcesStack, 'SsmSiteEntryRootDomainName', {
-    parameterName: `/som/site/root-domain-name/${siteResourcesStack.siteProps.context.rootDomainName}`,
-    stringValue: siteResourcesStack.siteProps.context.somId,
-    tier: ssm.ParameterTier.STANDARD,
+  const ssm1 = new SsmParameter(siteStack, 'SsmSiteEntryRootDomainName', {
+    type: 'String',
+    name: `${SSM_PARAM_PATH_ROOT_DOMAIN_NAME}/${siteStack.siteProps.context.rootDomainName}`,
+    value: siteStack.siteProps.context.somId,
+    provider: siteStack.providerControlPlaneRegion,
+    tags: _somTags(siteStack),
   });
-  _somMeta(
-    siteResourcesStack.siteProps.config,
-    res1,
-    siteResourcesStack.siteProps.context.somId,
-    siteResourcesStack.siteProps.locked
-  );
 
-  const res2 = new ssm.StringParameter(siteResourcesStack, 'SsmSiteEntrySomId', {
-    parameterName: `/som/site/som-id/${siteResourcesStack.siteProps.context.somId}`,
-    stringValue: siteResourcesStack.siteProps.context.rootDomainName,
-    tier: ssm.ParameterTier.STANDARD,
+  const ssm2 = new SsmParameter(siteStack, 'SsmSiteEntrySomId', {
+    type: 'String',
+    name: `/som/site/som-id/${siteStack.siteProps.context.somId}`,
+    value: siteStack.siteProps.context.rootDomainName,
+    provider: siteStack.providerManifestRegion,
+    tags: _somTags(siteStack),
   });
-  _somMeta(
-    siteResourcesStack.siteProps.config,
-    res2,
-    siteResourcesStack.siteProps.context.somId,
-    siteResourcesStack.siteProps.locked
-  );
 
-  const res3 = new ssm.StringParameter(siteResourcesStack, 'SsmRootDomain', {
-    parameterName: toSsmParamName(
-      siteResourcesStack.siteProps.config,
-      siteResourcesStack.siteProps.context.somId,
+  const ssm3 = new SsmParameter(siteStack, 'SsmRootDomain', {
+    type: 'String',
+    name: toSsmParamName(
+      siteStack.siteProps.config,
+      siteStack.siteProps.context.somId,
       SSM_PARAM_NAME_ROOT_DOMAIN_NAME
     ),
-    stringValue: siteResourcesStack.siteProps.context.rootDomainName,
-    tier: ssm.ParameterTier.STANDARD,
+    value: siteStack.siteProps.context.rootDomainName,
+    provider: siteStack.providerManifestRegion,
+    tags: _somTags(siteStack),
   });
-  _somMeta(
-    siteResourcesStack.siteProps.config,
-    res3,
-    siteResourcesStack.siteProps.context.somId,
-    siteResourcesStack.siteProps.locked
-  );
 
-  const res4 = new ssm.StringParameter(siteResourcesStack, 'SsmWebmasterEmail', {
-    parameterName: toSsmParamName(
-      siteResourcesStack.siteProps.config,
-      siteResourcesStack.siteProps.context.somId,
-      SSM_PARAM_NAME_WEBMASTER_EMAIL
-    ),
-    stringValue:
+  const ssm4 = new SsmParameter(siteStack, 'SsmWebmasterEmail', {
+    type: 'String',
+    name: toSsmParamName(siteStack.siteProps.config, siteStack.siteProps.context.somId, SSM_PARAM_NAME_WEBMASTER_EMAIL),
+    value:
       contextTemplateString(
-        siteResourcesStack.siteProps.context.manifest.webmasterEmail ??
-          siteResourcesStack.siteProps.config.WEBMASTER_EMAIL_DEFAULT,
-        siteResourcesStack.siteProps.context
+        siteStack.siteProps.context.manifest.webmasterEmail ?? siteStack.siteProps.config.WEBMASTER_EMAIL_DEFAULT,
+        siteStack.siteProps.context
       ) ?? UNKNOWN,
-    tier: ssm.ParameterTier.STANDARD,
+    provider: siteStack.providerManifestRegion,
+    tags: _somTags(siteStack),
   });
-  _somMeta(
-    siteResourcesStack.siteProps.config,
-    res4,
-    siteResourcesStack.siteProps.context.somId,
-    siteResourcesStack.siteProps.locked
-  );
 
-  const res5 = new ssm.StringParameter(siteResourcesStack, 'SsmProtectedStatus', {
-    parameterName: toSsmParamName(
-      siteResourcesStack.siteProps.config,
-      siteResourcesStack.siteProps.context.somId,
-      SSM_PARAM_NAME_PROTECTED_STATUS
-    ),
-    stringValue: siteResourcesStack.siteProps.locked ? 'true' : 'false',
-    tier: ssm.ParameterTier.STANDARD,
+  const ssm5 = new SsmParameter(siteStack, 'SsmSomVersion', {
+    type: 'String',
+    name: toSsmParamName(siteStack.siteProps.config, siteStack.siteProps.context.somId, SSM_PARAM_NAME_SOM_VERSION),
+    value: VERSION,
+    provider: siteStack.providerManifestRegion,
+    tags: _somTags(siteStack),
   });
-  _somMeta(
-    siteResourcesStack.siteProps.config,
-    res5,
-    siteResourcesStack.siteProps.context.somId,
-    siteResourcesStack.siteProps.locked
-  );
 
-  const res6 = new ssm.StringParameter(siteResourcesStack, 'SsmSomVersion', {
-    parameterName: toSsmParamName(
-      siteResourcesStack.siteProps.config,
-      siteResourcesStack.siteProps.context.somId,
-      SSM_PARAM_NAME_SOM_VERSION
-    ),
-    stringValue: VERSION,
-    tier: ssm.ParameterTier.STANDARD,
-  });
-  _somMeta(
-    siteResourcesStack.siteProps.config,
-    res6,
-    siteResourcesStack.siteProps.context.somId,
-    siteResourcesStack.siteProps.locked
-  );
-
-  return [res1, res2, res3, res4, res5, res6];
+  return [ssm1, ssm2, ssm3, ssm4, ssm5];
 }

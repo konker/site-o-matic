@@ -1,26 +1,22 @@
-import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
+import { WafWebAcl } from '@cdktf/provider-aws/lib/waf-web-acl';
 
 import type { WebHostingClauseWithResources } from '../../../../../lib/manifest/schemas/site-o-matic-manifest.schema';
-import type { SiteResourcesStack } from '../SiteStack/SiteResourcesStack';
+import { _somTags } from '../../../../../lib/utils';
+import type { SiteStack } from '../SiteStack';
 
 // ----------------------------------------------------------------------
 export type WafResources =
   | {
       readonly wafEnabled: false;
     }
-  | { readonly wafEnabled: true; readonly wafAcl: wafv2.CfnWebACL };
+  | { readonly wafEnabled: true; readonly wafAcl: WafWebAcl };
 
 // ----------------------------------------------------------------------
 export async function build(
-  siteResourcesStack: SiteResourcesStack,
-  webHostingSpec: WebHostingClauseWithResources
+  siteStack: SiteStack,
+  webHostingSpec: WebHostingClauseWithResources,
+  localIdPostfix: string
 ): Promise<WafResources> {
-  if (!siteResourcesStack.domainUserResources?.domainUser) {
-    throw new Error('[site-o-matic] Could not build WAF resources when domainUser is missing');
-  }
-
-  // ----------------------------------------------------------------------
-  // WAF ACl
   const awsManagedRules = webHostingSpec.waf?.AWSManagedRules;
   const wafEnabled = !!webHostingSpec.waf?.enabled && awsManagedRules && awsManagedRules.length > 0;
 
@@ -28,15 +24,14 @@ export async function build(
     return { wafEnabled: false };
   }
 
-  const wafAcl = new wafv2.CfnWebACL(siteResourcesStack, 'WafAcl', {
-    defaultAction: { allow: {} },
-    scope: 'CLOUDFRONT',
-    visibilityConfig: {
-      cloudWatchMetricsEnabled: false,
-      sampledRequestsEnabled: true,
-      metricName: `${webHostingSpec.domainName}-wafAcl`,
-    },
+  // ----------------------------------------------------------------------
+  // WAF ACl
+  const wafAcl = new WafWebAcl(siteStack, `WafAcl-${localIdPostfix}`, {
+    name: `WafAcl-${localIdPostfix}`,
+    metricName: `${webHostingSpec.domainName}-WAF`,
+    defaultAction: { type: 'allow' },
     rules: awsManagedRules.map((rule) => ({
+      ruleId: rule.name,
       name: rule.name,
       priority: rule.priority,
       statement: {
@@ -45,16 +40,15 @@ export async function build(
           name: rule.name,
         },
       },
-      overrideAction: { none: {} },
+      overrideAction: { type: 'none' },
       visibilityConfig: {
-        metricName: `${webHostingSpec.domainName}-AWSManagedRules`,
+        metricName: `${webHostingSpec.domainName}-WAF`,
         cloudWatchMetricsEnabled: false,
         sampledRequestsEnabled: true,
       },
     })),
-    tags: [
-      { key: siteResourcesStack.siteProps.config.SOM_TAG_NAME, value: siteResourcesStack.siteProps.context.somId },
-    ],
+    provider: siteStack.providerManifestRegion,
+    tags: _somTags(siteStack),
   });
 
   return { wafEnabled: true, wafAcl };

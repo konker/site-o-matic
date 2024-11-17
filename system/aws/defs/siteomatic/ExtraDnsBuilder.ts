@@ -1,89 +1,74 @@
-import * as route53 from 'aws-cdk-lib/aws-route53';
+import { Route53Record } from '@cdktf/provider-aws/lib/route53-record';
 
 import type { DnsConfigMx } from '../../../../lib/manifest/schemas/site-o-matic-manifest.schema';
-import { _id, _somMeta } from '../../../../lib/utils';
-import type { SiteResourcesStack } from './SiteStack/SiteResourcesStack';
+import { _id, _somTags } from '../../../../lib/utils';
+import type { SiteStack } from './SiteStack';
 
 // ----------------------------------------------------------------------
-export type ExtraDnsResources = Array<route53.RecordSet>;
+export type ExtraDnsResources = Array<Route53Record>;
 
 // ----------------------------------------------------------------------
-export async function build(siteResourcesStack: SiteResourcesStack): Promise<ExtraDnsResources> {
-  const hostedZone = siteResourcesStack.hostedZoneResources?.hostedZone;
+export async function build(siteStack: SiteStack): Promise<ExtraDnsResources> {
+  const hostedZone = siteStack.hostedZoneResources?.hostedZone;
   if (!hostedZone) {
     throw new Error('[site-o-matic] Could not build extra DNS resources when hostedZone is missing');
   }
   if (
-    !siteResourcesStack.siteProps.context.manifest.extraDnsConfig ||
-    siteResourcesStack.siteProps.context.manifest.extraDnsConfig.length == 0
+    !siteStack.siteProps.context.manifest.extraDnsConfig ||
+    siteStack.siteProps.context.manifest.extraDnsConfig.length == 0
   ) {
     return [];
   }
 
-  const mxRecords: Array<route53.MxRecord> = (() => {
-    const mxConfigs = siteResourcesStack.siteProps.context.manifest.extraDnsConfig.filter(
+  const mxRecords: Array<Route53Record> = (() => {
+    const mxConfigs = siteStack.siteProps.context.manifest.extraDnsConfig.filter(
       (i) => i.type === 'MX'
     ) as Array<DnsConfigMx>;
 
     if (mxConfigs.length > 0) {
-      const res = new route53.MxRecord(
-        siteResourcesStack,
-        _id('DnsRecordSet_MX', siteResourcesStack.siteProps.context.rootDomainName),
-        {
-          zone: hostedZone,
-          values: mxConfigs.map((i: DnsConfigMx) => ({
-            hostName: i.hostName,
-            priority: i.priority,
-          })),
-        }
-      );
-      _somMeta(
-        siteResourcesStack.siteProps.config,
-        res,
-        siteResourcesStack.siteProps.context.somId,
-        siteResourcesStack.siteProps.locked
-      );
+      const res = new Route53Record(siteStack, _id('DnsRecordSet_MX', siteStack.siteProps.context.rootDomainName), {
+        type: 'MX',
+        zoneId: hostedZone.zoneId,
+        name: siteStack.siteProps.context.rootDomainName,
+        records: mxConfigs.map((i: DnsConfigMx) => `${i.priority} ${i.hostName}`),
+        ttl: 300,
+        provider: siteStack.providerManifestRegion,
+      });
       return [res];
     }
     return [];
   })();
 
-  const otherRecords: Array<route53.RecordSet> = siteResourcesStack.siteProps.context.manifest.extraDnsConfig
+  const otherRecords: Array<Route53Record> = siteStack.siteProps.context.manifest.extraDnsConfig
     .filter((i) => i.type !== 'MX')
     .map((dnsConfig, i) => {
       switch (dnsConfig.type) {
         case 'CNAME':
-          const res1 = new route53.CnameRecord(
-            siteResourcesStack,
-            _id(`DnsRecordSet_CNAME_${i}`, siteResourcesStack.siteProps.context.rootDomainName),
+          const res1 = new Route53Record(
+            siteStack,
+            _id(`DnsRecordSet_CNAME_${i}`, siteStack.siteProps.context.rootDomainName),
             {
-              zone: hostedZone,
-              recordName: dnsConfig.recordName,
-              domainName: dnsConfig.domainName,
+              type: 'CNAME',
+              zoneId: hostedZone.zoneId,
+              name: dnsConfig.recordName,
+              records: [dnsConfig.domainName],
+              ttl: 300,
+              provider: siteStack.providerManifestRegion,
             }
-          );
-          _somMeta(
-            siteResourcesStack.siteProps.config,
-            res1,
-            siteResourcesStack.siteProps.context.somId,
-            siteResourcesStack.siteProps.locked
           );
           return res1;
         case 'TXT':
-          const res2 = new route53.TxtRecord(
-            siteResourcesStack,
-            _id(`DnsRecordSet_TXT_${i}`, siteResourcesStack.siteProps.context.rootDomainName),
+          const res2 = new Route53Record(
+            siteStack,
+            _id(`DnsRecordSet_TXT_${i}`, siteStack.siteProps.context.rootDomainName),
             {
-              zone: hostedZone,
-              recordName: dnsConfig.recordName,
-              values: dnsConfig.values,
+              type: 'TXT',
+              zoneId: hostedZone.zoneId,
+              name: dnsConfig.recordName,
+              records: dnsConfig.values,
+              ttl: 300,
+              provider: siteStack.providerManifestRegion,
             }
-          );
-          _somMeta(
-            siteResourcesStack.siteProps.config,
-            res2,
-            siteResourcesStack.siteProps.context.somId,
-            siteResourcesStack.siteProps.locked
           );
           return res2;
       }

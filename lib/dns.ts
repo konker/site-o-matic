@@ -13,7 +13,6 @@ export async function resolveDnsSomTxtRecord(rootDomain?: string): Promise<strin
   if (!rootDomain) return undefined;
 
   return new Promise((resolve, _reject) =>
-    //[FIXME: do not duplicate how this key is formed]
     dns.resolveTxt(`_som.${rootDomain}`, (err: unknown, res: Array<Array<string>>) => {
       if (err) resolve(undefined);
       if (res?.[0]) {
