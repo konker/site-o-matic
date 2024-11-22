@@ -2,6 +2,7 @@ import { SsmParameter } from '@cdktf/provider-aws/lib/ssm-parameter';
 
 import { toSsmParamName } from '../../../../lib/aws/ssm';
 import {
+  SSM_PARAM_NAME_PROTECTED_STATUS,
   SSM_PARAM_NAME_ROOT_DOMAIN_NAME,
   SSM_PARAM_NAME_SOM_VERSION,
   SSM_PARAM_NAME_WEBMASTER_EMAIL,
@@ -69,5 +70,17 @@ export async function build(siteStack: SiteStack): Promise<DomainParametersResou
     tags: _somTags(siteStack),
   });
 
-  return [ssm1, ssm2, ssm3, ssm4, ssm5];
+  const ssm6 = new SsmParameter(siteStack, 'SsmProtectedStatus', {
+    type: 'String',
+    name: toSsmParamName(
+      siteStack.siteProps.config,
+      siteStack.siteProps.context.somId,
+      SSM_PARAM_NAME_PROTECTED_STATUS
+    ),
+    value: siteStack.siteProps.protected ? 'true' : 'false',
+    provider: siteStack.providerManifestRegion,
+    tags: _somTags(siteStack),
+  });
+
+  return [ssm1, ssm2, ssm3, ssm4, ssm5, ssm6];
 }

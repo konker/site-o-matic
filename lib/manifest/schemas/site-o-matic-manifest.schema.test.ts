@@ -24,7 +24,7 @@ describe('site-o-matic-manifest-schema', () => {
     expect(validation.success).toEqual(true);
     expect(validation.data).toStrictEqual({
       domainName: 'minimal-example.com',
-      locked: false,
+      protected: false,
       webHosting: [
         {
           originPath: '/www',

@@ -6,7 +6,6 @@ import {
   SSM_PARAM_NAME_DOMAIN_PUBLISHER_USER_NAME,
   SSM_PARAM_NAME_DOMAIN_USER_USER_NAME,
   SSM_PARAM_NAME_HOSTED_ZONE_ID,
-  SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS,
   SSM_PARAM_NAME_IS_AWS_ROUTE53_REGISTERED_DOMAIN,
   SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN,
   SSM_PARAM_NAME_PROTECTED_STATUS,
@@ -17,8 +16,8 @@ import type { Facts } from './index';
 import { is, isNonZero, isNot, rulesEngineFactory } from './index';
 
 export const SOM_FACTS_NAMES = [
-  'lockedManifest',
-  'lockedSsm',
+  'protectedManifest',
+  'protectedSsm',
   'hasDomainUserUserNameParam',
   'hasDomainPublisherUserNameParam',
   'isBootstrapped',
@@ -62,8 +61,8 @@ export type SomFactNames = typeof SOM_FACTS_NAMES;
 export type SomFacts = Facts<SomFactNames>;
 
 export const siteOMaticRules = rulesEngineFactory<SomFactNames, SomContext>({
-  lockedManifest: async (_facts, context) => context.manifest?.locked === true,
-  lockedSsm: async (_facts, context) => getContextParam(context, SSM_PARAM_NAME_PROTECTED_STATUS) === 'true',
+  protectedManifest: async (_facts, context) => context.manifest?.protected === true,
+  protectedSsm: async (_facts, context) => getContextParam(context, SSM_PARAM_NAME_PROTECTED_STATUS) === 'true',
   hasDomainUserUserNameParam: async (_facts, context) =>
     is(getContextParam(context, SSM_PARAM_NAME_DOMAIN_USER_USER_NAME)),
   hasDomainPublisherUserNameParam: async (_facts, context) =>
@@ -71,8 +70,7 @@ export const siteOMaticRules = rulesEngineFactory<SomFactNames, SomContext>({
   isBootstrapped: async (facts, _context) =>
     is(facts.hasDomainUserUserNameParam) && is(facts.hasDomainPublisherUserNameParam),
 
-  hasHostedZoneIdParam: async (_facts, context) =>
-    is(getContextParam(context, SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS)),
+  hasHostedZoneIdParam: async (_facts, context) => is(getContextParam(context, SSM_PARAM_NAME_HOSTED_ZONE_ID)),
   hasHostedZoneNameServers: async (_facts, context) => is(context.hostedZoneNameservers),
   hasHostedZoneAttributes: async (_facts, context) => is(context.hostedZoneAttributes),
   hasDnsResolvedNameservers: async (_facts, context) => is(context.dnsResolvedNameserverRecords),

@@ -81,6 +81,7 @@ export async function build(
         enabled: true,
         isIpv6Enabled: true,
         priceClass: 'PriceClass_100',
+        comment: webHostingSpec.domainName,
         domainNames: [webHostingSpec.domainName],
         origin: [
           {
@@ -101,25 +102,29 @@ export async function build(
           acmCertificateArn: certificateResources.certificate.arn,
           sslSupportMethod: 'sni-only',
         },
-        defaultCacheBehavior: {
-          targetOriginId: `originId-${localIdPostfix}`,
-          allowedMethods: ['GET', 'HEAD', 'OPTIONS', 'PUT', 'PATCH', 'POST', 'DELETE'],
-          cachedMethods: [],
-          viewerProtocolPolicy: 'redirect-to-https',
-          responseHeadersPolicyId: cloudfrontSubResources.responseHeadersPolicy.id,
-          cachePolicyId: cloudfrontSubResources.cachePolicy.id,
-          originRequestPolicy: cloudfrontSubResources.originRequestPolicyHttps,
-          compress: true,
-        },
+        defaultCacheBehavior: Object.assign(
+          {
+            targetOriginId: `originId-${localIdPostfix}`,
+            allowedMethods: ['GET', 'HEAD', 'OPTIONS', 'PUT', 'PATCH', 'POST', 'DELETE'],
+            cachedMethods: [],
+            viewerProtocolPolicy: 'redirect-to-https',
+            responseHeadersPolicyId: cloudfrontSubResources.responseHeadersPolicy.id,
+            cachePolicyId: cloudfrontSubResources.cachePolicy.id,
+            originRequestPolicy: cloudfrontSubResources.originRequestPolicyHttps,
+            compress: true,
+          },
+          cloudfrontFunctionsResources.functions.length > 0
+            ? {
+                functionAssociation: cloudfrontFunctionsResources.functions.map(
+                  ([cfFunction, cfFunctionEventType]) => ({
+                    functionArn: cfFunction.arn,
+                    eventType: cfFunctionEventType,
+                  })
+                ),
+              }
+            : {}
+        ),
       },
-      cloudfrontFunctionsResources.functions.length > 0
-        ? {
-            functionAssociations: cloudfrontFunctionsResources.functions.map(([cfFunction, cfFunctionEventType]) => ({
-              function: cfFunction,
-              eventType: cfFunctionEventType,
-            })),
-          }
-        : {},
       wafResources.wafEnabled && wafResources.wafAcl ? { webAclId: wafResources.wafAcl.arn } : {},
       {
         provider: siteStack.providerManifestRegion,

@@ -22,7 +22,7 @@ exports[`site-o-matic-manifest-schema should validate a complete example 1`] = `
       ],
     },
   ],
-  "locked": false,
+  "protected": false,
   "notifications": {
     "noSubscription": false,
     "subscriptionEmail": "webmaster+{{context.manifest.rootDomainName}}@example.com",

@@ -25,7 +25,7 @@ export async function build(siteResourcesStack: SiteStack, localIdPostfix: strin
     siteResourcesStack,
     `SecurityHeadersResponseHeaderPolicy-${localIdPostfix}`,
     {
-      name: 'SSS',
+      name: `SecurityHeadersResponseHeaderPolicy-${localIdPostfix}`,
       securityHeadersConfig: {
         contentSecurityPolicy: {
           override: true,

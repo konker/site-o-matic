@@ -76,9 +76,9 @@ export function actionInfo(vorpal: Vorpal, config: SiteOMaticConfig, state: SomG
           noSubscription: context.manifest.notifications?.noSubscription ?? false,
           subscriptionEmail: context.manifest.notifications?.subscriptionEmail ?? context.webmasterEmail,
         },
-        locked: {
-          lockedManifest: facts.lockedManifest,
-          lockedSsm: facts.lockedSsm,
+        protected: {
+          protectedManifest: facts.protectedManifest,
+          protectedSsm: facts.protectedSsm,
         },
         pathToManifestFile: { Param: 'pathToManifestFile', Value: context.pathToManifestFile ?? UNKNOWN },
         manifestHash: { Param: 'manifestHash', Value: context.manifestHash ?? UNKNOWN },

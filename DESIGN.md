@@ -4,8 +4,25 @@
 
 Port of site-o-matic to cdktf (from standard cdk)
 
+## TODO
+
+- Unit tests for everything
+- Documentation
+  - konker.dev
+
+## To Test
+
+- Check SNS topic
+- Check SNS topic subscription
+- Set up CI with access key and see if it works
+- Check HTTPS Cf deployment
+- Check destroy
+- Refactor action code files to match, e.g. listSites -> sitesList [?]
+
 ## Strategy for Port
 
+- Check subdomains
+- Other deployment regions
 - Content upload flip-flopping (upload/delete)
 - Access key + secrets
 - S3 bucket block public access all

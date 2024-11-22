@@ -132,15 +132,15 @@ export function renderInfoSpec(infoSpec: SomInfoSpec): string {
       */
       .concat([
         {
-          Param: chalk.bold(chalk.white('locked')),
+          Param: chalk.bold(chalk.white('protected')),
           Value: `SSM: ${
-            infoSpec.locked.lockedSsm === infoSpec.locked.lockedManifest
-              ? chalk.green(infoSpec.locked.lockedSsm)
-              : chalk.red(infoSpec.locked.lockedSsm)
+            infoSpec.protected.protectedSsm === infoSpec.protected.protectedManifest
+              ? chalk.green(infoSpec.protected.protectedSsm)
+              : chalk.red(infoSpec.protected.protectedSsm)
           } / Manifest: ${
-            infoSpec.locked.lockedManifest === infoSpec.locked.lockedSsm
-              ? chalk.green(infoSpec.locked.lockedManifest)
-              : chalk.red(infoSpec.locked.lockedManifest)
+            infoSpec.protected.protectedManifest === infoSpec.protected.protectedSsm
+              ? chalk.green(infoSpec.protected.protectedManifest)
+              : chalk.red(infoSpec.protected.protectedManifest)
           }`,
         },
         infoSpec.pathToManifestFile,

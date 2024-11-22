@@ -1,7 +1,7 @@
 import type Vorpal from 'vorpal';
 
 import type { ExecProcResponse } from './proc';
-import { execProc } from './proc';
+import { spawnProc } from './proc';
 
 export async function cdkExec(
   vorpal: Vorpal,
@@ -13,7 +13,7 @@ export async function cdkExec(
   extraArgs: Array<string> = []
 ): Promise<ExecProcResponse> {
   if (!somId) return [1, []];
-  return execProc(
+  return spawnProc(
     (s) => vorpal.log(s),
     'pnpm',
     ['cdktf', cdkCmd]

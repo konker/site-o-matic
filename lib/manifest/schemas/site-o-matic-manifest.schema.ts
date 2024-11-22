@@ -272,7 +272,7 @@ export const SiteOMaticManifest = z
     extraDnsConfig: ExtraDnsClause.optional(),
     webmasterEmail: z.string().email().optional(),
     registrar: z.enum(['aws-route53', 'dynadot']).optional(),
-    locked: z.boolean().optional(),
+    protected: z.boolean().optional(),
 
     webHostingDefaults: WebHostingDefaultsClause.optional(),
     webHosting: z.array(WebHostingClause).optional(),
@@ -294,7 +294,7 @@ export const SiteOMaticManifest = z
     return {
       ...x,
       region: x.region ?? DEFAULT_CERTIFICATE_REGION,
-      locked: x.locked ?? false,
+      protected: x.protected ?? false,
       webHostingDefaults,
       webHosting: (x.webHosting && x.webHosting.length > 0
         ? x.webHosting.map(applyWebHostingDefaults)

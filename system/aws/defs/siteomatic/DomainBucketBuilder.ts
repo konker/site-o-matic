@@ -42,6 +42,7 @@ export async function build(siteStack: SiteStack): Promise<DomainBucketResources
   const bucketName = `wwwbucket-${siteStack.siteProps.context.somId}`;
   const domainBucket = new S3Bucket(siteStack, 'DomainBucket', {
     bucket: bucketName,
+    forceDestroy: siteStack.siteProps.context.manifest.protected,
     provider: siteStack.providerManifestRegion,
     tags: _somTags(siteStack),
   });
@@ -51,6 +52,7 @@ export async function build(siteStack: SiteStack): Promise<DomainBucketResources
     versioningConfiguration: {
       status: 'Disabled',
     },
+    provider: siteStack.providerManifestRegion,
   });
 
   const domainBucketServerSideEncryptionConfiguration = new S3BucketServerSideEncryptionConfigurationA(
@@ -70,7 +72,7 @@ export async function build(siteStack: SiteStack): Promise<DomainBucketResources
   );
 
   siteStack.domainUserPolicyDocuments.push(
-    new DataAwsIamPolicyDocument(siteStack, 'DomainBucketPolicyDocument', {
+    new DataAwsIamPolicyDocument(siteStack, 'DomainUserBucketPolicyDocument', {
       statement: [
         {
           effect: 'Allow',

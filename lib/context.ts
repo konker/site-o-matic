@@ -14,6 +14,7 @@ import { calculateDomainHash, formulateSomId } from './index';
 import type { SiteOMaticManifest } from './manifest/schemas/site-o-matic-manifest.schema';
 import { getRegistrarConnector } from './registrar';
 import type { SomFacts } from './rules/site-o-matic.rules';
+import { siteOMaticRules } from './rules/site-o-matic.rules';
 import * as secrets from './secrets';
 import { getAllSomSecrets } from './secrets';
 import type { HasManifest, HasNetworkDerived, SomContext } from './types';
@@ -178,8 +179,10 @@ export async function loadContext(
   manifest: SiteOMaticManifest,
   manifestHash: string
 ): Promise<HasNetworkDerived<SomContext>> {
-  return refreshContextPass1(
+  const contextPass1 = await refreshContextPass1(
     config,
     manifestDerivedProps(config, DEFAULT_INITIAL_CONTEXT, pathToManifestFile, cdkCommand, manifest, manifestHash)
   );
+  const facts = await siteOMaticRules(contextPass1);
+  return refreshContextPass2(contextPass1, facts);
 }

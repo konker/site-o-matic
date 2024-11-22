@@ -27,7 +27,7 @@ export type SiteStackProps = {
   readonly config: SiteOMaticConfig;
   readonly context: HasNetworkDerived<SomContext>;
   readonly facts: SomFacts;
-  readonly locked: boolean;
+  readonly protected: boolean;
   readonly description: string;
   readonly contextParams: Record<string, string>;
   readonly env: Record<string, string>;
@@ -149,9 +149,9 @@ export type SomInfoSpec = {
     readonly noSubscription: boolean;
     readonly subscriptionEmail: string | undefined;
   };
-  readonly locked: {
-    readonly lockedManifest: boolean;
-    readonly lockedSsm: boolean;
+  readonly protected: {
+    readonly protectedManifest: boolean;
+    readonly protectedSsm: boolean;
   };
   readonly pathToManifestFile: SomParam;
   readonly manifestHash: SomParam;

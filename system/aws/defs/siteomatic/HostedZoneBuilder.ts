@@ -1,3 +1,4 @@
+import { DataAwsRoute53Zone } from '@cdktf/provider-aws/lib/data-aws-route53-zone';
 import { Route53Record } from '@cdktf/provider-aws/lib/route53-record';
 import { Route53Zone } from '@cdktf/provider-aws/lib/route53-zone';
 import { SsmParameter } from '@cdktf/provider-aws/lib/ssm-parameter';
@@ -16,7 +17,7 @@ import type { SiteStack } from './SiteStack';
 
 // ----------------------------------------------------------------------
 export type HostedZoneResources = {
-  readonly hostedZone: Route53Zone;
+  readonly hostedZone: Route53Zone | DataAwsRoute53Zone;
   readonly verificationRecord: Route53Record;
   readonly ssmParams: Array<SsmParameter>;
 };
@@ -43,21 +44,24 @@ export async function build(siteStack: SiteStack): Promise<HostedZoneResources> 
 
   // ----------------------------------------------------------------------
   // DNS HostedZone
-  const hostedZone = new Route53Zone(
-    siteStack,
-    _id('HostedZone', siteStack.siteProps.context.rootDomainName),
-    hostedZoneAttributes
-      ? {
-          ...hostedZoneAttributes,
-          provider: siteStack.providerManifestRegion,
-          tags: _somTags(siteStack),
-        }
-      : {
+  // If it already exists because the domain was registered via Route53,
+  // then load it into a Data construct. Otherwise create a new HostedZone.
+  const hostedZone = hostedZoneAttributes
+    ? new DataAwsRoute53Zone(siteStack, _id('HostedZone', siteStack.siteProps.context.rootDomainName), {
+        ...hostedZoneAttributes,
+        provider: siteStack.providerManifestRegion,
+        tags: _somTags(siteStack),
+      })
+    : new Route53Zone(
+        siteStack,
+        _id('HostedZone', siteStack.siteProps.context.rootDomainName),
+
+        {
           name: siteStack.siteProps.context.rootDomainName,
           provider: siteStack.providerManifestRegion,
           tags: _somTags(siteStack),
         }
-  );
+      );
 
   // ----------------------------------------------------------------------
   // Internal validation resource
@@ -107,7 +111,7 @@ export async function build(siteStack: SiteStack): Promise<HostedZoneResources> 
         siteStack.siteProps.context.somId,
         SSM_PARAM_NAME_IS_AWS_ROUTE53_REGISTERED_DOMAIN
       ),
-      value: siteStack.siteProps.context.manifest.registrar === REGISTRAR_ID_AWS_ROUTE53 ? 'true' : 'false',
+      value: siteStack.siteProps.facts.isAwsRoute53RegisteredDomain ? 'true' : 'false',
       provider: siteStack.providerManifestRegion,
       tags: _somTags(siteStack),
     }

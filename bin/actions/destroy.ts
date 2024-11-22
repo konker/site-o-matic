@@ -23,14 +23,6 @@ export function actionDestroy(vorpal: Vorpal, config: SiteOMaticConfig, state: S
     }
 
     const facts = await siteOMaticRules(state.context);
-    /*[XXX]
-    const username = args.username ?? getContextParam(state.context, SSM_PARAM_NAME_DOMAIN_USER_NAME);
-    if (!username) {
-      const errorMessage = `ERROR: no username was resolved`;
-      verror(vorpal, state, errorMessage);
-      return;
-    }
-    */
 
     const response = state.yes
       ? { confirm: 'y' }
@@ -40,8 +32,8 @@ export function actionDestroy(vorpal: Vorpal, config: SiteOMaticConfig, state: S
           message: chalk.red(`Are you sure you want to destroy site: ${chalk.bold(state.context.somId)}? [y/N] `),
         });
     if (response.confirm === 'y') {
-      // Check that the SSM locked status is set to 'false'
-      if (!facts.lockedSsm) {
+      // Check that the SSM protected status is set to 'false'
+      if (!facts.protectedSsm) {
         await removeVerificationCnameRecords(
           config,
           state.context.manifest.region,
@@ -71,7 +63,7 @@ export function actionDestroy(vorpal: Vorpal, config: SiteOMaticConfig, state: S
         }
       } else {
         const errorMessage =
-          "Deployed locked status is not set to 'false', cannot proceed.\nSet the protected property to `true` in the manifest and re-deploy.";
+          "Deployed protected status is not set to 'false', cannot proceed.\nSet the protected property to `true` in the manifest and re-deploy.";
         verror(vorpal, state, errorMessage);
       }
     } else {

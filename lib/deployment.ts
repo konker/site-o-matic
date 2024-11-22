@@ -138,6 +138,18 @@ export async function preDeploymentCheck(
     checkItems.push(checkPassed('WebHosting unique domain names'));
   }
 
+  if (
+    context.manifest?.webHosting &&
+    context.manifest.webHosting.length !==
+      new Set(context.manifest.webHosting.filter((x) => x.type !== WEB_HOSTING_TYPE_NONE).map((x) => x.originPath)).size
+  ) {
+    checkItems.push(
+      checkFailed('WebHosting unique domain names', 'WebHosting clauses must have unique originPath properties')
+    );
+  } else {
+    checkItems.push(checkPassed('WebHosting unique originPaths'));
+  }
+
   if (context.manifest?.webHosting) {
     if (
       context.manifest.webHosting

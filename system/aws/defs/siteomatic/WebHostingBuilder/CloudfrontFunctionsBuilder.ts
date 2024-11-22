@@ -44,7 +44,7 @@ export async function build(
         });
 
         const func = new CloudfrontFunction(siteStack, `CloudFrontFunction-${cfFunctionId}-${localIdPostfix}`, {
-          name: `${cfFunctionId}-function-for-${normalizeDomainName(webHostingSpec.domainName, 20)}`,
+          name: `${cfFunctionId}-function-for-${normalizeDomainName(webHostingSpec.domainName, 0, 20)}`,
           runtime: 'cloudfront-js-2.0',
           code: Fn.file(asset.path),
           provider: siteStack.providerManifestRegion,

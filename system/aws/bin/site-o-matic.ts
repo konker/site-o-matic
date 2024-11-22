@@ -55,7 +55,7 @@ async function main(): Promise<void> {
     config,
     context,
     facts,
-    locked: context.manifest.locked ?? false,
+    protected: context.manifest.protected ?? false,
     contextParams,
     description: `Site-o-Matic Stack for ${context.manifest.domainName}`,
     env: {},

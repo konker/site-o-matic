@@ -1,8 +1,9 @@
+import * as path from 'node:path';
+
 import type { CloudfrontDistributionCustomErrorResponse } from '@cdktf/provider-aws/lib/cloudfront-distribution';
 import { CloudfrontDistribution } from '@cdktf/provider-aws/lib/cloudfront-distribution';
 import { DataAwsIamPolicyDocument } from '@cdktf/provider-aws/lib/data-aws-iam-policy-document';
 import { Route53Record } from '@cdktf/provider-aws/lib/route53-record';
-import { S3BucketPolicy } from '@cdktf/provider-aws/lib/s3-bucket-policy';
 import { SsmParameter } from '@cdktf/provider-aws/lib/ssm-parameter';
 
 import { toSsmParamName } from '../../../../../lib/aws/ssm';
@@ -32,7 +33,6 @@ import * as WafBuilder from './WafBuilder';
 // ----------------------------------------------------------------------
 export type S3CloudfrontDistributionResources = {
   readonly cloudfrontDistribution: CloudfrontDistribution;
-  readonly s3BucketCloudfrontAccessPolicy: S3BucketPolicy;
   readonly cloudfrontFunctionsResources: CloudfrontFunctionsResources;
   readonly wafResources: WafBuilder.WafResources;
   readonly dnsRecords: Array<Route53Record>;
@@ -96,6 +96,7 @@ export async function build(
         enabled: true,
         isIpv6Enabled: true,
         priceClass: 'PriceClass_100',
+        comment: webHostingSpec.domainName,
         domainNames: [webHostingSpec.domainName],
         aliases: [webHostingSpec.domainName],
         defaultRootObject: webHostingSpec.defaultRootObject ?? webHostingDefaults.defaultRootObject,
@@ -114,19 +115,31 @@ export async function build(
             */
           },
         ],
-        defaultCacheBehavior: {
-          targetOriginId: siteStack.domainBucketResources.domainBucket.id,
-          allowedMethods: ['GET', 'HEAD', 'OPTIONS'],
-          cachedMethods: ['GET', 'HEAD', 'OPTIONS'],
-          viewerProtocolPolicy: 'redirect-to-https',
-          responseHeadersPolicyId: cloudfrontSubResources.responseHeadersPolicy.id,
-          cachePolicyId: cloudfrontSubResources.cachePolicy.id,
-          originRequestPolicy: cloudfrontSubResources.originRequestPolicyS3,
-          compress: true,
-          minTtl: 0,
-          defaultTtl: 0,
-          maxTtl: 0,
-        },
+        defaultCacheBehavior: Object.assign(
+          {
+            targetOriginId: siteStack.domainBucketResources.domainBucket.id,
+            allowedMethods: ['GET', 'HEAD', 'OPTIONS'],
+            cachedMethods: ['GET', 'HEAD', 'OPTIONS'],
+            viewerProtocolPolicy: 'redirect-to-https',
+            responseHeadersPolicyId: cloudfrontSubResources.responseHeadersPolicy.id,
+            cachePolicyId: cloudfrontSubResources.cachePolicy.id,
+            originRequestPolicy: cloudfrontSubResources.originRequestPolicyS3,
+            compress: true,
+            minTtl: 0,
+            defaultTtl: 0,
+            maxTtl: 0,
+          },
+          cloudfrontFunctionsResources.functions.length > 0
+            ? {
+                functionAssociation: cloudfrontFunctionsResources.functions.map(
+                  ([cfFunction, cfFunctionEventType]) => ({
+                    functionArn: cfFunction.arn,
+                    eventType: cfFunctionEventType,
+                  })
+                ),
+              }
+            : {}
+        ),
         restrictions: {
           geoRestriction: {
             restrictionType: 'none',
@@ -138,14 +151,6 @@ export async function build(
           minimumProtocolVersion: 'TLSv1.2_2021',
         },
       },
-      cloudfrontFunctionsResources.functions.length > 0
-        ? {
-            functionAssociations: cloudfrontFunctionsResources.functions.map(([cfFunction, cfFunctionEventType]) => ({
-              function: cfFunction,
-              eventType: cfFunctionEventType,
-            })),
-          }
-        : {},
       wafResources.wafEnabled && wafResources.wafAcl ? { webAclId: wafResources.wafAcl.arn } : {},
       {
         provider: siteStack.providerManifestRegion,
@@ -156,36 +161,30 @@ export async function build(
 
   // ----------------------------------------------------------------------
   // Permissions
-  const s3BucketCloudfrontAccessPolicy = new S3BucketPolicy(
-    siteStack,
-    `s3BucketCloudfrontAccessPolicy-${localIdPostfix}`,
-    {
-      bucket: siteStack.domainBucketResources.domainBucket.id,
-      policy: new DataAwsIamPolicyDocument(siteStack, `s3BucketCloudfrontAccessPolicyDocument-${localIdPostfix}`, {
-        statement: [
-          {
-            effect: 'Allow',
-            actions: ['s3:GetObject'],
-            principals: [
-              {
-                identifiers: ['cloudfront.amazonaws.com'],
-                type: 'Service',
-              },
-            ],
-            resources: [`${siteStack.domainBucketResources.domainBucket.arn}/*`],
-            condition: [
-              {
-                test: 'StringEquals',
-                variable: 'AWS:SourceArn',
-                values: [cloudfrontDistribution.arn],
-              },
-            ],
-          },
-        ],
-        provider: siteStack.providerManifestRegion,
-      }).json,
+  siteStack.domainBucketPolicyDocuments.push(
+    new DataAwsIamPolicyDocument(siteStack, `s3BucketCloudfrontAccessPolicyDocument-${localIdPostfix}`, {
+      statement: [
+        {
+          effect: 'Allow',
+          actions: ['s3:GetObject'],
+          principals: [
+            {
+              identifiers: ['cloudfront.amazonaws.com'],
+              type: 'Service',
+            },
+          ],
+          resources: [`${siteStack.domainBucketResources.domainBucket.arn}/*`],
+          condition: [
+            {
+              test: 'StringEquals',
+              variable: 'AWS:SourceArn',
+              values: [cloudfrontDistribution.arn],
+            },
+          ],
+        },
+      ],
       provider: siteStack.providerManifestRegion,
-    }
+    })
   );
 
   // ----------------------------------------------------------------------
@@ -237,8 +236,8 @@ export async function build(
     const siteContentDeps = await SiteContentLoader.load(siteStack, webHostingSpec);
     if (siteContentDeps.siteContentTmpDirPath) {
       await awsCliS3CpDirectory(
-        siteContentDeps.siteContentTmpDirPath,
-        `s3://${getContextParam(siteStack.siteProps.context, SSM_PARAM_NAME_DOMAIN_BUCKET_NAME)}`
+        `${siteContentDeps.siteContentTmpDirPath}/*`,
+        `s3://${getContextParam(siteStack.siteProps.context, SSM_PARAM_NAME_DOMAIN_BUCKET_NAME)}/${path.relative('/', webHostingSpec.originPath ?? webHostingDefaults.originPath)}`
       );
     }
   }
@@ -275,7 +274,6 @@ export async function build(
 
   return {
     cloudfrontDistribution,
-    s3BucketCloudfrontAccessPolicy,
     cloudfrontFunctionsResources,
     wafResources,
     dnsRecords: [dns1, dns2],

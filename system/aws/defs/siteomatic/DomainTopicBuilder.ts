@@ -1,5 +1,6 @@
 import { DataAwsIamPolicyDocument } from '@cdktf/provider-aws/lib/data-aws-iam-policy-document';
 import { SnsTopic } from '@cdktf/provider-aws/lib/sns-topic';
+import { SnsTopicSubscription } from '@cdktf/provider-aws/lib/sns-topic-subscription';
 import { SsmParameter } from '@cdktf/provider-aws/lib/ssm-parameter';
 
 import { toSsmParamName } from '../../../../lib/aws/ssm';
@@ -13,6 +14,7 @@ import type { SiteStack } from './SiteStack';
 // ----------------------------------------------------------------------
 export type DomainTopicResources = {
   readonly domainTopic: SnsTopic;
+  readonly domainTopicSubscription: SnsTopicSubscription | undefined;
   readonly ssmParams: Array<SsmParameter>;
 };
 
@@ -44,6 +46,18 @@ export async function build(siteStack: SiteStack): Promise<DomainTopicResources>
   );
 
   // ----------------------------------------------------------------------
+  // SNS topic subscription
+  const domainTopicSubscription =
+    siteStack.siteProps.context.webmasterEmail && siteStack.siteProps.facts.shouldSubscribeEmailToNotificationsSnsTopic
+      ? new SnsTopicSubscription(siteStack, 'NotificationsSnsTopicSubscription', {
+          topicArn: domainTopic.arn,
+          protocol: 'email',
+          endpoint: siteStack.siteProps.context.webmasterEmail,
+          provider: siteStack.providerManifestRegion,
+        })
+      : undefined;
+
+  // ----------------------------------------------------------------------
   // SSM Params
   const ssm1 = new SsmParameter(siteStack, 'SsmSnsTopicName', {
     type: 'String',
@@ -71,6 +85,7 @@ export async function build(siteStack: SiteStack): Promise<DomainTopicResources>
 
   return {
     domainTopic,
+    domainTopicSubscription,
     ssmParams: [ssm1, ssm2],
   };
 }

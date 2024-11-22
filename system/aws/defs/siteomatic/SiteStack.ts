@@ -8,6 +8,7 @@ import cloneDeep from 'lodash.clonedeep';
 import { DEFAULT_CERTIFICATE_REGION, WEB_HOSTING_TYPE_NONE } from '../../../../lib/consts';
 import type { SiteStackProps } from '../../../../lib/types';
 import * as DomainBucketBuilder from './DomainBucketBuilder';
+import * as DomainBucketPermissionsBuilder from './DomainBucketPermissionsBuilder';
 import * as DomainParametersBuilder from './DomainParametersBuilder';
 import * as DomainTopicBuilder from './DomainTopicBuilder';
 import * as DomainUserBuilder from './DomainUserBuilder';
@@ -24,6 +25,7 @@ export class SiteStack extends TerraformStack {
   public readonly providerCertificateRegion: AwsProvider;
   public readonly providerLocal: LocalProvider;
   public readonly domainUserPolicyDocuments: Array<DataAwsIamPolicyDocument>;
+  public readonly domainBucketPolicyDocuments: Array<DataAwsIamPolicyDocument>;
 
   public domainUserResources: DomainUserBuilder.DomainUserResources | undefined;
   public domainParametersResources: DomainParametersBuilder.DomainParametersResources | undefined;
@@ -33,6 +35,7 @@ export class SiteStack extends TerraformStack {
   public domainTopicResources: DomainTopicBuilder.DomainTopicResources | undefined;
   public webHostingResourcesList: Array<WebHostingBuilder.WebHostingResources> | undefined;
   public domainUserPermissionsResources: DomainUserPermissionsBuilder.DomainUserPermissionsResources | undefined;
+  public domainBucketPermissionsResources: DomainBucketPermissionsBuilder.DomainBucketPermissionsResources | undefined;
 
   constructor(scope: Construct, props: SiteStackProps) {
     super(scope, props.context.somId);
@@ -56,6 +59,7 @@ export class SiteStack extends TerraformStack {
     });
 
     this.domainUserPolicyDocuments = [];
+    this.domainBucketPolicyDocuments = [];
   }
 
   async build() {
@@ -75,6 +79,7 @@ export class SiteStack extends TerraformStack {
       );
     }
     this.domainUserPermissionsResources = await DomainUserPermissionsBuilder.build(this);
+    this.domainBucketPermissionsResources = await DomainBucketPermissionsBuilder.build(this);
 
     console.log(`Generated SiteStack [${this.siteProps.context.somId}]`);
   }
