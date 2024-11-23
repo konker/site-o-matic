@@ -1,5 +1,7 @@
 // ----------------------------------------------------------------------
 import {
+  WEB_HOSTING_TYPE_CLOUDFRONT_HTTPS,
+  WEB_HOSTING_TYPE_CLOUDFRONT_S3,
   WEB_HOSTING_VIEWER_REQUEST_BASIC_AUTH_FUNCTION_PRODUCER_ID,
   WEB_HOSTING_VIEWER_REQUEST_DIR_DEFAULT_FUNCTION_PRODUCER_ID,
   WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID,
@@ -11,11 +13,40 @@ import { getFunctionProducer } from '../../../../../lib/edge';
 import type { WebHostingClauseWithResources } from '../../../../../lib/manifest/schemas/site-o-matic-manifest.schema';
 import type { SecretsSetCollection } from '../../../../../lib/secrets/types';
 import type { SiteStack } from '../SiteStack';
+import type { CloudfrontFunctionEventType } from './CloudfrontFunctionsBuilder';
+import {
+  CLOUDFRONT_FUNCTION_EVENT_TYPE_VIEWER_REQUEST,
+  CLOUDFRONT_FUNCTION_EVENT_TYPE_VIEWER_RESPONSE,
+} from './CloudfrontFunctionsBuilder';
 
 export type CloudfrontFunctionsLoaderResources = {
   readonly cfFunctionViewerRequestTmpFilePath: string | undefined;
   readonly cfFunctionViewerResponseTmpFilePath: string | undefined;
 };
+
+// ----------------------------------------------------------------------
+export function resolveBaseSubComponentIds(
+  cfFunctionEvenType: CloudfrontFunctionEventType,
+  webHostingSpec: WebHostingClauseWithResources
+): ReadonlyArray<SomFunctionFragmentProducerDef<unknown>> {
+  switch (cfFunctionEvenType) {
+    case CLOUDFRONT_FUNCTION_EVENT_TYPE_VIEWER_REQUEST:
+      switch (webHostingSpec.type) {
+        case WEB_HOSTING_TYPE_CLOUDFRONT_S3:
+          return [{ id: WEB_HOSTING_VIEWER_REQUEST_DIR_DEFAULT_FUNCTION_PRODUCER_ID, spec: undefined }];
+        case WEB_HOSTING_TYPE_CLOUDFRONT_HTTPS:
+          return [];
+      }
+      break;
+    case CLOUDFRONT_FUNCTION_EVENT_TYPE_VIEWER_RESPONSE:
+      switch (webHostingSpec.type) {
+        case WEB_HOSTING_TYPE_CLOUDFRONT_S3:
+        case WEB_HOSTING_TYPE_CLOUDFRONT_HTTPS:
+          return [];
+      }
+      break;
+  }
+}
 
 // ----------------------------------------------------------------------
 export async function load(
@@ -29,8 +60,10 @@ export async function load(
 
   // ----------------------------------------------------------------------
   // Viewer Request cfFunction
-  const cfFunctionViewerRequestSubComponentIds = ([] as ReadonlyArray<SomFunctionFragmentProducerDef<unknown>>)
-    .concat([{ id: WEB_HOSTING_VIEWER_REQUEST_DIR_DEFAULT_FUNCTION_PRODUCER_ID, spec: undefined }])
+  const cfFunctionViewerRequestSubComponentIds = resolveBaseSubComponentIds(
+    CLOUDFRONT_FUNCTION_EVENT_TYPE_VIEWER_REQUEST,
+    webHostingSpec
+  )
     .concat(
       'redirect' in webHostingSpec && webHostingSpec.redirect
         ? [{ id: WEB_HOSTING_VIEWER_REQUEST_REDIRECT_FUNCTION_PRODUCER_ID, spec: webHostingSpec.redirect }]
@@ -42,33 +75,49 @@ export async function load(
         : []
     );
 
-  const viewerRequestFunctionProducer = getFunctionProducer(
-    WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID,
-    cfFunctionViewerRequestSubComponentIds,
-    siteStack.siteProps.context.somId,
-    secrets,
-    siteStack.siteProps.context.manifest,
-    webHostingSpec
-  );
-  if (!viewerRequestFunctionProducer) throw new Error(`Could not get functionProducer for Cloudfront viewer request`);
+  const cfFunctionViewerRequestTmpFilePath = await (() => {
+    if (cfFunctionViewerRequestSubComponentIds.length === 0) {
+      return undefined;
+    }
 
-  const cfFunctionViewerRequestTmpFilePath = await viewerRequestFunctionProducer();
+    const viewerRequestFunctionProducer = getFunctionProducer(
+      WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID,
+      cfFunctionViewerRequestSubComponentIds,
+      siteStack.siteProps.context.somId,
+      secrets,
+      siteStack.siteProps.context.manifest,
+      webHostingSpec
+    );
+    if (!viewerRequestFunctionProducer) throw new Error(`Could not get functionProducer for Cloudfront viewer request`);
+
+    return viewerRequestFunctionProducer();
+  })();
 
   // ----------------------------------------------------------------------
   // Viewer Response cfFunction
-  const cfFunctionViewerResponseSubComponentIds = [] as ReadonlyArray<SomFunctionFragmentProducerDef<unknown>>;
-
-  const viewerResponseFunctionProducer = getFunctionProducer(
-    WEB_HOSTING_VIEWER_RESPONSE_FUNCTION_PRODUCER_ID,
-    cfFunctionViewerResponseSubComponentIds,
-    siteStack.siteProps.context.somId,
-    secrets,
-    siteStack.siteProps.context.manifest,
+  const cfFunctionViewerResponseSubComponentIds = resolveBaseSubComponentIds(
+    CLOUDFRONT_FUNCTION_EVENT_TYPE_VIEWER_RESPONSE,
     webHostingSpec
   );
-  if (!viewerResponseFunctionProducer) throw new Error(`Could not get functionProducer for Cloudfront viewer response`);
 
-  const cfFunctionViewerResponseTmpFilePath = await viewerResponseFunctionProducer();
+  const cfFunctionViewerResponseTmpFilePath = await (() => {
+    if (cfFunctionViewerResponseSubComponentIds.length === 0) {
+      return undefined;
+    }
+
+    const viewerResponseFunctionProducer = getFunctionProducer(
+      WEB_HOSTING_VIEWER_RESPONSE_FUNCTION_PRODUCER_ID,
+      cfFunctionViewerResponseSubComponentIds,
+      siteStack.siteProps.context.somId,
+      secrets,
+      siteStack.siteProps.context.manifest,
+      webHostingSpec
+    );
+    if (!viewerResponseFunctionProducer)
+      throw new Error(`Could not get functionProducer for Cloudfront viewer response`);
+
+    return viewerResponseFunctionProducer();
+  })();
 
   return {
     cfFunctionViewerRequestTmpFilePath,

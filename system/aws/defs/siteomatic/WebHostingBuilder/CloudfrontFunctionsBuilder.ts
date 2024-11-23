@@ -14,6 +14,12 @@ export type CloudfrontFunctionEventType =
   | typeof CLOUDFRONT_FUNCTION_EVENT_TYPE_VIEWER_RESPONSE;
 
 // ----------------------------------------------------------------------
+export type FunctionProducerId = string;
+export type FunctionTmpFilePath = string;
+
+export type CloudfrontFunctionsTmpFilePathSpec = [FunctionProducerId, FunctionTmpFilePath | undefined];
+
+// ----------------------------------------------------------------------
 export type CloudfrontFunctionsResources = {
   functions: Array<[CloudfrontFunction, CloudfrontFunctionEventType]>;
 };
@@ -23,8 +29,8 @@ export async function build(
   siteStack: SiteStack,
   webHostingSpec: WebHostingClauseWithResources,
   localIdPostfix: string,
-  cfFunctionViewerRequestTmpFilePath: [string, string | undefined],
-  cfFunctionViewerResponseTmpFilePath: [string, string | undefined]
+  cfFunctionViewerRequestTmpFilePathSpec: CloudfrontFunctionsTmpFilePathSpec,
+  cfFunctionViewerResponseTmpFilePathSpec: CloudfrontFunctionsTmpFilePathSpec
 ): Promise<CloudfrontFunctionsResources> {
   if (!siteStack.domainUserResources?.domainUser) {
     throw new Error('[site-o-matic] Could not build cloudfront functions resources when domainUser is missing');
@@ -33,8 +39,12 @@ export async function build(
   // ----------------------------------------------------------------------
   // Cloudfront functions
   const functions = [
-    [...cfFunctionViewerRequestTmpFilePath, CLOUDFRONT_FUNCTION_EVENT_TYPE_VIEWER_REQUEST],
-    [...cfFunctionViewerResponseTmpFilePath, CLOUDFRONT_FUNCTION_EVENT_TYPE_VIEWER_RESPONSE],
+    cfFunctionViewerRequestTmpFilePathSpec[1]
+      ? [...cfFunctionViewerRequestTmpFilePathSpec, CLOUDFRONT_FUNCTION_EVENT_TYPE_VIEWER_REQUEST]
+      : [],
+    cfFunctionViewerResponseTmpFilePathSpec[1]
+      ? [...cfFunctionViewerResponseTmpFilePathSpec, CLOUDFRONT_FUNCTION_EVENT_TYPE_VIEWER_RESPONSE]
+      : [],
   ].reduce(
     (acc, [cfFunctionId, cfFunctionTmpFilePath, cfFunctionEventType]) => {
       if (cfFunctionTmpFilePath) {
@@ -44,7 +54,8 @@ export async function build(
         });
 
         const func = new CloudfrontFunction(siteStack, `CloudFrontFunction-${cfFunctionId}-${localIdPostfix}`, {
-          name: `${cfFunctionId}-function-for-${normalizeDomainName(webHostingSpec.domainName, 0, 20)}`,
+          name: `${cfFunctionId}-${normalizeDomainName(webHostingSpec.domainName, 0, 38)}`,
+          comment: `${cfFunctionId}-${normalizeDomainName(webHostingSpec.domainName, 0, 38)}`,
           runtime: 'cloudfront-js-2.0',
           code: Fn.file(asset.path),
           provider: siteStack.providerManifestRegion,

@@ -12,12 +12,13 @@ Port of site-o-matic to cdktf (from standard cdk)
 
 ## To Test
 
-- No cf functions for https type
-- Check destroy
 - Refactor action code files to match, e.g. listSites -> sitesList [?]
 
 ## Strategy for Port
 
+- No cf functions if subComponentIds.length === 0
+- No cf functions for https type
+- Check destroy
 - Check HTTPS Cf deployment
 - Set up CI with access key and see if it works
 - Check SNS topic

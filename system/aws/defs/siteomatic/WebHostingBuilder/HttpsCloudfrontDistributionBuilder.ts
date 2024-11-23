@@ -120,8 +120,7 @@ export async function build(
             cachePolicyId: cloudfrontSubResources.cachePolicy.id,
             originRequestPolicy: cloudfrontSubResources.originRequestPolicyHttps,
             compress: true,
-          }
-          /*[FIXME]
+          },
           cloudfrontFunctionsResources.functions.length > 0
             ? {
                 functionAssociation: cloudfrontFunctionsResources.functions.map(
@@ -132,7 +131,6 @@ export async function build(
                 ),
               }
             : {}
-          */
         ),
       },
       wafResources.wafEnabled && wafResources.wafAcl ? { webAclId: wafResources.wafAcl.arn } : {},

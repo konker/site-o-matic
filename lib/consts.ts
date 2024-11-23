@@ -63,11 +63,11 @@ export const REDIRECT_IMPL_EDGE_CF_FUNCTION = 'edge-cf-function' as const;
 export const AUTH_TYPE_BASIC_AUTH = 'basic-auth' as const;
 export const AUTH_IMPL_EDGE_CF_FUNCTION = 'edge-cf-function' as const;
 
-export const WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID = 'cf-functions-viewer-request';
-export const WEB_HOSTING_VIEWER_REQUEST_DIR_DEFAULT_FUNCTION_PRODUCER_ID = 'cf-functions-viewer-request-dir-default';
-export const WEB_HOSTING_VIEWER_REQUEST_REDIRECT_FUNCTION_PRODUCER_ID = 'cf-functions-viewer-request-redirect';
-export const WEB_HOSTING_VIEWER_REQUEST_BASIC_AUTH_FUNCTION_PRODUCER_ID = 'cf-functions-viewer-request-basic-auth';
-export const WEB_HOSTING_VIEWER_RESPONSE_FUNCTION_PRODUCER_ID = 'cf-functions-viewer-response';
+export const WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID = 'cf-fns-viewer-request';
+export const WEB_HOSTING_VIEWER_REQUEST_DIR_DEFAULT_FUNCTION_PRODUCER_ID = 'cf-fns-viewer-request-dir-default';
+export const WEB_HOSTING_VIEWER_REQUEST_REDIRECT_FUNCTION_PRODUCER_ID = 'cf-fns-viewer-request-redirect';
+export const WEB_HOSTING_VIEWER_REQUEST_BASIC_AUTH_FUNCTION_PRODUCER_ID = 'cf-fns-viewer-request-basic-auth';
+export const WEB_HOSTING_VIEWER_RESPONSE_FUNCTION_PRODUCER_ID = 'cf-fns-viewer-response';
 
 export const SITE_PIPELINE_TYPE_CODESTAR_S3 = 'codestar-s3' as const;
 export const SITE_PIPELINE_TYPE_CODESTAR_CUSTOM = 'codestar-custom' as const;
