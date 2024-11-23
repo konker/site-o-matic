@@ -7,7 +7,7 @@ import { DEFAULT_SECRETS_SOURCE } from '../../lib/secrets/types';
 import { vtabulate } from '../../lib/ui/logging';
 import type { SomGlobalState } from '../SomGlobalState';
 
-export function actionAddSecret(vorpal: Vorpal, config: SiteOMaticConfig, state: SomGlobalState) {
+export function actionSecretsAdd(vorpal: Vorpal, config: SiteOMaticConfig, state: SomGlobalState) {
   return async (args: Vorpal.Args | string): Promise<void> => {
     if (typeof args === 'string') throw new Error('Error: string args to action');
 

@@ -8,7 +8,7 @@ import type { SomGlobalState } from '../SomGlobalState';
 /**
   @deprecated
 */
-export function actionListUsers(vorpal: Vorpal, config: SiteOMaticConfig, state: SomGlobalState) {
+export function actionUsersList(vorpal: Vorpal, config: SiteOMaticConfig, state: SomGlobalState) {
   return async (_: Vorpal.Args | string): Promise<void> => {
     state.spinner.start();
     const data = await iam.listSomUsers(config, state.context.manifest?.region ?? config.AWS_REGION_CONTROL_PLANE);

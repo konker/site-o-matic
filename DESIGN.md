@@ -10,12 +10,12 @@ Port of site-o-matic to cdktf (from standard cdk)
 - Documentation
   - konker.dev
 
-## To Test
-
-- Refactor action code files to match, e.g. listSites -> sitesList [?]
-
 ## Strategy for Port
 
+- Refactor action code files to match, e.g. listSites -> sitesList [?]
+- Prune old actions
+  - Codestar
+  - keys
 - No cf functions if subComponentIds.length === 0
 - No cf functions for https type
 - Check destroy

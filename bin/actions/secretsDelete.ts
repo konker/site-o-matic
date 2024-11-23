@@ -6,7 +6,7 @@ import * as secrets from '../../lib/secrets';
 import { vtabulate } from '../../lib/ui/logging';
 import type { SomGlobalState } from '../SomGlobalState';
 
-export function actionDeleteSecret(vorpal: Vorpal, config: SiteOMaticConfig, state: SomGlobalState) {
+export function actionSecretsDelete(vorpal: Vorpal, config: SiteOMaticConfig, state: SomGlobalState) {
   return async (args: Vorpal.Args | string): Promise<void> => {
     if (typeof args === 'string') throw new Error('Error: string args to action');
 

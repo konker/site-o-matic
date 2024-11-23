@@ -6,7 +6,7 @@ import { SSM_PARAM_PATH_ROOT_DOMAIN_NAME } from '../../lib/consts';
 import { vtabulate } from '../../lib/ui/logging';
 import type { SomGlobalState } from '../SomGlobalState';
 
-export function actionListSites(vorpal: Vorpal, config: SiteOMaticConfig, state: SomGlobalState) {
+export function actionSitesList(vorpal: Vorpal, config: SiteOMaticConfig, state: SomGlobalState) {
   return async (_: Vorpal.Args | string): Promise<void> => {
     state.spinner.start();
     const data = await ssm.getSsmParams(config, config.AWS_REGION_CONTROL_PLANE, SSM_PARAM_PATH_ROOT_DOMAIN_NAME);

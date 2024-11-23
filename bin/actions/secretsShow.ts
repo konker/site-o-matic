@@ -4,7 +4,7 @@ import type { SiteOMaticConfig } from '../../lib/config/schemas/site-o-matic-con
 import * as secrets from '../../lib/secrets';
 import type { SomGlobalState } from '../SomGlobalState';
 
-export function actionShowSecret(vorpal: Vorpal, config: SiteOMaticConfig, state: SomGlobalState) {
+export function actionSecretsShow(vorpal: Vorpal, config: SiteOMaticConfig, state: SomGlobalState) {
   return async (args: Vorpal.Args | string): Promise<void> => {
     if (typeof args === 'string') throw new Error('Error: string args to action');
 
