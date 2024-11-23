@@ -11,7 +11,7 @@ import { verror, vlog } from '../../lib/ui/logging';
 import { getContextParam } from '../../lib/utils';
 import type { SomGlobalState } from '../SomGlobalState';
 
-export function actionSetNameServersWithRegistrar(vorpal: Vorpal, config: SiteOMaticConfig, state: SomGlobalState) {
+export function actionNameServersSetWithRegistrar(vorpal: Vorpal, config: SiteOMaticConfig, state: SomGlobalState) {
   return async (_: Vorpal.Args | string): Promise<void> => {
     if (!hasManifest(state.context)) {
       const errorMessage = 'ERROR: no manifest loaded';
