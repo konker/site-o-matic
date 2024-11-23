@@ -253,7 +253,7 @@ export async function build(
       webHostingSpec.domainName
     ),
     value: cloudfrontDistribution.id,
-    provider: siteStack.providerCertificateRegion,
+    provider: siteStack.providerControlPlaneRegion,
     tags: _somTags(siteStack),
   });
 
@@ -266,7 +266,7 @@ export async function build(
       webHostingSpec.domainName
     ),
     value: cloudfrontDistribution.domainName,
-    provider: siteStack.providerCertificateRegion,
+    provider: siteStack.providerControlPlaneRegion,
     tags: _somTags(siteStack),
   });
 

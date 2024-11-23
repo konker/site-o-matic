@@ -93,7 +93,7 @@ export async function loadNetworkDerivedContext(
     dnsVerificationTxtRecord,
     connectionStatus,
   ] = await Promise.all([
-    getSsmParams(config, context.manifest.region, ssmBasePath(config, context.somId)),
+    getSsmParams(config, config.AWS_REGION_CONTROL_PLANE, ssmBasePath(config, context.somId)),
     getAllSomSecrets(config, context.manifest.region, context.somId),
     findHostedZoneAttributes(config, context.manifest, context.rootDomainName),
     getNsRecordValuesForDomainName(config, context.manifest, context.rootDomainName),

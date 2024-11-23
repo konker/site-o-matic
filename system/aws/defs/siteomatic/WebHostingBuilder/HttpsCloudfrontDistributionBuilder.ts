@@ -73,6 +73,7 @@ export async function build(
 
   // ----------------------------------------------------------------------
   // Cloudfront distribution
+  console.log('KONK90', webHostingSpec);
   const cloudfrontDistribution = new CloudfrontDistribution(
     siteStack,
     `CloudFrontDistribution-${localIdPostfix}`,
@@ -83,9 +84,16 @@ export async function build(
         priceClass: 'PriceClass_100',
         comment: webHostingSpec.domainName,
         domainNames: [webHostingSpec.domainName],
+        aliases: [webHostingSpec.domainName],
         origin: [
           {
             originId: `originId-${localIdPostfix}`,
+            customOriginConfig: {
+              httpPort: 80,
+              httpsPort: 443,
+              originProtocolPolicy: 'https-only',
+              originSslProtocols: ['TLSv1', 'TLSv1.1', 'TLSv1.2'],
+            },
             domainName: webHostingSpec.url,
             originShield: {
               enabled: false,
@@ -106,13 +114,14 @@ export async function build(
           {
             targetOriginId: `originId-${localIdPostfix}`,
             allowedMethods: ['GET', 'HEAD', 'OPTIONS', 'PUT', 'PATCH', 'POST', 'DELETE'],
-            cachedMethods: [],
+            cachedMethods: ['GET', 'HEAD'],
             viewerProtocolPolicy: 'redirect-to-https',
             responseHeadersPolicyId: cloudfrontSubResources.responseHeadersPolicy.id,
             cachePolicyId: cloudfrontSubResources.cachePolicy.id,
             originRequestPolicy: cloudfrontSubResources.originRequestPolicyHttps,
             compress: true,
-          },
+          }
+          /*[FIXME]
           cloudfrontFunctionsResources.functions.length > 0
             ? {
                 functionAssociation: cloudfrontFunctionsResources.functions.map(
@@ -123,6 +132,7 @@ export async function build(
                 ),
               }
             : {}
+          */
         ),
       },
       wafResources.wafEnabled && wafResources.wafAcl ? { webAclId: wafResources.wafAcl.arn } : {},
@@ -184,7 +194,7 @@ export async function build(
       webHostingSpec.domainName
     ),
     value: cloudfrontDistribution.id,
-    provider: siteStack.providerCertificateRegion,
+    provider: siteStack.providerControlPlaneRegion,
     tags: _somTags(siteStack),
   });
 
@@ -197,7 +207,7 @@ export async function build(
       webHostingSpec.domainName
     ),
     value: cloudfrontDistribution.domainName,
-    provider: siteStack.providerCertificateRegion,
+    provider: siteStack.providerControlPlaneRegion,
     tags: _somTags(siteStack),
   });
 

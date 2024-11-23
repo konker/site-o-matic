@@ -34,7 +34,7 @@ export async function build(siteStack: SiteStack): Promise<DomainParametersResou
     type: 'String',
     name: `/som/site/som-id/${siteStack.siteProps.context.somId}`,
     value: siteStack.siteProps.context.rootDomainName,
-    provider: siteStack.providerManifestRegion,
+    provider: siteStack.providerControlPlaneRegion,
     tags: _somTags(siteStack),
   });
 
@@ -46,7 +46,7 @@ export async function build(siteStack: SiteStack): Promise<DomainParametersResou
       SSM_PARAM_NAME_ROOT_DOMAIN_NAME
     ),
     value: siteStack.siteProps.context.rootDomainName,
-    provider: siteStack.providerManifestRegion,
+    provider: siteStack.providerControlPlaneRegion,
     tags: _somTags(siteStack),
   });
 
@@ -58,7 +58,7 @@ export async function build(siteStack: SiteStack): Promise<DomainParametersResou
         siteStack.siteProps.context.manifest.webmasterEmail ?? siteStack.siteProps.config.WEBMASTER_EMAIL_DEFAULT,
         siteStack.siteProps.context
       ) ?? UNKNOWN,
-    provider: siteStack.providerManifestRegion,
+    provider: siteStack.providerControlPlaneRegion,
     tags: _somTags(siteStack),
   });
 
@@ -66,7 +66,7 @@ export async function build(siteStack: SiteStack): Promise<DomainParametersResou
     type: 'String',
     name: toSsmParamName(siteStack.siteProps.config, siteStack.siteProps.context.somId, SSM_PARAM_NAME_SOM_VERSION),
     value: VERSION,
-    provider: siteStack.providerManifestRegion,
+    provider: siteStack.providerControlPlaneRegion,
     tags: _somTags(siteStack),
   });
 
@@ -78,7 +78,7 @@ export async function build(siteStack: SiteStack): Promise<DomainParametersResou
       SSM_PARAM_NAME_PROTECTED_STATUS
     ),
     value: siteStack.siteProps.protected ? 'true' : 'false',
-    provider: siteStack.providerManifestRegion,
+    provider: siteStack.providerControlPlaneRegion,
     tags: _somTags(siteStack),
   });
 

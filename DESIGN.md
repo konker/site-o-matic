@@ -12,15 +12,16 @@ Port of site-o-matic to cdktf (from standard cdk)
 
 ## To Test
 
-- Check SNS topic
-- Check SNS topic subscription
-- Set up CI with access key and see if it works
-- Check HTTPS Cf deployment
+- No cf functions for https type
 - Check destroy
 - Refactor action code files to match, e.g. listSites -> sitesList [?]
 
 ## Strategy for Port
 
+- Check HTTPS Cf deployment
+- Set up CI with access key and see if it works
+- Check SNS topic
+- Check SNS topic subscription
 - Check subdomains
 - Other deployment regions
 - Content upload flip-flopping (upload/delete)

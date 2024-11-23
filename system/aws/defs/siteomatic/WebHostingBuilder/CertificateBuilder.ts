@@ -71,7 +71,7 @@ export async function build(
       webHostingSpec.domainName
     ),
     value: certificate.arn,
-    provider: siteStack.providerManifestRegion,
+    provider: siteStack.providerControlPlaneRegion,
     tags: _somTags(siteStack),
   });
 

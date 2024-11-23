@@ -80,7 +80,7 @@ export async function build(siteStack: SiteStack): Promise<HostedZoneResources> 
     type: 'String',
     name: toSsmParamName(siteStack.siteProps.config, siteStack.siteProps.context.somId, SSM_PARAM_NAME_HOSTED_ZONE_ID),
     value: hostedZone.zoneId,
-    provider: siteStack.providerManifestRegion,
+    provider: siteStack.providerControlPlaneRegion,
     tags: _somTags(siteStack),
   });
 
@@ -95,7 +95,7 @@ export async function build(siteStack: SiteStack): Promise<HostedZoneResources> 
         SSM_PARAM_NAME_HOSTED_ZONE_NAME_SERVERS
       ),
       value: Fn.join(',', hostedZone.nameServers ?? []),
-      provider: siteStack.providerManifestRegion,
+      provider: siteStack.providerControlPlaneRegion,
       tags: _somTags(siteStack),
     }
   );
@@ -112,7 +112,7 @@ export async function build(siteStack: SiteStack): Promise<HostedZoneResources> 
         SSM_PARAM_NAME_IS_AWS_ROUTE53_REGISTERED_DOMAIN
       ),
       value: siteStack.siteProps.facts.isAwsRoute53RegisteredDomain ? 'true' : 'false',
-      provider: siteStack.providerManifestRegion,
+      provider: siteStack.providerControlPlaneRegion,
       tags: _somTags(siteStack),
     }
   );

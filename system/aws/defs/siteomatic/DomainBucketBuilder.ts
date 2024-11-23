@@ -117,7 +117,7 @@ export async function build(siteStack: SiteStack): Promise<DomainBucketResources
       SSM_PARAM_NAME_DOMAIN_BUCKET_NAME
     ),
     value: domainBucket.bucket,
-    provider: siteStack.providerManifestRegion,
+    provider: siteStack.providerControlPlaneRegion,
     tags: _somTags(siteStack),
   });
 

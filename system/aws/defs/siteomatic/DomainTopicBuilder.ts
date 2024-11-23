@@ -67,7 +67,7 @@ export async function build(siteStack: SiteStack): Promise<DomainTopicResources>
       SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_NAME
     ),
     value: domainTopic.name,
-    provider: siteStack.providerManifestRegion,
+    provider: siteStack.providerControlPlaneRegion,
     tags: _somTags(siteStack),
   });
 
@@ -79,7 +79,7 @@ export async function build(siteStack: SiteStack): Promise<DomainTopicResources>
       SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN
     ),
     value: domainTopic.arn,
-    provider: siteStack.providerManifestRegion,
+    provider: siteStack.providerControlPlaneRegion,
     tags: _somTags(siteStack),
   });
 

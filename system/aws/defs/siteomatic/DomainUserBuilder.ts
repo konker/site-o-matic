@@ -60,7 +60,7 @@ export async function build(siteStack: SiteStack): Promise<DomainUserResources> 
       SSM_PARAM_NAME_DOMAIN_USER_USER_NAME
     ),
     value: domainUserName,
-    provider: siteStack.providerManifestRegion,
+    provider: siteStack.providerControlPlaneRegion,
     tags: _somTags(siteStack),
   });
 
