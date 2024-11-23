@@ -29,11 +29,6 @@ export async function build(
   secrets: SecretsSetCollection,
   webHostingSpec: WebHostingClauseWithResources
 ): Promise<WebHostingResources> {
-  // TODO: check for actual dependencies, if any
-  if (!siteResourcesStack.domainUserResources?.domainUser) {
-    throw new Error('[site-o-matic] Could not build web hosting resources when domainUser is missing');
-  }
-
   const localIdPostfix = formulateSomId(siteResourcesStack.siteProps.config, webHostingSpec.domainName);
 
   // ----------------------------------------------------------------------

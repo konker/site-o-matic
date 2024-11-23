@@ -76,21 +76,6 @@ export function renderInfoSpec(infoSpec: SomInfoSpec): string {
               .join('\n')
           : undefined,
       },
-      /*[XXX]
-      {
-        Param: chalk.bold(chalk.white('pipeline')),
-        Value: infoSpec.pipeline
-          ? `${chalk.bold(chalk.white('type'))}:\n ↪ ${infoSpec.pipeline.type}` +
-            ('codestarConnectionArn' in infoSpec.pipeline
-              ? `\n${chalk.bold(chalk.white('codestarConnectionArn'))}:\n ↪ ${infoSpec.pipeline.codestarConnectionArn}`
-              : '') +
-            ('owner' in infoSpec.pipeline
-              ? `\n${chalk.bold(chalk.white('owner'))}:\n ↪ ${infoSpec.pipeline.owner}`
-              : '') +
-            ('repo' in infoSpec.pipeline ? `\n${chalk.bold(chalk.white('repo'))}:\n ↪ ${infoSpec.pipeline?.repo}` : '')
-          : undefined,
-      },
-      */
       {
         Param: chalk.bold(chalk.white('notifications')),
         Value: tabulate(
@@ -107,46 +92,23 @@ export function renderInfoSpec(infoSpec: SomInfoSpec): string {
           [25, 25, 28]
         ),
       },
-    ]
-      /*[XXX]
-      .concat(
-        infoSpec.certificateClones
-          ? [
-              {
-                Param: chalk.bold(chalk.white('certificate clones')),
-                Value: infoSpec.certificateClones?.join('\n'),
-              },
-            ]
-          : []
-      )
-      .concat(
-        infoSpec.crossAccountAccessNames
-          ? [
-              {
-                Param: chalk.bold(chalk.white('cross account access')),
-                Value: infoSpec.crossAccountAccessNames?.join('\n'),
-              },
-            ]
-          : []
-      )
-      */
-      .concat([
-        {
-          Param: chalk.bold(chalk.white('protected')),
-          Value: `SSM: ${
-            infoSpec.protected.protectedSsm === infoSpec.protected.protectedManifest
-              ? chalk.green(infoSpec.protected.protectedSsm)
-              : chalk.red(infoSpec.protected.protectedSsm)
-          } / Manifest: ${
-            infoSpec.protected.protectedManifest === infoSpec.protected.protectedSsm
-              ? chalk.green(infoSpec.protected.protectedManifest)
-              : chalk.red(infoSpec.protected.protectedManifest)
-          }`,
-        },
-        infoSpec.pathToManifestFile,
-        infoSpec.manifestHash,
-        infoSpec.somId,
-      ]),
+    ].concat([
+      {
+        Param: chalk.bold(chalk.white('protected')),
+        Value: `SSM: ${
+          infoSpec.protected.protectedSsm === infoSpec.protected.protectedManifest
+            ? chalk.green(infoSpec.protected.protectedSsm)
+            : chalk.red(infoSpec.protected.protectedSsm)
+        } / Manifest: ${
+          infoSpec.protected.protectedManifest === infoSpec.protected.protectedSsm
+            ? chalk.green(infoSpec.protected.protectedManifest)
+            : chalk.red(infoSpec.protected.protectedManifest)
+        }`,
+      },
+      infoSpec.pathToManifestFile,
+      infoSpec.manifestHash,
+      infoSpec.somId,
+    ]),
     ['Param', 'Value'],
     ['', 'Manifest']
   );

@@ -1,6 +1,3 @@
-// TODO: combine secrets manager secrets with SSM params starting with `/som/secrets`
-// TODO: ssm params will have scope 'ssm' => read-only
-
 import * as secretsManager from '../aws/secretsmanager';
 import * as ssm from '../aws/ssm';
 import type { SiteOMaticConfig } from '../config/schemas/site-o-matic-config.schema';

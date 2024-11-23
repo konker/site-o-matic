@@ -33,37 +33,6 @@ export type SiteStackProps = {
   readonly env: Record<string, string>;
 };
 
-/*[XXX]
-// ----------------------------------------------------------------------
-export type BaseSitePipelineResources = {
-  readonly invalidateCloudfrontCodeBuildProject: codebuild.PipelineProject;
-};
-export type CodeStarS3SitePipelineResources = BaseSitePipelineResources & {
-  readonly type: typeof SITE_PIPELINE_TYPE_CODESTAR_S3;
-  readonly codestarConnectionArn: string;
-  readonly owner: string;
-  readonly repo: string;
-  readonly codePipeline: codepipeline.Pipeline;
-};
-export type CodeStarCustomSitePipelineResources = BaseSitePipelineResources & {
-  readonly type: typeof SITE_PIPELINE_TYPE_CODESTAR_CUSTOM;
-  readonly codestarConnectionArn: string;
-  readonly owner: string;
-  readonly repo: string;
-  readonly codePipeline: codepipeline.Pipeline;
-};
-
-export type PipelineResources = CodeStarS3SitePipelineResources | CodeStarCustomSitePipelineResources;
-
-// ----------------------------------------------------------------------
-export type PipelineType = typeof SITE_PIPELINE_TYPE_CODESTAR_S3 | typeof SITE_PIPELINE_TYPE_CODESTAR_CUSTOM;
-
-export type PipelineBuilderProps = {
-  readonly pipelineType: PipelineType;
-  readonly siteResourcesStack: SiteResourcesNestedStack;
-};
-*/
-
 // ----------------------------------------------------------------------
 export type SomStatus =
   | typeof SOM_STATUS_NOT_STARTED

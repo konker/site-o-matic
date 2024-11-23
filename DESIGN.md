@@ -12,6 +12,8 @@ Port of site-o-matic to cdktf (from standard cdk)
 
 ## Strategy for Port
 
+- Remove pipeline stuff
+- Remove certificate clones
 - Refactor action code files to match, e.g. listSites -> sitesList [?]
 - Prune old actions
   - Codestar

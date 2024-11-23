@@ -70,27 +70,6 @@ export async function preDeploymentCheck(
     checkItems.push(checkPassed('Site-O-Matic version'));
   }
 
-  /*[XXX]
-  if (context.manifest) {
-    // Check codestar pipeline
-    if (
-      context.manifest.pipeline?.type === SITE_PIPELINE_TYPE_CODESTAR_S3 ||
-      context.manifest.pipeline?.type === SITE_PIPELINE_TYPE_CODESTAR_CUSTOM
-    ) {
-      const codestarConnections = await codestar.listCodeStarConnections(config, AWS_REGION_CONTROL_PLANE);
-      const manifestCodestarConnection = context.manifest?.pipeline?.codestarConnectionArn;
-      const codestarConnection = codestarConnections.find(
-        (i) => manifestCodestarConnection && i.ConnectionArn === manifestCodestarConnection
-      );
-      if (!codestarConnection || codestarConnection.ConnectionStatus !== 'AVAILABLE') {
-        checkItems.push(checkFailed('Pipeline Arn', 'CodeStar connection does not exist, or is not AVAILABLE'));
-      } else {
-        checkItems.push(checkPassed('Pipeline Arn', 'CodeStar connection exists and is AVAILABLE'));
-      }
-    }
-  }
-  */
-
   const somSecrets = await secrets.getAllSomSecrets(config, context.manifest.region, context.somId);
 
   if (context.registrar) {

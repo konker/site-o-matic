@@ -57,20 +57,6 @@ export function actionInfo(vorpal: Vorpal, config: SiteOMaticConfig, state: SomG
               : { waf: undefined }
           )
         ),
-        /*
-        pipeline: context.manifest.pipeline,
-        redirect: context.manifest.redirect
-          ? {
-              type: context.manifest.redirect.type,
-              action: `${context.manifest.redirect.source} ⟶ ${context.manifest.redirect.target}`,
-            }
-          : undefined,
-        */
-        /*
-        certificateClones: context.manifest.certificate?.clones?.map((i) => `${i.name} / ${i.region}`),
-        crossAccountAccessNames: context.manifest.crossAccountAccess?.map((i) => i.name),
-        */
-
         notifications: {
           disabled: context.manifest.notifications?.disabled ?? false,
           noSubscription: context.manifest.notifications?.noSubscription ?? false,

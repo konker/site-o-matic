@@ -62,34 +62,6 @@ export function actionDeploy(vorpal: Vorpal, config: SiteOMaticConfig, state: So
       return;
     }
 
-    if (false /*[XXX]facts.shouldDeployCertificateClones*/) {
-      const response2 = state.yes
-        ? { confirm: 'y' }
-        : await vorpal.activeCommand.prompt({
-            type: 'input',
-            name: 'confirm',
-            message: chalk
-              .yellow
-              // [FIXME: what is this again? approve on the target account? Could have better explanation, and/or link to eventual docs here?]
-              // No footprint in target account
-              // Certificate clones are pending validation in som-production account
-              // Need to click `Create DNS records in Amazon Route 53` button in the AWS Certificate Manager console
-              //
-              // [FIXME: this should also inform that the tool basically hangs until the certificate clones are validated]
-              // [TODD: is it possible for the tool to detect this kind of hanging, and periodically prompt the user to perform validation?]
-              /*[XXX]
-              `WARNING!: Manual action needed to clone certificates into ${state.context.manifest?.certificate?.clones
-                ?.map((i) => i.name)
-                ?.join(',')}. Proceed? [y/N] `
-               */
-              (),
-          });
-      if (response2.confirm !== 'y') {
-        verror(vorpal, state, 'Aborted');
-        return;
-      }
-    }
-
     // Engage
     try {
       const [code, log] = await cdkTfExec.cdkDeploy(

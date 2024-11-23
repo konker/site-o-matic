@@ -48,8 +48,6 @@ export const SOM_FACTS_NAMES = [
   'hostedZoneDnsTxtRecordMatch',
   'hostedZoneVerified',
   'shouldDeployAllResources',
-  // 'hasCertificateClones',
-  // 'shouldDeployCertificateClones',
   'needsCloudfrontDist',
   'hasCloudfrontDistId',
   'isStatusNotStarted',
@@ -144,11 +142,6 @@ export const siteOMaticRules = rulesEngineFactory<SomFactNames, SomContext>({
 
   shouldDeployAllResources: async (facts, _context) => is(facts.registrarNameserversMatchHostedZoneNameServers),
 
-  // hasCertificateClones: async (_facts, context) => isNonZero(context.manifest?.certificate?.clones?.length),
-  // shouldDeployCertificateClones: async (facts, _context) =>
-  //   is(facts.hasCertificateClones) && (is(facts.isAwsRoute53RegisteredDomain) || is(facts.hostedZoneVerified)),
-
-  // TODO: Only used for status messages
   needsCloudfrontDist: async (_facts, context) => is(context.manifest?.webHosting),
   hasCloudfrontDistId: async (_facts, context) =>
     is(getContextParam(context, SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID)),

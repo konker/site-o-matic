@@ -79,16 +79,6 @@ export function contextTemplateString(s: string | undefined, context: HasManifes
   return compliedTemplate({ context });
 }
 
-/*[XXX]
-export function searchCertificates(
-  certificateResources: CertificateResources | undefined,
-  domainName: string
-): CertificateResources | undefined {
-  if (certificateResources?.domainName === domainName) return certificateResources;
-  return undefined;
-}
-*/
-
 export function formulateIamUserName(somId: string, prefix: string): string {
   return `${prefix}_${somId}`.replace(/--/g, '_').replace(/-/g, '_');
 }

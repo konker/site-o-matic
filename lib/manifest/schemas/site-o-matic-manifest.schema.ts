@@ -56,7 +56,7 @@ export const RedirectClauseEdgeCfFunction = z.object({
 });
 export type RedirectClauseEdgeCfFunction = z.TypeOf<typeof RedirectClauseEdgeCfFunction>;
 
-// XXX: change to union if we add more than one kind of redirect
+// NOTE: change to union if we add more than one kind of redirect
 export const RedirectClause = RedirectClauseEdgeCfFunction;
 export type RedirectClause = RedirectClauseEdgeCfFunction;
 
@@ -69,7 +69,7 @@ export const AuthClauseBasicEdgeCfFunction = z.object({
 });
 export type AuthClauseBasicEdgeCfFunction = z.TypeOf<typeof AuthClauseBasicEdgeCfFunction>;
 
-// XXX: change to union if we add more than one kind of auth
+// NOTE: change to union if we add more than one kind of auth
 export const AuthClause = AuthClauseBasicEdgeCfFunction;
 export type AuthClause = AuthClauseBasicEdgeCfFunction;
 
