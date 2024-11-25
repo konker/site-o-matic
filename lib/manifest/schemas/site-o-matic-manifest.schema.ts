@@ -6,8 +6,6 @@ import {
   DEFAULT_CERTIFICATE_REGION,
   DEFAULT_CONTENT_CLAUSE,
   REDIRECT_IMPL_EDGE_CF_FUNCTION,
-  SITE_PIPELINE_TYPE_CODESTAR_CUSTOM,
-  SITE_PIPELINE_TYPE_CODESTAR_S3,
   WEB_HOSTING_DEFAULT,
   WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT,
   WEB_HOSTING_DEFAULT_ORIGIN_PATH,
@@ -171,7 +169,7 @@ export type WebHostingTypeCloudfrontHttps = z.TypeOf<typeof WebHostingTypeCloudf
 export const WebHostingClauseCloudfrontHttps = z.object({
   type: WebHostingTypeCloudfrontHttps,
   domainName: z.string().min(1),
-  url: z.string().min(1),
+  proxyHost: z.string().min(1),
   originPath: z.string().min(1).default('/').optional(),
   waf: WafClause.optional(),
 });
@@ -197,57 +195,6 @@ export type WebHostingClause = z.TypeOf<typeof WebHostingClause>;
 
 export const WebHostingClauseWithResources = z.union([WebHostingClauseCloudfrontS3, WebHostingClauseCloudfrontHttps]);
 export type WebHostingClauseWithResources = z.TypeOf<typeof WebHostingClauseWithResources>;
-
-// ----------------------------------------------------------------------
-export const CertificateCloneSpec = z.object({
-  name: z.string().min(1),
-  account: z.string().min(12),
-  region: z.string().min(1),
-});
-export type CertificateCloneSpec = z.TypeOf<typeof CertificateCloneSpec>;
-
-export const CertificateClause = z.object({
-  clones: z.array(CertificateCloneSpec),
-});
-export type CertificateClause = z.TypeOf<typeof CertificateClause>;
-
-// ----------------------------------------------------------------------
-export const PipelineBuildPhase = z.object({
-  commands: z.array(z.string().min(1)).min(1),
-});
-export type PipelineBuildPhase = z.TypeOf<typeof PipelineBuildPhase>;
-
-export const CodeStarConnectionArn = z.string().regex(/^arn:aws:codestar-connections:.*/);
-export type CodeStarConnectionArn = z.TypeOf<typeof CodeStarConnectionArn>;
-
-export const PipelineClauseCodeStarS3 = z.object({
-  type: z.literal(SITE_PIPELINE_TYPE_CODESTAR_S3),
-  codestarConnectionArn: CodeStarConnectionArn,
-  owner: z.string().min(1),
-  repo: z.string().min(1),
-});
-export type PipelineClauseCodeStarS3 = z.TypeOf<typeof PipelineClauseCodeStarS3>;
-
-export const PipelineClauseCodeStarCustom = z.object({
-  type: z.literal(SITE_PIPELINE_TYPE_CODESTAR_CUSTOM),
-  codestarConnectionArn: CodeStarConnectionArn,
-  owner: z.string().min(1),
-  repo: z.string().min(1),
-  buildImage: z.string().min(1).optional(),
-  buildPhases: z.record(z.string(), PipelineBuildPhase),
-  buildFiles: z.array(z.string().min(1)).optional(),
-});
-export type PipelineClauseCodeStarCustom = z.TypeOf<typeof PipelineClauseCodeStarCustom>;
-
-export const PipelineClause = z.union([PipelineClauseCodeStarS3, PipelineClauseCodeStarCustom]);
-export type PipelineClause = z.TypeOf<typeof PipelineClause>;
-
-// ----------------------------------------------------------------------
-export const CrossAccountAccessSpec = z.object({
-  name: z.string().min(1),
-  arn: z.string().regex(/^arn.+/),
-});
-export type CrossAccountAccessSpec = z.TypeOf<typeof CrossAccountAccessSpec>;
 
 // ----------------------------------------------------------------------
 export const NotificationsClause = z.object({
@@ -278,11 +225,8 @@ export const SiteOMaticManifest = z
     webHosting: z.array(WebHostingClause).optional(),
 
     notifications: NotificationsClause.optional(),
-
-    // pipeline: PipelineClause.optional(),
-    // certificate: CertificateClause.optional(),
-    // crossAccountAccess: z.array(CrossAccountAccessSpec).optional(),
   })
+  .strict()
   // Apply defaults
   .transform((x) => {
     const webHostingDefaults = x.webHostingDefaults ?? WEB_HOSTING_DEFAULTS_DEFAULT;

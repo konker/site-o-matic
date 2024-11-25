@@ -22,11 +22,11 @@ exports[`site-o-matic-manifest-schema should validate a complete example 1`] = `
       ],
     },
   ],
-  "protected": false,
   "notifications": {
     "noSubscription": false,
     "subscriptionEmail": "webmaster+{{context.manifest.rootDomainName}}@example.com",
   },
+  "protected": false,
   "region": "us-east-1",
   "registrar": "dynadot",
   "title": "example.com",

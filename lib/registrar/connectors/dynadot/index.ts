@@ -25,7 +25,7 @@ export async function getNameServers(
 
     const data = XML_PARSER.parse(result.body);
     if (data?.GetNsResponse?.GetNsHeader?.Status !== SUCCESS) {
-      console.log(data[1]);
+      console.log('[registrar/dynadot] ERROR: ', data);
       return [];
     }
 
@@ -50,7 +50,7 @@ export async function setNameServers(
 
     const data = XML_PARSER.parse(result.body);
     if (data?.SetNsResponse?.SetNsHeader?.Status !== SUCCESS) {
-      console.log(data[1]);
+      console.log('[registrar/dynadot] ERROR: ', data);
       return undefined;
     }
 

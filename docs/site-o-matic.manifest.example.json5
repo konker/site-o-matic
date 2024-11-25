@@ -113,9 +113,8 @@
     {
       type: 'cloudfront-https',
       domainName: 'api.bp-o-matic.development.konker.dev',
-      url: 'https://8r3xuheel8.execute-api.eu-west-1.amazonaws.com/',
-      originPath: '/',
-      certificate: 'api.bp-o-matic.development.konker.dev', // do we need this?
+      proxyHost: '8r3xuheel8.execute-api.eu-west-1.amazonaws.com',
+      originPath: '',
     },
   ],
 
@@ -134,69 +133,4 @@
     // Override the webmaster email with a different email address
     subscriptionEmail: 'webmaster+{{context.manifest.rootDomainName}}@example.com',
   },
-
-  // TODO: need to be able to invoke the pipeline for branches other than `main`
-  // TODO: but not just any branch, only those configured under the `webHosting` clause
-  pipeline: {
-    // Type of pipeline to create, currently one of [codestar-s3, codestar-custom, codecommit-s3, codecommit-custom]
-    type: 'codestar-custom',
-
-    // If the type is [codestar-s3, codestar-custom], then this is the source GitHub repo connection via CodeStar Connections
-    codestarConnectionArn: 'arn:aws:codestar-connections:us-east-1:111111111111:connection/12345678-cafe-cafe-cafe-123456789012',
-    // The GitHub user
-    owner: 'example',
-    // The GitHub repo
-    repo: 'example.com',
-
-    // The files which should be deployed, defaults to ["**/*"]
-    // TODO: do we need this as a config or will it be governed by conventions?
-    // TODO: these build files will be copied by the pipeline to the bucket directory corresponding to the branch.
-    buildFiles: ['www/**'],
-
-    // The CodeBuild image to use, defaults to SITE_PIPELINE_DEFAULT_BUILD_IMAGE
-    // See: https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-available.html
-    buildImage: 'aws/codebuild/amazonlinux2-x86_64-standard:5.0',
-
-    // Optionally specify some custom build phases for the CodeBuild pipeline
-    // TODO: assume this is always the same for every branch
-    // TODO: perhaps inject the branch into the env or something?
-    buildPhases: {
-      install: {
-        commands: ['npm install'],
-      },
-      build: {
-        commands: ['npm run build'],
-      },
-    },
-  },
-
-  // TODO: leave for later, what was this for again?
-  certificate: {
-    // Clone the SSL certificates for this domain and sub-domains to the following accounts
-    clones: [
-      {
-        name: 'eg-development',
-        account: '111111111111',
-        region: 'eu-north-1',
-      },
-      {
-        name: 'eg-production',
-        account: '222222222222',
-        region: 'eu-north-1',
-      },
-    ],
-  },
-
-  // Allow the following roles to assume the DomainRole for this website
-  // TODO: What is this for again?
-  crossAccountAccess: [
-    {
-      name: 'eg-development',
-      arn: 'arn:aws:sts::111111111111:role/OrganizationAccountAccessRole',
-    },
-    {
-      name: 'eg-production',
-      arn: 'arn:aws:iam::222222222222:role/OrganizationAccountAccessRole',
-    },
-  ],
 }

@@ -23,3 +23,9 @@ export type Secret = {
   readonly name: string;
   readonly value: string;
 };
+
+export type SecretMetadata = {
+  readonly name: string;
+  readonly source: SecretsSource;
+  readonly scope: string;
+};

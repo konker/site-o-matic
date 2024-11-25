@@ -37,7 +37,7 @@ export async function build(
   siteStack: SiteStack,
   secrets: SecretsSetCollection,
   webHostingSpec: WebHostingClauseCloudfrontHttps,
-  _webHostingDefaults: WebHostingDefaultsClauseCloudfrontHttps,
+  webHostingDefaults: WebHostingDefaultsClauseCloudfrontHttps,
   localIdPostfix: string,
   certificateResources: CertificateResources
 ): Promise<HttpsCloudfrontDistributionResources> {
@@ -94,7 +94,8 @@ export async function build(
               originProtocolPolicy: 'https-only',
               originSslProtocols: ['TLSv1', 'TLSv1.1', 'TLSv1.2'],
             },
-            domainName: webHostingSpec.url,
+            domainName: webHostingSpec.proxyHost,
+            originPath: webHostingSpec.originPath ?? webHostingDefaults.originPath,
             originShield: {
               enabled: false,
               originShieldRegion: siteStack.siteProps.context.manifest.region,

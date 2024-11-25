@@ -1,7 +1,7 @@
 import type Vorpal from 'vorpal';
 
 import type { SiteOMaticConfig } from '../../lib/config/schemas/site-o-matic-config.schema';
-import { GLOBAL_SECRETS_SCOPE } from '../../lib/consts';
+import { SECRETS_SCOPE_GLOBAL, SECRETS_SCOPE_SITE } from '../../lib/consts';
 import * as secrets from '../../lib/secrets';
 import { DEFAULT_SECRETS_SOURCE } from '../../lib/secrets/types';
 import { vtabulate } from '../../lib/ui/logging';
@@ -15,9 +15,9 @@ export function actionSecretsAdd(vorpal: Vorpal, config: SiteOMaticConfig, state
     const data = await secrets.addSomSecret(
       config,
       state.context.manifest?.region ?? config.AWS_REGION_CONTROL_PLANE,
-      state.context.somId ?? GLOBAL_SECRETS_SCOPE,
+      state.context.somId ?? SECRETS_SCOPE_GLOBAL,
       DEFAULT_SECRETS_SOURCE,
-      state.context.somId ?? GLOBAL_SECRETS_SCOPE,
+      state.context.somId ?? SECRETS_SCOPE_GLOBAL,
       args.name,
       args.value
     );
@@ -26,11 +26,15 @@ export function actionSecretsAdd(vorpal: Vorpal, config: SiteOMaticConfig, state
     vtabulate(
       vorpal,
       state,
-      data.map((x) => ({ Name: x })),
-      ['Name'],
-      ['Name'],
+      data.map((x) => ({
+        Name: x.name,
+        Scope: x.scope === SECRETS_SCOPE_GLOBAL ? SECRETS_SCOPE_GLOBAL : SECRETS_SCOPE_SITE,
+        Source: x.source,
+      })),
+      ['Name', 'Scope', 'Source'],
+      ['Name', 'Scope', 'Source'],
       false,
-      [60]
+      [50, 10, 10]
     );
   };
 }

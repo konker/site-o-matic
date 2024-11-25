@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import * as path from 'node:path';
 
 import type { CloudfrontDistributionCustomErrorResponse } from '@cdktf/provider-aws/lib/cloudfront-distribution';
@@ -234,7 +235,7 @@ export async function build(
     webHostingSpec.content?.producerId !== CONTENT_PRODUCER_ID_NONE
   ) {
     const siteContentDeps = await SiteContentLoader.load(siteStack, webHostingSpec);
-    if (siteContentDeps.siteContentTmpDirPath) {
+    if (siteContentDeps.siteContentTmpDirPath && fs.existsSync(siteContentDeps.siteContentTmpDirPath)) {
       await awsCliS3CpDirectory(
         `${siteContentDeps.siteContentTmpDirPath}/*`,
         `s3://${getContextParam(siteStack.siteProps.context, SSM_PARAM_NAME_DOMAIN_BUCKET_NAME)}/${path.relative('/', webHostingSpec.originPath ?? webHostingDefaults.originPath)}`

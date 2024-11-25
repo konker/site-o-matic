@@ -1,9 +1,9 @@
 import * as secretsManager from '../aws/secretsmanager';
 import * as ssm from '../aws/ssm';
 import type { SiteOMaticConfig } from '../config/schemas/site-o-matic-config.schema';
-import { GLOBAL_SECRETS_SCOPE, SECURE_STRING_FLAG } from '../consts';
+import { SECRETS_SCOPE_GLOBAL, SECURE_STRING_FLAG } from '../consts';
 import type { SomParam } from '../types';
-import type { Secret, SecretsPlain, SecretsSet, SecretsSetCollection, SecretsSource } from './types';
+import type { Secret, SecretMetadata, SecretsPlain, SecretsSet, SecretsSetCollection, SecretsSource } from './types';
 import { ALL_SECRETS_SOURCES, SECRETS_SOURCE_SECRETS_MANAGER, SECRETS_SOURCE_SSM } from './types';
 
 // --------------------------------------------------------------------------
@@ -62,7 +62,7 @@ export async function getSecretsManagerScopedSomSecrets(
 }
 
 export async function getSecretsManagerGlobalSomSecrets(config: SiteOMaticConfig, region: string): Promise<SecretsSet> {
-  return getSecretsManagerScopedSomSecrets(config, region, GLOBAL_SECRETS_SCOPE);
+  return getSecretsManagerScopedSomSecrets(config, region, SECRETS_SCOPE_GLOBAL);
 }
 
 // --------------------------------------------------------------------------
@@ -79,20 +79,33 @@ export async function getSsmScopedSomSecrets(
 }
 
 export async function getSsmGlobalSomSecrets(config: SiteOMaticConfig, region: string): Promise<SecretsSet> {
-  return getSsmScopedSomSecrets(config, region, GLOBAL_SECRETS_SCOPE);
+  return getSsmScopedSomSecrets(config, region, SECRETS_SCOPE_GLOBAL);
 }
 
 // --------------------------------------------------------------------------
 export async function getAllSomSecrets(
   config: SiteOMaticConfig,
-  region: string,
+  region: string | undefined,
   somId?: string
 ): Promise<SecretsSetCollection> {
-  const globalReqs = [getSecretsManagerGlobalSomSecrets(config, region), getSsmGlobalSomSecrets(config, region)];
+  const secretsRegions = Array.from(
+    new Set([region ?? config.AWS_REGION_CONTROL_PLANE, config.AWS_REGION_CONTROL_PLANE])
+  );
+
+  // Fetch global scoped secrets from manifest region, and from control plane region
+  const globalReqs = [
+    ...secretsRegions.map((region) => getSecretsManagerGlobalSomSecrets(config, region)),
+    ...secretsRegions.map((region) => getSsmGlobalSomSecrets(config, region)),
+  ];
+
+  // If we have somId scope, also fetch somId-scoped secrets from manifest region, and from control plane region
   const scopedReqs =
-    !somId || somId === GLOBAL_SECRETS_SCOPE
+    !somId || somId === SECRETS_SCOPE_GLOBAL
       ? []
-      : [getSecretsManagerScopedSomSecrets(config, region, somId), getSsmScopedSomSecrets(config, region, somId)];
+      : [
+          ...secretsRegions.map((region) => getSecretsManagerScopedSomSecrets(config, region, somId)),
+          ...secretsRegions.map((region) => getSsmScopedSomSecrets(config, region, somId)),
+        ];
 
   const secretSets = await Promise.all([...globalReqs, ...scopedReqs]);
 
@@ -117,9 +130,11 @@ export async function listSomSecretNames(
   config: SiteOMaticConfig,
   region: string,
   scope?: string
-): Promise<Array<string>> {
+): Promise<Array<SecretMetadata>> {
   const secretSet = await getAllSomSecrets(config, region, scope);
-  return Object.keys(secretSet.lookup);
+  return secretSet.secretsSets.flatMap((secretSet) =>
+    Object.keys(secretSet.secretsPlain).map((name) => ({ name, scope: secretSet.scope, source: secretSet.source }))
+  );
 }
 
 // --------------------------------------------------------------------------
@@ -131,7 +146,7 @@ export async function addSomSecret(
   scope: string,
   name: string,
   value: string
-): Promise<Array<string>> {
+): Promise<Array<SecretMetadata>> {
   switch (source) {
     case SECRETS_SOURCE_SECRETS_MANAGER:
       {
@@ -194,7 +209,7 @@ export async function deleteSomSecret(
   somId: string,
   scope: string,
   name: string
-): Promise<Array<string>> {
+): Promise<Array<SecretMetadata>> {
   for (const source of ALL_SECRETS_SOURCES) {
     await deleteSomSecretBySource(config, region, somId, source, scope, name);
   }
