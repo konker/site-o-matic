@@ -36,7 +36,10 @@ export function actionInfo(vorpal: Vorpal, config: SiteOMaticConfig, state: SomG
         webmasterEmail: context.webmasterEmail,
         registrar: context.registrar,
         region: context.manifest.region,
-        subdomains: context.subdomains,
+        extraDnsConfig: context.manifest.extraDnsConfig?.map((x) => ({
+          Type: x.type,
+          Properties: Object.values(x).slice(1).join(' '),
+        })),
         webHosting: context.manifest.webHosting.map((x) =>
           Object.assign(
             { type: x.type },

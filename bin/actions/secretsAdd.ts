@@ -11,6 +11,21 @@ export function actionSecretsAdd(vorpal: Vorpal, config: SiteOMaticConfig, state
   return async (args: Vorpal.Args | string): Promise<void> => {
     if (typeof args === 'string') throw new Error('Error: string args to action');
 
+    if (!args.value) {
+      const value = await vorpal.activeCommand.prompt({
+        type: 'password',
+        name: 'secretValue',
+        message: 'Enter secret value: ',
+      });
+
+      if (!value.secretValue || value.secretValue === '') {
+        vorpal.log('Invalid secret value');
+        return;
+      }
+
+      args.value = value.secretValue;
+    }
+
     state.spinner.start();
     const data = await secrets.addSomSecret(
       config,

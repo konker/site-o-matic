@@ -1,3 +1,5 @@
+import fs from 'node:fs/promises';
+
 import type { WebHostingClauseWithResources } from '../manifest/schemas/site-o-matic-manifest.schema';
 import type { HasNetworkDerived, SomContext } from '../types';
 import { getTmpDirPath, processContentDirectory } from './lib';
@@ -30,6 +32,9 @@ function createContentGenerator(contentProducer: SomContentProducer): SomContent
       console.log(`ERROR: Could not generate content: Could not get tmp dir path`);
       return undefined;
     }
+
+    // Make sure we delete any previous version of the tmpDir
+    await fs.rm(tmpDirPath, { recursive: true, force: true });
 
     const result = await processContentDirectory(
       somId,

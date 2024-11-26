@@ -21,7 +21,7 @@ import type {
   WebHostingDefaultsClauseCloudfrontS3,
 } from '../../../../../lib/manifest/schemas/site-o-matic-manifest.schema';
 import type { SecretsSetCollection } from '../../../../../lib/secrets/types';
-import { _somTags, fqdn, getContextParam } from '../../../../../lib/utils';
+import { _somTags, fqdn, getContextParam, sleep } from '../../../../../lib/utils';
 import type { SiteStack } from '../SiteStack';
 import type { CertificateResources } from './CertificateBuilder';
 import type { CloudfrontFunctionsResources } from './CloudfrontFunctionsBuilder';
@@ -235,6 +235,10 @@ export async function build(
     webHostingSpec.content?.producerId !== CONTENT_PRODUCER_ID_NONE
   ) {
     const siteContentDeps = await SiteContentLoader.load(siteStack, webHostingSpec);
+
+    // Sleep to prevent race condition between creating content, and checking that the content exists
+    await sleep(1000);
+
     if (siteContentDeps.siteContentTmpDirPath && fs.existsSync(siteContentDeps.siteContentTmpDirPath)) {
       await awsCliS3CpDirectory(
         `${siteContentDeps.siteContentTmpDirPath}/*`,

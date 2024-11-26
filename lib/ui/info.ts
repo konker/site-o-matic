@@ -77,6 +77,10 @@ export function renderInfoSpec(infoSpec: SomInfoSpec): string {
           : undefined,
       },
       {
+        Param: chalk.bold(chalk.white('extraDnsConfig')),
+        Value: tabulate(infoSpec.extraDnsConfig ?? [], ['Type', 'Properties'], undefined, false, [25, 54]),
+      },
+      {
         Param: chalk.bold(chalk.white('notifications')),
         Value: tabulate(
           [

@@ -6,21 +6,6 @@ Port of site-o-matic to cdktf (from standard cdk)
 
 ## TODO
 
-- Content, make sure it is generated before aws cli upload is called
-- Prompt for secretsAdd secret value to avoid writing secrets in history
-
-- Upgrade all sites to 0.0.4
-
-  - In reverse-importance order:
-    X konker.dev
-    - morningwoodsoftware.com
-    - konradmarkus.com
-
-- Add GitHub action examples for:
-
-  - astro build, dist -> www
-  - general node workflow: checkout, install node, pnpm install, pnpm run build, deploy $dist -> $www, invalidate Cf
-
 - Have a clear idea about `tfstate`
 
   - What happens if you delete this from the local machine?
@@ -28,19 +13,34 @@ Port of site-o-matic to cdktf (from standard cdk)
   - Should this be backed up? A first-class asset in SCM? Synced to cloud? Something else?
     - This is in the realms of terraform best practices..?
 
-- `site-o-matic/metadata.json`
+- Unit tests for everything
+- Documentation
+  - konker.dev
+
+## Strategy for Port
+
+- Add GitHub action examples for:
+
+  - astro build, dist -> www
+  - general node workflow: checkout, install node, pnpm install, pnpm run build, deploy $dist -> $www, invalidate Cf
+
+- Prompt for secretsAdd secret value to avoid writing secrets in history
+- extraDnsConfig not shown in info
+- Upgrade all sites to 0.0.4
+
+  - In reverse-importance order:
+    O konker.dev
+    O morningwoodsoftware.com
+    O konradmarkus.com
+  - Remove _pipeline_ S3 buckets in us-east-1
+
+- Content, make sure it is generated before aws cli upload is called
 
   - Automatically push this to the root of the S3 bucket
   - Basically, information from the manifest
     - Could it even have deploy-time data?
       - If it was pushed at deploy-time, then no.
       - If it was pushed as a manual command, then yes, via ssm params
-
-- Unit tests for everything
-- Documentation
-  - konker.dev
-
-## Strategy for Port
 
 - Mark global secrets in listing
   - Also mark SM vs SSM?

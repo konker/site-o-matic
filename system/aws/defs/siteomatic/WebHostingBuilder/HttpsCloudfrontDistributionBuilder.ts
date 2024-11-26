@@ -73,7 +73,6 @@ export async function build(
 
   // ----------------------------------------------------------------------
   // Cloudfront distribution
-  console.log('KONK90', webHostingSpec);
   const cloudfrontDistribution = new CloudfrontDistribution(
     siteStack,
     `CloudFrontDistribution-${localIdPostfix}`,

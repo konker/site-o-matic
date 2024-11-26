@@ -91,7 +91,9 @@ async function main() {
   vorpal.command('users', 'List users').action(actionUsersList(vorpal, config, globalState));
 
   vorpal.command('secrets ls', 'List secrets').action(actionSecretsList(vorpal, config, globalState));
-  vorpal.command('secrets add <name> <value>', 'Add a secret').action(actionSecretsAdd(vorpal, config, globalState));
+  vorpal
+    .command('secrets add <name> [<value>]', 'Add a secret, you will be prompted for a value if it is not provided.')
+    .action(actionSecretsAdd(vorpal, config, globalState));
   vorpal.command('secrets show <name>', 'Reveal a secret value').action(actionSecretsShow(vorpal, config, globalState));
   vorpal.command('secrets del <name>', 'Delete a secret').action(actionSecretsDelete(vorpal, config, globalState));
 

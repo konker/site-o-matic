@@ -107,7 +107,7 @@ export type SomInfoSpec = {
   readonly webmasterEmail: string | undefined;
   readonly registrar: string | undefined;
   readonly region: string | undefined;
-  readonly subdomains: Array<string> | undefined;
+  readonly extraDnsConfig: Array<{ Type: string; Properties: string }> | undefined;
   readonly webHosting: Array<{
     readonly type: string;
     readonly domainName?: string;
