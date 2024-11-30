@@ -19,8 +19,8 @@ export async function cdkExec(
     ['cdktf', cdkCmd]
       .concat(extraArgs)
       .concat(['--app', `npx node system/aws/bin/site-o-matic`])
-      .concat(['--output', `system/aws/.cdk-${somId}.out`])
-      .concat(['--outputs-file', `system/aws/.cdk-${somId}.out/outputs.json`])
+      .concat(['--output', `.site-o-matic/.cdk-${somId}.out`])
+      .concat(['--outputs-file', `.site-o-matic/.cdk-${somId}.out/outputs.json`])
       .concat(['--auto-approve'])
       .concat(['--no-color']),
     plumbing,
