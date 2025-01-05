@@ -48,6 +48,7 @@ export function actionInfo(vorpal: Vorpal, config: SiteOMaticConfig, state: SomG
             'content' in x ? { content: x.content?.producerId } : { content: undefined },
             'redirect' in x ? { redirect: x.redirect } : { redirect: undefined },
             'auth' in x ? { auth: x.auth } : { auth: undefined },
+            'keyValueStore' in x ? { keyValueStore: x.keyValueStore } : { keyValueStore: undefined },
             'waf' in x
               ? {
                   waf: x?.waf

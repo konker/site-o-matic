@@ -4,6 +4,7 @@ import { AssetType, Fn, TerraformAsset } from 'cdktf';
 import { normalizeDomainName } from '../../../../../lib';
 import type { WebHostingClauseWithResources } from '../../../../../lib/manifest/schemas/site-o-matic-manifest.schema';
 import type { SiteStack } from '../SiteStack';
+import type { CloudfrontKeyValueStoreResources } from './CloudfrontKeyValueStoreBuilder';
 
 // ----------------------------------------------------------------------
 export const CLOUDFRONT_FUNCTION_EVENT_TYPE_VIEWER_REQUEST = 'viewer-request' as const;
@@ -29,6 +30,7 @@ export async function build(
   siteStack: SiteStack,
   webHostingSpec: WebHostingClauseWithResources,
   localIdPostfix: string,
+  keyValueStoreResources: CloudfrontKeyValueStoreResources | undefined,
   cfFunctionViewerRequestTmpFilePathSpec: CloudfrontFunctionsTmpFilePathSpec,
   cfFunctionViewerResponseTmpFilePathSpec: CloudfrontFunctionsTmpFilePathSpec
 ): Promise<CloudfrontFunctionsResources> {
@@ -59,6 +61,7 @@ export async function build(
           runtime: 'cloudfront-js-2.0',
           code: Fn.file(asset.path),
           provider: siteStack.providerManifestRegion,
+          keyValueStoreAssociations: keyValueStoreResources ? [keyValueStoreResources.keyValueStore.arn] : [],
         });
         return [...acc, [func, cfFunctionEventType] as [CloudfrontFunction, CloudfrontFunctionEventType]];
       }

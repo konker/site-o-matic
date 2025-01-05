@@ -7,12 +7,13 @@ import {
   DEFAULT_CONTENT_CLAUSE,
   REDIRECT_IMPL_EDGE_CF_FUNCTION,
   WEB_HOSTING_DEFAULT,
-  WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT,
-  WEB_HOSTING_DEFAULT_ORIGIN_PATH,
   WEB_HOSTING_DEFAULTS_DEFAULT,
   WEB_HOSTING_TYPE_CLOUDFRONT_HTTPS,
+  WEB_HOSTING_TYPE_CLOUDFRONT_HTTPS_DEFAULT_ORIGIN_PATH,
   WEB_HOSTING_TYPE_CLOUDFRONT_HTTPS_DEFAULTS_DEFAULT,
   WEB_HOSTING_TYPE_CLOUDFRONT_S3,
+  WEB_HOSTING_TYPE_CLOUDFRONT_S3_DEFAULT_DEFAULT_ROOT_OBJECT,
+  WEB_HOSTING_TYPE_CLOUDFRONT_S3_DEFAULT_ORIGIN_PATH,
   WEB_HOSTING_TYPE_CLOUDFRONT_S3_DEFAULTS_DEFAULT,
   WEB_HOSTING_TYPE_NONE,
   WEB_HOSTING_TYPE_NONE_DEFAULTS_DEFAULT,
@@ -116,8 +117,9 @@ export const WebHostingDefaultsClauseCloudfrontS3 = z.object({
     .array(WebHostingErrorResponse)
     .optional()
     .default(WEB_HOSTING_TYPE_CLOUDFRONT_S3_DEFAULTS_DEFAULT.errorResponses),
-  originPath: z.string().min(1).optional().default(WEB_HOSTING_DEFAULT_ORIGIN_PATH),
+  originPath: z.string().min(1).optional().default(WEB_HOSTING_TYPE_CLOUDFRONT_S3_DEFAULT_ORIGIN_PATH),
   content: ContentClause.default(DEFAULT_CONTENT_CLAUSE),
+  keyValueStore: z.boolean().default(false).optional(),
   waf: z
     .object({
       enabled: z.boolean().default(false),
@@ -128,7 +130,7 @@ export const WebHostingDefaultsClauseCloudfrontS3 = z.object({
 export type WebHostingDefaultsClauseCloudfrontS3 = z.TypeOf<typeof WebHostingDefaultsClauseCloudfrontS3>;
 
 export const WebHostingDefaultsClauseCloudfrontHttps = z.object({
-  originPath: z.string(),
+  originPath: z.string().default(WEB_HOSTING_TYPE_CLOUDFRONT_HTTPS_DEFAULT_ORIGIN_PATH),
 });
 export type WebHostingDefaultsClauseCloudfrontHttps = z.TypeOf<typeof WebHostingDefaultsClauseCloudfrontHttps>;
 
@@ -153,9 +155,10 @@ export type WebHostingTypeCloudFrontS3 = z.TypeOf<typeof WebHostingTypeCloudFron
 export const WebHostingClauseCloudfrontS3 = z.object({
   type: WebHostingTypeCloudFrontS3,
   domainName: z.string().min(1),
-  originPath: z.string().min(1).default(WEB_HOSTING_DEFAULT_ORIGIN_PATH).optional(),
-  defaultRootObject: z.string().min(1).default(WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT).optional(),
+  originPath: z.string().min(1).default(WEB_HOSTING_TYPE_CLOUDFRONT_S3_DEFAULT_ORIGIN_PATH).optional(),
+  defaultRootObject: z.string().min(1).default(WEB_HOSTING_TYPE_CLOUDFRONT_S3_DEFAULT_DEFAULT_ROOT_OBJECT).optional(),
   errorResponses: z.array(WebHostingErrorResponse).optional(),
+  keyValueStore: z.boolean().optional(),
   waf: WafClause.optional(),
   redirect: RedirectClause.optional(),
   auth: AuthClause.optional(),
@@ -170,7 +173,7 @@ export const WebHostingClauseCloudfrontHttps = z.object({
   type: WebHostingTypeCloudfrontHttps,
   domainName: z.string().min(1),
   proxyHost: z.string().min(1),
-  originPath: z.string().min(1).default('/').optional(),
+  originPath: z.string().default('').optional(),
   waf: WafClause.optional(),
 });
 export type WebHostingClauseCloudfrontHttps = z.TypeOf<typeof WebHostingClauseCloudfrontHttps>;
@@ -212,6 +215,7 @@ export const SiteOMaticManifest = z
   .object({
     domainName: z.string().min(1),
     title: z.string().optional(),
+    notes: z.string().optional(),
     region: z
       .string()
       .regex(/..-[a-z]+-\d+[a-z]?/)
@@ -231,6 +235,7 @@ export const SiteOMaticManifest = z
   .transform((x) => {
     const webHostingDefaults = x.webHostingDefaults ?? WEB_HOSTING_DEFAULTS_DEFAULT;
     const applyWebHostingDefaults = (x: WebHostingClause) => ({
+      keyValueStore: false,
       ...webHostingDefaults[x.type],
       ...x,
     });

@@ -22,6 +22,7 @@ exports[`site-o-matic-manifest-schema should validate a complete example 1`] = `
       ],
     },
   ],
+  "notes": "Example Company website FTW?",
   "notifications": {
     "noSubscription": false,
     "subscriptionEmail": "webmaster+{{context.manifest.rootDomainName}}@example.com",
@@ -71,6 +72,7 @@ exports[`site-o-matic-manifest-schema should validate a complete example 1`] = `
           "responsePagePath": "/404.html",
         },
       ],
+      "keyValueStore": true,
       "originPath": "/main/www",
       "type": "cloudfront-s3",
       "waf": {
@@ -114,14 +116,14 @@ exports[`site-o-matic-manifest-schema should validate a complete example 1`] = `
     },
     {
       "domainName": "api.bp-o-matic.development.konker.dev",
-      "originPath": "/",
+      "originPath": "",
+      "proxyHost": "8r3xuheel8.execute-api.eu-west-1.amazonaws.com",
       "type": "cloudfront-https",
-      "url": "https://8r3xuheel8.execute-api.eu-west-1.amazonaws.com/",
     },
   ],
   "webHostingDefaults": {
     "cloudfront-https": {
-      "originPath": "/",
+      "originPath": "",
     },
     "cloudfront-s3": {
       "content": {

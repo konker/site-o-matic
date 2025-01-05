@@ -84,16 +84,6 @@ export async function build(siteStack: SiteStack): Promise<DomainBucketResources
           actions: ['s3:ListBucket'],
           resources: [domainBucket.arn],
         },
-        {
-          effect: 'Allow',
-          actions: ['s3:DeleteObject', 's3:GetObject', 's3:GetObjectVersion', 's3:PutObject', 's3:PutObjectAcl'],
-          resources: [`${domainBucket.arn}/*`],
-        },
-        {
-          effect: 'Allow',
-          actions: ['s3:ListBucket'],
-          resources: [domainBucket.arn],
-        },
       ],
     })
   );

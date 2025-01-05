@@ -42,6 +42,8 @@ export const SSM_PARAM_NAME_NOTIFICATIONS_SNS_TOPIC_ARN = 'notifications-sns-top
 export const SSM_PARAM_NAME_DOMAIN_BUCKET_NAME = 'domain-bucket-name' as const;
 export const SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID = 'cloudfront-distribution-id' as const;
 export const SSM_PARAM_NAME_CLOUDFRONT_DOMAIN_NAME = 'cloudfront-domain-name' as const;
+export const SSM_PARAM_NAME_CLOUDFRONT_KEY_VALUE_STORE_NAME = 'cloudfront-key-value-store-name' as const;
+export const SSM_PARAM_NAME_CLOUDFRONT_KEY_VALUE_STORE_ARN = 'cloudfront-key-value-store-arn' as const;
 
 export const REGISTRAR_ID_AWS_ROUTE53 = 'aws-route53' as const;
 export const WEB_HOSTING_TYPE_CLOUDFRONT_S3 = 'cloudfront-s3' as const;
@@ -75,14 +77,15 @@ export const DEFAULT_CONTENT_CLAUSE = {
   producerId: CONTENT_PRODUCER_ID_DEFAULT,
 } as const;
 
-export const WEB_HOSTING_DEFAULT_ORIGIN_PATH = '/www' as const;
-export const WEB_HOSTING_DEFAULT_DEFAULT_ROOT_OBJECT = 'index.html' as const;
+export const WEB_HOSTING_TYPE_CLOUDFRONT_S3_DEFAULT_ORIGIN_PATH = '/www' as const;
+export const WEB_HOSTING_TYPE_CLOUDFRONT_S3_DEFAULT_DEFAULT_ROOT_OBJECT = 'index.html' as const;
 
 export const WEB_HOSTING_TYPE_CLOUDFRONT_S3_DEFAULTS_DEFAULT = {
   // The default file that will be served when a directory is requested
   defaultRootObject: 'index.html',
-  originPath: WEB_HOSTING_DEFAULT_ORIGIN_PATH,
+  originPath: WEB_HOSTING_TYPE_CLOUDFRONT_S3_DEFAULT_ORIGIN_PATH,
   content: DEFAULT_CONTENT_CLAUSE,
+  keyValueStore: false,
 
   // A mapping to custom files for HTTP error situations
   errorResponses: [
@@ -91,8 +94,9 @@ export const WEB_HOSTING_TYPE_CLOUDFRONT_S3_DEFAULTS_DEFAULT = {
   ],
 };
 
+export const WEB_HOSTING_TYPE_CLOUDFRONT_HTTPS_DEFAULT_ORIGIN_PATH = '' as const;
 export const WEB_HOSTING_TYPE_CLOUDFRONT_HTTPS_DEFAULTS_DEFAULT = {
-  originPath: '',
+  originPath: WEB_HOSTING_TYPE_CLOUDFRONT_HTTPS_DEFAULT_ORIGIN_PATH,
 } as const;
 
 export const WEB_HOSTING_TYPE_NONE_DEFAULTS_DEFAULT = {} as const;

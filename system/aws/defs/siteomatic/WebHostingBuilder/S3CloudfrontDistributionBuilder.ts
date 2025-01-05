@@ -27,6 +27,8 @@ import type { CertificateResources } from './CertificateBuilder';
 import type { CloudfrontFunctionsResources } from './CloudfrontFunctionsBuilder';
 import * as CloudfrontFunctionsBuilder from './CloudfrontFunctionsBuilder';
 import * as CloudfrontFunctionsLoader from './CloudfrontFunctionsLoader';
+import type { CloudfrontKeyValueStoreResources } from './CloudfrontKeyValueStoreBuilder';
+import * as CloudfrontKeyValueStoreBuilder from './CloudfrontKeyValueStoreBuilder';
 import * as CloudfrontSubResourcesBuilder from './CloudfrontSubResourcesBuilder';
 import * as SiteContentLoader from './SiteContentLoader';
 import * as WafBuilder from './WafBuilder';
@@ -34,6 +36,7 @@ import * as WafBuilder from './WafBuilder';
 // ----------------------------------------------------------------------
 export type S3CloudfrontDistributionResources = {
   readonly cloudfrontDistribution: CloudfrontDistribution;
+  readonly cloudfrontKeyValueStoreResources: CloudfrontKeyValueStoreResources | undefined;
   readonly cloudfrontFunctionsResources: CloudfrontFunctionsResources;
   readonly wafResources: WafBuilder.WafResources;
   readonly dnsRecords: Array<Route53Record>;
@@ -60,12 +63,19 @@ export async function build(
   }
 
   // ----------------------------------------------------------------------
+  // Key-value Store
+  const cloudfrontKeyValueStoreResources = webHostingSpec.keyValueStore
+    ? await CloudfrontKeyValueStoreBuilder.build(siteStack, webHostingSpec, localIdPostfix)
+    : undefined;
+
+  // ----------------------------------------------------------------------
   // Build cloudfront functions
   const cloudfrontFunctionsDeps = await CloudfrontFunctionsLoader.load(siteStack, secrets, webHostingSpec);
   const cloudfrontFunctionsResources = await CloudfrontFunctionsBuilder.build(
     siteStack,
     webHostingSpec,
     localIdPostfix,
+    cloudfrontKeyValueStoreResources,
     [WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID, cloudfrontFunctionsDeps.cfFunctionViewerRequestTmpFilePath],
     [WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID, cloudfrontFunctionsDeps.cfFunctionViewerResponseTmpFilePath]
   );
@@ -279,6 +289,7 @@ export async function build(
 
   return {
     cloudfrontDistribution,
+    cloudfrontKeyValueStoreResources,
     cloudfrontFunctionsResources,
     wafResources,
     dnsRecords: [dns1, dns2],

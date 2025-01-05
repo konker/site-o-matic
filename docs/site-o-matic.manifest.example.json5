@@ -82,6 +82,9 @@
       domainName: 'www.example.com',
       originPath: '/main/www',
 
+      // Create and associate a Key-Value Store
+      keyValueStore: true,
+
       // Add WAF protection
       waf: {
         // Toggle whether WAF is enabled or not

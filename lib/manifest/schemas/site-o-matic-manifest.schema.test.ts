@@ -25,6 +25,7 @@ describe('site-o-matic-manifest-schema', () => {
     expect(validation.data).toStrictEqual({
       domainName: 'minimal-example.com',
       protected: false,
+      region: 'us-east-1',
       webHosting: [
         {
           originPath: '/www',
@@ -44,11 +45,12 @@ describe('site-o-matic-manifest-schema', () => {
           content: {
             producerId: 'default',
           },
+          keyValueStore: false,
         },
       ],
       webHostingDefaults: {
         'cloudfront-https': {
-          originPath: '/',
+          originPath: '',
         },
         'cloudfront-s3': {
           originPath: '/www',
@@ -66,6 +68,7 @@ describe('site-o-matic-manifest-schema', () => {
           content: {
             producerId: 'default',
           },
+          keyValueStore: false,
         },
         none: {},
       },

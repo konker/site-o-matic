@@ -66,6 +66,12 @@ export function renderInfoSpec(infoSpec: SomInfoSpec): string {
                           Value: renderWebHostingWaf(x.waf as WafClause),
                         }
                       : { Param: 'WAF', Value: undefined },
+                    'keyValueStore' in x && !!x.keyValueStore
+                      ? {
+                          Param: 'keyValueStore',
+                          Value: x.keyValueStore,
+                        }
+                      : { Param: 'keyValueStore', Value: x },
                   ],
                   ['Param', 'Value'],
                   ['', x.domainName ?? ''],
