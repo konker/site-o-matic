@@ -6,6 +6,7 @@ import {
   WEB_HOSTING_VIEWER_REQUEST_DIR_DEFAULT_FUNCTION_PRODUCER_ID,
   WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID,
   WEB_HOSTING_VIEWER_REQUEST_REDIRECT_FUNCTION_PRODUCER_ID,
+  WEB_HOSTING_VIEWER_RESPONSE_CSP_HASHES_FUNCTION_PRODUCER_ID,
   WEB_HOSTING_VIEWER_RESPONSE_FUNCTION_PRODUCER_ID,
 } from '../../../../../lib/consts';
 import type { SomFunctionFragmentProducerDef } from '../../../../../lib/edge';
@@ -41,6 +42,7 @@ export function resolveBaseSubComponentIds(
     case CLOUDFRONT_FUNCTION_EVENT_TYPE_VIEWER_RESPONSE:
       switch (webHostingSpec.type) {
         case WEB_HOSTING_TYPE_CLOUDFRONT_S3:
+          return [{ id: WEB_HOSTING_VIEWER_RESPONSE_CSP_HASHES_FUNCTION_PRODUCER_ID, spec: undefined }];
         case WEB_HOSTING_TYPE_CLOUDFRONT_HTTPS:
           return [];
       }

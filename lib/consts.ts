@@ -60,6 +60,7 @@ export const WEB_HOSTING_VIEWER_REQUEST_DIR_DEFAULT_FUNCTION_PRODUCER_ID = 'cf-f
 export const WEB_HOSTING_VIEWER_REQUEST_REDIRECT_FUNCTION_PRODUCER_ID = 'cf-fns-viewer-request-redirect';
 export const WEB_HOSTING_VIEWER_REQUEST_BASIC_AUTH_FUNCTION_PRODUCER_ID = 'cf-fns-viewer-request-basic-auth';
 export const WEB_HOSTING_VIEWER_RESPONSE_FUNCTION_PRODUCER_ID = 'cf-fns-viewer-response';
+export const WEB_HOSTING_VIEWER_RESPONSE_CSP_HASHES_FUNCTION_PRODUCER_ID = 'cf-fns-viewer-response-csp-hashes';
 
 export const SOM_STATUS_NOT_STARTED = 'NotStarted' as const;
 export const SOM_STATUS_HOSTED_ZONE_AWAITING_NS_CONFIG = 'HostedZoneAwaitingNameserverConfig' as const;

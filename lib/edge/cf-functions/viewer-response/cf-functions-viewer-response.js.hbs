@@ -1,8 +1,11 @@
 {{{ generatorWarning }}}
 
-// Viewer Request Handler
+import cf from 'cloudfront';
+
+// Viewer Response Handler
 async function handler(event) {
   var request = event.request;
+  var response = event.response;
 
   {{#each subComponents}}
     // ---------------
@@ -10,5 +13,5 @@ async function handler(event) {
 
   {{/each}}
 
-  return request;
+  return response;
 }

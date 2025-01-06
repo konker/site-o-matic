@@ -14,6 +14,7 @@ import {
   SSM_PARAM_NAME_CLOUDFRONT_DOMAIN_NAME,
   SSM_PARAM_NAME_DOMAIN_BUCKET_NAME,
   WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID,
+  WEB_HOSTING_VIEWER_RESPONSE_FUNCTION_PRODUCER_ID,
 } from '../../../../../lib/consts';
 import { CONTENT_PRODUCER_ID_NONE } from '../../../../../lib/content';
 import type {
@@ -77,7 +78,7 @@ export async function build(
     localIdPostfix,
     cloudfrontKeyValueStoreResources,
     [WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID, cloudfrontFunctionsDeps.cfFunctionViewerRequestTmpFilePath],
-    [WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID, cloudfrontFunctionsDeps.cfFunctionViewerResponseTmpFilePath]
+    [WEB_HOSTING_VIEWER_RESPONSE_FUNCTION_PRODUCER_ID, cloudfrontFunctionsDeps.cfFunctionViewerResponseTmpFilePath]
   );
 
   // ----------------------------------------------------------------------

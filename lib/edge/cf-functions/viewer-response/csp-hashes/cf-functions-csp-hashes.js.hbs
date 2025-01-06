@@ -1,0 +1,16 @@
+
+  if (typeof response.headers['content-security-policy'] !== 'undefined') {
+    const CSP_HASHES_KEY_PREFIX = 'csp-hashes';
+
+    try {
+      const kvsHandle = cf.kvs();
+      const hashesKey = `${CSP_HASHES_KEY_PREFIX}-${request.uri}`;
+      const cspHashes = await kvsHandle.get(hashesKey);
+
+      if (cspHashes) {
+        response.headers['content-security-policy'] = { value: response.headers['content-security-policy'].value + ' ; '+ cspHashes };
+      }
+    } catch (e) {
+      /* swallow */
+    }
+  }

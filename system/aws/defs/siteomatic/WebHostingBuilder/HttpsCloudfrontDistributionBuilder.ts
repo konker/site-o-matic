@@ -8,6 +8,7 @@ import {
   SSM_PARAM_NAME_CLOUDFRONT_DISTRIBUTION_ID,
   SSM_PARAM_NAME_CLOUDFRONT_DOMAIN_NAME,
   WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID,
+  WEB_HOSTING_VIEWER_RESPONSE_FUNCTION_PRODUCER_ID,
 } from '../../../../../lib/consts';
 import type {
   WebHostingClauseCloudfrontHttps,
@@ -61,7 +62,7 @@ export async function build(
     localIdPostfix,
     undefined,
     [WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID, cloudfrontFunctionsDeps.cfFunctionViewerRequestTmpFilePath],
-    [WEB_HOSTING_VIEWER_REQUEST_FUNCTION_PRODUCER_ID, cloudfrontFunctionsDeps.cfFunctionViewerResponseTmpFilePath]
+    [WEB_HOSTING_VIEWER_RESPONSE_FUNCTION_PRODUCER_ID, cloudfrontFunctionsDeps.cfFunctionViewerResponseTmpFilePath]
   );
 
   // ----------------------------------------------------------------------

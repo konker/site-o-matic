@@ -29,7 +29,7 @@ export async function build(siteResourcesStack: SiteStack, localIdPostfix: strin
       securityHeadersConfig: {
         contentSecurityPolicy: {
           override: true,
-          contentSecurityPolicy: "default-src 'self'",
+          contentSecurityPolicy: "default-src 'self'; base-uri 'none';",
         },
         strictTransportSecurity: {
           override: true,

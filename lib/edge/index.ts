@@ -14,8 +14,9 @@ import * as cfFunctionsViewerRequestBasicAuth from './cf-functions/viewer-reques
 import * as cfFunctionsViewerRequestDirDefault from './cf-functions/viewer-request/dir-default';
 import * as cfFunctionsViewerRequestRedirect from './cf-functions/viewer-request/redirect';
 import * as cfFunctionsViewerResponse from './cf-functions/viewer-response';
+import * as cfFunctionsViewerResponseCspHashes from './cf-functions/viewer-response/csp-hashes';
 import generatorWarning from './generator-warning.json';
-import { getTmpFilePath, undefinedFunctionProducerExec } from './lib';
+import { getTmpFilePath } from './lib';
 
 // --------------------------------------------------------------------------
 export type SomFunctionCodeGenerator = () => Promise<string | undefined>;
@@ -73,8 +74,14 @@ export function getFunctionProducer(
         webHostingSpec
       );
     case cfFunctionsViewerResponse.ID:
-      // Placeholder for future implementation
-      return undefinedFunctionProducerExec;
+      return createFunctionProducerExec(
+        cfFunctionsViewerResponse,
+        fragmentProducerDefs,
+        somId,
+        secrets,
+        manifest,
+        webHostingSpec
+      );
     default:
       throw new Error(`Could not get FunctionProducer for ${id}`);
   }
@@ -110,6 +117,15 @@ export function getFunctionFragmentProducer<S>(
     case cfFunctionsViewerRequestDirDefault.ID:
       return createFunctionFragmentProducerExec(
         cfFunctionsViewerRequestDirDefault,
+        somId,
+        secrets,
+        manifest,
+        webHostingSpec,
+        spec
+      );
+    case cfFunctionsViewerResponseCspHashes.ID:
+      return createFunctionFragmentProducerExec(
+        cfFunctionsViewerResponseCspHashes,
         somId,
         secrets,
         manifest,
