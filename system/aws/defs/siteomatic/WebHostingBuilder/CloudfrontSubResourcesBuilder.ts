@@ -26,10 +26,36 @@ export async function build(siteResourcesStack: SiteStack, localIdPostfix: strin
     `SecurityHeadersResponseHeaderPolicy-${localIdPostfix}`,
     {
       name: `SecurityHeadersResponseHeaderPolicy-${localIdPostfix}`,
+      customHeadersConfig: {
+        items: [
+          {
+            header: 'Cross-Origin-Resource-Policy',
+            value: 'same-origin',
+            override: false,
+          },
+          {
+            header: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin',
+            override: false,
+          },
+          {
+            header: 'Cross-Origin-Embedder-Policy',
+            value: 'require-corp',
+            override: false,
+          },
+          {
+            header: 'Permissions-Policy',
+            value:
+              'accelerometer=(), ambient-light-sensor=(), autoplay=(), camera=(), display-capture=(), document-domain=(), encrypted-media=(), fullscreen=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=()',
+            override: false,
+          },
+        ],
+      },
       securityHeadersConfig: {
         contentSecurityPolicy: {
           override: true,
-          contentSecurityPolicy: "default-src 'self'; base-uri 'none';",
+          contentSecurityPolicy:
+            "default-src 'self'; font-src 'self' data:; form-action 'self'; connect-src 'self' 'strict-dynamic' https:; frame-ancestors 'none'; base-uri 'none'",
         },
         strictTransportSecurity: {
           override: true,
