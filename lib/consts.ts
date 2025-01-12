@@ -9,6 +9,8 @@ export const DEFAULT_CERTIFICATE_REGION = 'us-east-1' as const;
 export const CLS = '\u001b[2J\u001b[0;0H' as const;
 export const SOM_ROOT_PATH = path.join(__dirname, '..');
 
+export const SOM_SYSTEM_DIR_NAME = '.site-o-matic';
+
 export const CDK_COMMAND_NOTHING = 'nothing' as const;
 
 export const SOM_CONFIG_DEFAULT_FILE_NAME = 'site-o-matic.config.json5' as const;

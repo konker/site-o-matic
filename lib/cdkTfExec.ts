@@ -1,5 +1,8 @@
+import path from 'node:path';
+
 import type Vorpal from 'vorpal';
 
+import { SOM_SYSTEM_DIR_NAME } from './consts';
 import type { ExecProcResponse } from './proc';
 import { spawnProc } from './proc';
 
@@ -13,14 +16,19 @@ export async function cdkExec(
   extraArgs: Array<string> = []
 ): Promise<ExecProcResponse> {
   if (!somId) return [1, []];
+
+  const appPath = path.join(__dirname, '..', 'system', 'aws', 'bin', 'site-o-matic');
+  const outputDirPath = path.join(__dirname, '..', SOM_SYSTEM_DIR_NAME, `cdk-${somId}.out`);
+  const outputsFilePath = path.join(__dirname, '..', SOM_SYSTEM_DIR_NAME, `cdk-${somId}.out`, 'outputs.json');
+
   return spawnProc(
     (s) => vorpal.log(s),
     'pnpm',
     ['cdktf', cdkCmd]
       .concat(extraArgs)
-      .concat(['--app', `npx node system/aws/bin/site-o-matic`])
-      .concat(['--output', `.site-o-matic/.cdk-${somId}.out`])
-      .concat(['--outputs-file', `.site-o-matic/.cdk-${somId}.out/outputs.json`])
+      .concat(['--app', `npx node ${appPath}`])
+      .concat(['--output', outputDirPath])
+      .concat(['--outputs-file', outputsFilePath])
       .concat(['--auto-approve'])
       .concat(['--no-color']),
     plumbing,

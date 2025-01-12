@@ -42,13 +42,12 @@ export class SiteStack extends TerraformStack {
 
     this.siteProps = cloneDeep(props);
 
+    this.providerManifestRegion = new AwsProvider(this, 'provider_manifest_region', {
+      region: this.siteProps.context.manifest.region,
+    });
     this.providerControlPlaneRegion = new AwsProvider(this, 'provider_control_plane_region', {
       region: props.config.AWS_REGION_CONTROL_PLANE,
       alias: 'aws_provider_control_plane',
-    });
-    this.providerManifestRegion = new AwsProvider(this, 'provider_manifest_region', {
-      region: this.siteProps.context.manifest.region,
-      alias: 'aws_provider_manifest',
     });
     this.providerCertificateRegion = new AwsProvider(this, 'provider_certificate_region', {
       region: DEFAULT_CERTIFICATE_REGION,

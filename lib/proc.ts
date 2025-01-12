@@ -2,6 +2,7 @@ import { exec, spawn } from 'node:child_process';
 
 import path from 'path';
 
+import { SOM_SYSTEM_DIR_NAME } from './consts';
 import { sanitizeOutput } from './sanitization';
 
 export type ExecProcResponse = [number, Array<string>];
@@ -17,7 +18,7 @@ export async function spawnProc(
   const log: Array<string> = [];
   return new Promise((resolve, reject) => {
     const proc = spawn(command, args, {
-      cwd: path.join(__dirname, '..'),
+      cwd: path.resolve(path.join(__dirname, '..')),
       env: {
         CI: 'true',
         ...process.env,
@@ -55,7 +56,7 @@ export async function execProc(
     exec(
       `${command} ${args.join(' ')}`,
       {
-        cwd: path.join(__dirname, '..'),
+        cwd: path.join(__dirname, '..', SOM_SYSTEM_DIR_NAME),
         env: {
           CI: 'true',
           ...process.env,
