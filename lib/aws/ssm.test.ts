@@ -6,7 +6,6 @@ describe('ssm', () => {
     SOM_PREFIX: 'SOM',
     AWS_REGION_CONTROL_PLANE: 'us-east-1',
     AWS_REGION_DEPLOYMENT_DEFAULT: 'eu-west-1',
-    SOM_ADMIN_ROLE_ARN: 'arn:aws::::',
     SOM_TAG_NAME: 'test-som-tag',
   };
 

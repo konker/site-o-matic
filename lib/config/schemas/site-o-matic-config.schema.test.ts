@@ -12,7 +12,6 @@ describe('site-o-matic-config-schema', () => {
     const validation = unit.SiteOMaticConfig.parse(data);
     // expect(validation.success).toEqual(true);
     expect(validation).toStrictEqual({
-      SOM_ADMIN_ROLE_ARN: 'arn:aws:iam::111111111111:role/OrganizationAccountAccessRole',
       AWS_REGION_CONTROL_PLANE: 'us-east-1',
       AWS_REGION_DEPLOYMENT_DEFAULT: 'us-east-1',
       WEBMASTER_EMAIL_DEFAULT: 'webmaster+{{context.manifest.rootDomainName}}@example.com',
@@ -29,7 +28,6 @@ describe('site-o-matic-config-schema', () => {
     const validation = unit.SiteOMaticConfig.safeParse(data);
     expect(validation.success).toEqual(true);
     expect(validation.data).toStrictEqual({
-      SOM_ADMIN_ROLE_ARN: 'arn:aws:iam::111111111111:role/OrganizationAccountAccessRole',
       AWS_REGION_CONTROL_PLANE: 'us-east-1',
       AWS_REGION_DEPLOYMENT_DEFAULT: 'eu-west-1',
       SOM_TAG_NAME: 'Site-o-Matic',

@@ -29,10 +29,10 @@ describe('utils', () => {
 
   describe('_somTag', () => {
     it('should work as expected', async () => {
-      const add = jest.fn();
+      const TEST_RESOURCE = { tags: {}, tagsInput: {} };
 
-      unit._somTag({ SOM_TAG_NAME: 'TAG_NAME' } as any, { add } as any, 'foo', false);
-      expect(add).toHaveBeenCalledWith('TAG_NAME', 'foo');
+      unit._somTag({ SOM_TAG_NAME: 'TAG_NAME' } as any, TEST_RESOURCE as any, 'foo', false);
+      expect(TEST_RESOURCE.tags).toStrictEqual({ TAG_NAME: 'foo' });
     });
   });
 

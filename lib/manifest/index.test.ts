@@ -6,9 +6,7 @@ import { sortObjectKeys } from './index';
 
 describe('manifest', () => {
   beforeAll(() => {
-    jest
-      .spyOn(fs.promises, 'readFile')
-      .mockResolvedValue(Buffer.from(JSON.stringify({ rootDomainName: 'example.com' })));
+    jest.spyOn(fs.promises, 'readFile').mockResolvedValue(Buffer.from(JSON.stringify({ domainName: 'example.com' })));
   });
   afterAll(() => {
     jest.restoreAllMocks();

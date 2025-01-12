@@ -4,7 +4,6 @@ import { SOM_CONFIG_DEFAULT_SOM_PREFIX, SOM_CONFIG_DEFAULT_SOM_TAG_NAME } from '
 
 export const SiteOMaticConfig = z
   .object({
-    SOM_ADMIN_ROLE_ARN: z.string().regex(/^arn:aws:iam:.*:\d+:role\/.+$/),
     AWS_REGION_CONTROL_PLANE: z.string().regex(/..-[a-z]+-\d+[a-z]?/),
     AWS_REGION_DEPLOYMENT_DEFAULT: z.string().regex(/..-[a-z]+-\d+[a-z]?/),
     WEBMASTER_EMAIL_DEFAULT: z
